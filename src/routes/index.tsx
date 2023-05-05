@@ -7,7 +7,7 @@
  */
 import React from 'react'
 import { Navigate, useRoutes } from 'react-router-dom'
-import { Fiat } from '@/pages'
+import { Home } from '@/pages'
 import Loading from '@/components/pageLoading'
 type CutomFallBackT =
   | boolean
@@ -16,7 +16,9 @@ type CutomFallBackT =
   | React.ReactPortal
   | null
 type ChildT = React.LazyExoticComponent<() => JSX.Element> | React.FC
-
+export interface routeProps {
+  getHealthcheck?: ()=> Promise<void>
+}
 // 加载异步组件的loading
 const SuspenseWrapper = (Child: ChildT, cutomFallBack?: CutomFallBackT): any => {
   return (
@@ -25,11 +27,13 @@ const SuspenseWrapper = (Child: ChildT, cutomFallBack?: CutomFallBackT): any => 
     </React.Suspense>
   )
 }
-const Routes = () => {
+const Routes = (props: routeProps) => {
   const RouterList = useRoutes([
     {
       path: '/',
-      element: SuspenseWrapper(Fiat, true),
+      element: SuspenseWrapper(
+        () => <Home {...props}/>
+      ),
     },
     { path: '*', element: <Navigate to="/" replace /> }
   ])

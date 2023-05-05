@@ -1,0 +1,15 @@
+<svg id="klaytn" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="12" fill="url(#paint0_linear_16093_18705)"/>
+    <circle cx="12" cy="12" r="12" fill="url(#paint1_linear_16093_18705)"/>
+    <path d="M12.431 0.00758953L6.31597 16.1053L19.6874 2.7851C20.2505 3.25535 20.7698 3.77624 21.2383 4.34078L13.5791 12L21.2146 19.6878C20.768 20.2224 20.2758 20.7177 19.7439 21.1674L12.0002 13.4737L4.30958 21.212C3.7291 20.7269 3.19516 20.1879 2.71546 19.6028L9.47386 1.89474L0.0205078 11.2956C0.385166 4.99603 5.60923 0 12.0002 0C12.1444 0 12.288 0.00254399 12.431 0.00758953Z" fill="white"/>
+    <defs>
+        <linearGradient id="paint0_linear_16093_18705" x1="20.6519" y1="3.89474" x2="5.17822" y2="20.3158" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FF8C00"/>
+            <stop offset="1" stop-color="#780000"/>
+        </linearGradient>
+        <linearGradient id="paint1_linear_16093_18705" x1="8.49401" y1="8.47368" x2="20.6519" y2="20.6316" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#D30168" stop-opacity="0"/>
+            <stop offset="1" stop-color="#D30168"/>
+        </linearGradient>
+    </defs>
+</svg>

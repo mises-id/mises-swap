@@ -11,4 +11,4 @@ import React from 'react'
 
 export const NotFund = React.lazy(() => import('./NotFound'))
 // export const Home = React.lazy(() => import('./home'))
-export const Fiat = React.lazy(() => import('./fiat'))
+export const Home = React.lazy(() => import('./home'))
