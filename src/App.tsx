@@ -119,7 +119,7 @@ function App() {
           <RecoilRoot>
             <ConfigProvider locale={enUS}>
               <div className='flex justify-between items-center px-10'>
-                <Image width={50} src='/logo192.png' />
+                <Image width={80} src='/logo192.png' />
                 <div>
                   <ConnectButton accountStatus="address" chainStatus="icon" />
                 </div>

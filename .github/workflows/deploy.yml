@@ -19,7 +19,7 @@ jobs:
       - name: Install and Test
         run: |
           yarn
-          REACT_APP_APPID=${{ secrets.FIAT_APPID }} REACT_APP_SECRET=${{ secrets.FIAT_SECRET }} yarn build
+          yarn build
         env:
           CI: true
       - name: Configure AWS Credentials
@@ -32,7 +32,7 @@ jobs:
         run: |
           aws s3 cp --recursive \
            --region us-east-1 \
-           build/ s3://fiat.mises/main
+           build/ s3://swap.mises/main
       - name: Invalidate cloudfront
         run: |
           aws cloudfront create-invalidation \

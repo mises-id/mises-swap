@@ -27,8 +27,18 @@ module.exports = {
       plugins: [
         new NodePolyfillPlugin({
           excludeAliases: ['console']
-        }), 
+        }),
       ],
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            enforce: "pre",
+            use: ["source-map-loader"],
+          },
+        ],
+      },
+      ignoreWarnings: [/Failed to parse source map/],
     }
   },
   jest: {

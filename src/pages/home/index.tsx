@@ -6,51 +6,18 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { routeProps } from "@/routes";
 import { allowance, getQuote, getSwapData, getTokens, spender, transaction } from "@/api/swap";
-import { Button, Input } from "antd-mobile";
 import { formatAmount, parseAmount } from "@/utils";
 import { useRequest } from "ahooks";
-import { sendTransaction, signTypedData } from '@wagmi/core'
+import { sendTransaction } from '@wagmi/core'
+import SwapProvider from "@/context/swapContext";
+import { SetOutline } from "antd-mobile-icons";
+import TokenInput from "@/components/tokenInput";
+import SwapButton from "@/components/swapButton";
 const defaultTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-interface token {
-  [key: string]: {
-    "symbol": string,
-    "name": string,
-    "address": `0x${string}`,
-    "decimals": number,
-    "logoURI": string
-  }
-}
 type allowanceParams = Record<'tokenAddress' | 'walletAddress', string>
 type transactionParams = Record<'tokenAddress' | 'amount', string>
-interface quoteParams {
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  amount: string,
-  protocols?: string,
-  fee?: number,
-  gasLimit?: string,
-  connectorTokens?: string,
-  complexityLevel?: string,
-  mainRouteParts?: string,
-  parts?: string,
-  gasPrice?: string
-}
-interface quoteData {
-  "fromToken": token[number],
-  "toToken": token[number],
-  "toTokenAmount": string,
-  "fromTokenAmount": string,
-  "protocols": [
-    {
-      "name": string,
-      "part": number,
-      "fromTokenAddress": string,
-      "toTokenAddress": string
-    }
-  ],
-  "estimatedGas": number
-}
 const Home = (props: routeProps) => {
+  
   // firebase
   const analytics = useAnalytics()
   useEffect(() => {
@@ -84,11 +51,11 @@ const Home = (props: routeProps) => {
     }>(chainId).then(res => {
       settokens({ ...res.data.tokens })
       setFormtokenAddress(defaultTokenAddress)
-      const findUSDTAddress = Object.keys(res.data.tokens).find(key=>res.data.tokens[key].symbol === 'USDT')
+      const findUSDTAddress = Object.keys(res.data.tokens).find(key => res.data.tokens[key].symbol === 'USDT')
 
-      if(findUSDTAddress){
+      if (findUSDTAddress) {
         setToTokenAddress(findUSDTAddress)
-        setFromAmount('1')
+        setFromAmount('')
         quote(defaultTokenAddress, findUSDTAddress)
       }
     })
@@ -109,16 +76,16 @@ const Home = (props: routeProps) => {
       return Promise.reject('error')
     }
     const parseAmountStr = tokens[fromTokenAddr] ? parseAmount(amount, tokens[fromTokenAddr]?.decimals) : '0'
-    if(parseAmountStr === '0') return Promise.reject('error')
+    if (parseAmountStr === '0') return Promise.reject('error')
 
     return getQuote<quoteData, quoteParams>(chainId, {
       fromTokenAddress: fromTokenAddr,
       toTokenAddress: toTokenAddr,
       amount: parseAmountStr,
       fee: 1
-    }).then(res=>{
+    }).then(res => {
       const toTokenAmount = formatAmount(res.data.toTokenAmount, res.data.toToken.decimals)
-      setToAmount(toTokenAmount)
+      if(fromAmount) setToAmount(toTokenAmount)
     })
   }
 
@@ -178,18 +145,18 @@ const Home = (props: routeProps) => {
         // eth_getTransactionReceipt
         await sendTransactionResult.wait()
         submitSwap()
-        return 
+        return
       }
       submitSwap()
     } catch (error) {
 
     }
   }
-  
-  const submitSwap = async () =>{
+
+  const submitSwap = async () => {
     // eth_signTypedData_v4
     // const sign = await signTypedData()
-    if(!address) return 
+    if (!address) return
     try {
       const parseAmountStr = tokens[fromTokenAddress] ? parseAmount(fromAmount, tokens[fromTokenAddress]?.decimals) : '0'
       const result = await getSwapData<quoteData & {
@@ -201,17 +168,17 @@ const Home = (props: routeProps) => {
           to: `0x${string}`,
           value: string
         }
-      }, quoteParams & {slippage: number, fromAddress: `0x${string}`, referrerAddress: `0x${string}`}>(chainId, {
+      }, quoteParams & { slippage: number, fromAddress: `0x${string}`, referrerAddress: `0x${string}` }>(chainId, {
         fromTokenAddress,
         toTokenAddress,
         fromAddress: address,
         amount: parseAmountStr,
         slippage: 1,
         referrerAddress: '0x971326424696d134b0EAEB37Aa1ED6Da18208211',
-        fee: 1 
+        fee: 1
       })
-      
-      const {gas, ...tx} = result.data.tx
+
+      const { gas, ...tx } = result.data.tx
       const sendTransactionResult = await sendTransaction({
         mode: 'prepared',
         request: {
@@ -231,11 +198,16 @@ const Home = (props: routeProps) => {
     manual: true,
   });
 
-  const getFromInputChange = (val: string) =>{
-    console.log(val, 'from')
-    setFromAmount(val)
-    setToAmount('')
-    run(fromTokenAddress, toTokenAddress, val)
+  const getFromInputChange = (val: string) => {
+    if(val){
+      const value = val.replace(/[^\d^\.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,2})/g)?.[0] || ""
+      setFromAmount(value)
+      setToAmount('')
+      run(fromTokenAddress, toTokenAddress, value)
+    }else{
+      setFromAmount('')
+      setToAmount('')
+    }
   }
 
 
@@ -245,17 +217,45 @@ const Home = (props: routeProps) => {
   //   setFromAmount('')
   // }
   return showLayout ?
-    <div>
-      <p>
+    <SwapProvider>
+      <div className="swap-container">
+        <div className="flex justify-between items-center swap-header">
+          <p className="title">Swap</p>
+          <SetOutline className="setting-icon" />
+        </div>
+        <div>
+          <TokenInput
+            type="from"
+            onChange={getFromInputChange}
+            tokens={tokens}
+            defaultTokenAddress={defaultTokenAddress}
+            placeholder='0'
+            pattern='^[0-9]*[.,]?[0-9]*$'
+            inputMode='decimal'
+            value={fromAmount} />
+
+          <div className="switch-token flex items-center justify-center">
+            <i className="iconfont icon-xiajiantou"></i>
+          </div>
+
+          <TokenInput
+            type="to"
+            tokens={tokens}
+            value={toAmount}
+            placeholder='0'
+            readOnly
+            disabled />
+        </div>
+        <SwapButton onClick={swap} />
+        {/* <p>
         {tokens[fromTokenAddress]?.symbol}
       </p>
-      <Input onChange={getFromInputChange} value={fromAmount} />
       <p>
         {tokens[toTokenAddress]?.symbol}
-      </p>
-      <Input readOnly disabled  value={toAmount} />
-      <Button onClick={swap} block color="primary">Swap</Button>
-    </div > :
+      </p> */}
+
+      </div >
+    </SwapProvider> :
     <></>
 };
 export default Home;

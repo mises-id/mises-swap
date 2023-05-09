@@ -10,7 +10,7 @@ const Loading = () => {
   return <div className='flex items-center justify-center h-screen'>
     <div className="text-center">
       <img src="/logo192.png" alt="logo" width={80} height={80}/>
-      <p className="text-lg color-primary mt-10">Loading Mises Fiat...</p>
+      <p className="text-lg color-primary mt-10">Loading Mises Swap...</p>
     </div>
   </div>
 }
