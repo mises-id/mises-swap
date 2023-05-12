@@ -19,6 +19,7 @@ import { publicProvider } from 'wagmi/providers/public';
 import jazzicon from '@metamask/jazzicon'
 import { useState } from 'react';
 import { healthcheck } from './api/swap';
+import SwapProvider from './context/swapContext';
 function App() {
   const klaytnChain: Chain = {
     id: 8217,
@@ -124,17 +125,18 @@ function App() {
                   <ConnectButton accountStatus="address" chainStatus="icon" />
                 </div>
               </div>
-
-              {!error ?
-                <div className='flex-1'>
-                  <BrowserRouter>
-                    <Routes getHealthcheck={getHealthcheck}/>
-                  </BrowserRouter>
-                </div> :
-                <div className='flex-1 flex items-center justify-center'>
-                  <ErrorBlock status='empty' title={error} description="" />
-                </div>
-              }
+              <SwapProvider>
+                {!error ?
+                  <div className='flex-1'>
+                    <BrowserRouter>
+                      <Routes getHealthcheck={getHealthcheck}/>
+                    </BrowserRouter>
+                  </div> :
+                  <div className='flex-1 flex items-center justify-center'>
+                    <ErrorBlock status='empty' title={error} description="" />
+                  </div>
+                }
+              </SwapProvider>
 
             </ConfigProvider>
           </RecoilRoot>

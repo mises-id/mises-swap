@@ -1,8 +1,9 @@
+type address = `0x${string}`
 interface token {
   [key: string]: {
     "symbol": string,
     "name": string,
-    "address": `0x${string}`,
+    "address": address,
     "decimals": number,
     "logoURI": string
   }

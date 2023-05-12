@@ -11,3 +11,4 @@ export function parseAmount(value: string, unitName?: BigNumberish): string {
 export function formatAmount(value: string, unitName?: BigNumberish): string {
   return ethers.utils.formatUnits(value, unitName).toString()
 }
+export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
