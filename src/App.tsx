@@ -5,7 +5,7 @@
  * @LastEditors: lmk
  * @Description: 
  */
-import { ConfigProvider, ErrorBlock, Image } from 'antd-mobile';
+import { ConfigProvider, ErrorBlock } from 'antd-mobile';
 import { BrowserRouter } from 'react-router-dom';
 import Routes from './routes';
 import enUS from 'antd-mobile/es/locales/en-US'
@@ -97,7 +97,14 @@ function App() {
   const { chain } = useNetwork()
   const [error, seterror] = useState('')
   const getHealthcheck = () => {
-    const chainId = chain?.id || 1
+    const chainId = chain?.id || 1;
+    console.log(chains)
+    const isChain = chains.some(val=>`${val.id}` === `${chainId}`)
+    
+    if(!isChain) {
+      seterror('Wrong network, please switch network')
+      return Promise.reject('Wrong network, please switch network')
+    }
     return healthcheck<{
       status: 'OK'
     }>(chainId).then(res => {
@@ -119,8 +126,9 @@ function App() {
         <RainbowKitProvider chains={chains} avatar={CustomAvatar}>
           <RecoilRoot>
             <ConfigProvider locale={enUS}>
-              <div className='flex justify-between items-center px-10'>
-                <Image width={80} src='/logo192.png' />
+              <div className='flex justify-between items-center px-10 py-10'>
+                {/* <Image width={80} src='/logo192.png' /> */}
+                <p className='swap-title'>Mises <span>Swap</span></p>
                 <div>
                   <ConnectButton accountStatus="address" chainStatus="icon" />
                 </div>

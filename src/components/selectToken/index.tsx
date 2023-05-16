@@ -163,7 +163,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         style={{
           '--border-inner': 'none',
         }}>
-        {/* eslint-disable-next-line react-hooks/exhaustive-deps */}
+        {tokenList.length === 0 && <div className='text-center pt-20'>No results found.</div>}
         <AutoSizer disableHeight>
           {({ width }: { width: number }) => (
             <VirtualizedList

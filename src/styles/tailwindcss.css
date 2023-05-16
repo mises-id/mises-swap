@@ -57,3 +57,20 @@ body,html,#root,.App{
   display: flex;
   flex-direction: column;
 }
+.swap-title{
+  color: var(--adm-color-primary);
+  font-size: 24px;
+  font-weight: bold;
+}
+
+@media screen and (max-width:400px){
+  .dialog-container{
+    --min-width: 90vw;
+  }
+}
+@media screen and (min-width:401px){
+  .dialog-container{
+    --min-width: 408px;
+    --max-width: 408px;
+  }
+}

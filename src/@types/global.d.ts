@@ -21,6 +21,7 @@ interface quoteParams {
   mainRouteParts?: string,
   parts?: string,
   gasPrice?: string
+  destReceiver?: string
 }
 interface quoteData {
   "fromToken": token[number],

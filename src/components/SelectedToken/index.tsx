@@ -1,8 +1,8 @@
 import { Image } from "antd-mobile";
 import { DownOutline } from "antd-mobile-icons";
 import { memo, useMemo } from "react";
-
-const SelectedToken = memo((props: {tokenAddress: string,tokens: token | undefined}) => {
+interface Iprops {tokenAddress: string, tokens: token | undefined}
+const SelectedToken = memo((props: Iprops) => {
   const findToken = useMemo(
     () => {
       if (props.tokenAddress && props.tokens) {
@@ -22,7 +22,7 @@ const SelectedToken = memo((props: {tokenAddress: string,tokens: token | undefin
     </div>
     <DownOutline className='downOutline' />
   </div>
-}, (prevProps: Readonly<{ tokenAddress: string; }>, nextProps: Readonly<{ tokenAddress: string; }>)=>{
-  return prevProps.tokenAddress === nextProps.tokenAddress
+}, (prevProps: Readonly<Iprops>, nextProps: Readonly<Iprops>)=>{
+  return prevProps.tokenAddress === nextProps.tokenAddress && JSON.stringify(prevProps.tokens) === JSON.stringify(nextProps.tokens)
 })
 export default SelectedToken

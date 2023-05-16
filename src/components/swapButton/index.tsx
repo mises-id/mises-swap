@@ -5,7 +5,7 @@ import { SwapContext } from '@/context/swapContext'
 
 const swapStatus = {
   99999: 'Swap',
-  1: 'Connnet wallet',
+  1: 'Connect wallet',
   2: 'Select token',
   3: 'Enter an amount',
   4: (token: string)=>`Insufficient ${token} balance`,
@@ -14,6 +14,8 @@ const swapStatus = {
   7: 'Not enough balance',
   8: 'Not enough allowance',
   9: (token: string)=>`Approve use of ${token}`,
+  10: 'Approval pending',
+  11: 'No payment channel found'
 }
 
 export type status = keyof typeof swapStatus

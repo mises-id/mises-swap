@@ -152,6 +152,10 @@
   visibility:visible;
 }
 
+.ml-5{
+  margin-left:5px;
+}
+
 .mt-10{
   margin-top:10px;
 }
@@ -172,12 +176,16 @@
   flex:1 1 0%;
 }
 
-.items-center{
-  align-items:center;
+.cursor-pointer{
+  cursor:pointer;
 }
 
-.justify-end{
-  justify-content:flex-end;
+.flex-col{
+  flex-direction:column;
+}
+
+.items-center{
+  align-items:center;
 }
 
 .justify-center{
@@ -188,13 +196,30 @@
   justify-content:space-between;
 }
 
+.gap-4{
+  gap:16px;
+}
+
 .rounded{
   border-radius:4px;
+}
+
+.p-20{
+  padding:20px;
 }
 
 .px-10{
   padding-left:10px;
   padding-right:10px;
+}
+
+.py-10{
+  padding-top:10px;
+  padding-bottom:10px;
+}
+
+.pt-20{
+  padding-top:20px;
 }
 
 .text-center{
@@ -271,4 +296,23 @@ body,html,#root,.App{
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.swap-title{
+  color: var(--adm-color-primary);
+  font-size: 24px;
+  font-weight: bold;
+}
+
+@media screen and (max-width:400px){
+  .dialog-container{
+    --min-width: 90vw;
+  }
+}
+
+@media screen and (min-width:401px){
+  .dialog-container{
+    --min-width: 408px;
+    --max-width: 408px;
+  }
 }
