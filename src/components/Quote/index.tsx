@@ -4,7 +4,7 @@ import { formatAmount, shortenAddress } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'
-import { SwapContext } from '@/context/swapContext';
+import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
 import { CenterPopup, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
 interface Iprops {
@@ -17,7 +17,7 @@ const Quote: FC<Iprops> = (props) => {
   const [tokenType, settokenType] = useState<'from' | 'to'>('from')
 
   const swapContext = useContext(SwapContext)
-  const slippage = swapContext?.slippage
+  const slippage = swapContext?.slippage || defaultSlippageValue
   const [receivingAddress, setReceivingAddress] = useState<string>()
 
   const tokenStr = useMemo(() => {

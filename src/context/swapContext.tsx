@@ -31,7 +31,7 @@ interface Iprops {
   children?: ReactNode
 }
 export const SwapContext = createContext<SwapContextType | null>(null);
-
+export const defaultSlippageValue = '0.1'
 const swapDataDefaults = {
   tokenAddress: ''
 }
@@ -44,7 +44,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [status, setStatus] = useState(1)
 
-  const [slippage, setSlippage] = useState('1')
+  const [slippage, setSlippage] = useState('')
 
   const { address } = useAccount()
 

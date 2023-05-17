@@ -1,12 +1,7 @@
-import { ethers } from 'ethers';
-import { readContracts } from 'wagmi';
+import { readContract } from '@wagmi/core';
 
 
-export async function getETHPrice(address: string) {
-
-  // This constant describes the ABI interface of the contract, which will provide the price of ETH
-  // It looks like a lot, and it is, but this information is generated when we compile the contract
-  // We need to let ethers know how to interact with this contract.
+export async function getUSDTPrice() {
   const aggregatorV3InterfaceABI = [
     {
       inputs: [],
@@ -56,22 +51,27 @@ export async function getETHPrice(address: string) {
       type: 'function'
     }
   ];
-  // console.log(address, 1111)
-  // const data = await readContracts({
-  //   contracts : [{
-  //     address: address as address,
-  //     abi: aggregatorV3InterfaceABI,
-  //     functionName: 'version',
-  //   }]
-  // })
-  // console.log(data)
+  const usdtToUsdAddress = '0x3E7d1eAB13ad0104d2750B8863b489D65364e32D'
+  const roundData: any = await readContract({
+    address: usdtToUsdAddress,
+    abi: aggregatorV3InterfaceABI,
+    functionName: 'latestRoundData'
+  })
 
-  // We create an instance of the contract which we can interact with
-  const priceFeed = new ethers.Contract(address, aggregatorV3InterfaceABI, window.ethereum as any);
-  // We get the data from the last round of the contract 
-  let roundData = await priceFeed.latestRoundData();
-  // Determine how many decimals the price feed has (10**decimals)
-  let decimals = await priceFeed.decimals();
-  // We convert the price to a number and return it
-  return Number((roundData.answer.toString() / Math.pow(10, decimals)).toFixed(2));
+  const decimals: any = await readContract({
+    address: usdtToUsdAddress,
+    abi: aggregatorV3InterfaceABI,
+    functionName: 'decimals'
+  })
+  
+  return roundData.answer.toNumber() / Math.pow(10, decimals)
+
+//   // We create an instance of the contract which we can interact with
+//   const priceFeed = new ethers.Contract(address, aggregatorV3InterfaceABI, window.ethereum as any);
+//   // We get the data from the last round of the contract 
+//   let roundData = await priceFeed.latestRoundData();
+//   // Determine how many decimals the price feed has (10**decimals)
+//   let decimals = await priceFeed.decimals();
+//   // We convert the price to a number and return it
+//   return Number((roundData.answer.toString() / Math.pow(10, decimals)).toFixed(2));
 }

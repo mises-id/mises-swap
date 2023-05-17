@@ -6,6 +6,7 @@ import { useAccount, useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
 import { getBalance } from '@/api/ether'
 import { fetchFeeData } from '@wagmi/core'
+import { getUSDTPrice } from '@/hooks/usePrice'
 interface Iprops extends InputProps {
   tokens?: token,
   type: 'from' | 'to',
@@ -20,7 +21,6 @@ const TokenInput: FC<Iprops> = (props) => {
   const [tokenBalance, settokenBalance] = useState('0')
   const swapContext = useContext(SwapContext)
   const { chain } = useNetwork()
-
   useEffect(() => {
     // get native token balance
     if (address && props.tokenAddress) {
@@ -32,7 +32,7 @@ const TokenInput: FC<Iprops> = (props) => {
       })
     }
     if(props.tokenAddress) {
-      // getETHPrice(props.tokenAddress)
+      getUSDTPrice()
       // formatUSD({
       //   chainShortName: 'bsc',
       //   tokenContractAddress: props.tokenAddress

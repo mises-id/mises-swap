@@ -160,6 +160,14 @@
   margin-top:10px;
 }
 
+.mt-20{
+  margin-top:20px;
+}
+
+.mr-10{
+  margin-right:10px;
+}
+
 .block{
   display:block;
 }
@@ -196,8 +204,20 @@
   justify-content:space-between;
 }
 
+.gap-10{
+  gap:40px;
+}
+
 .gap-4{
   gap:16px;
+}
+
+.gap-5{
+  gap:20px;
+}
+
+.gap-2{
+  gap:8px;
 }
 
 .rounded{
@@ -229,6 +249,15 @@
 .text-lg{
   font-size:16px;
   line-height:18px;
+}
+
+.text-24{
+  font-size:24px;
+}
+
+.text-xl{
+  font-size:18px;
+  line-height:20px;
 }
 
 .filter{

@@ -1,0 +1,67 @@
+.setting{
+  position: absolute;
+  z-index: 2;
+  width: 280px;
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgb(210, 217, 238);
+  box-shadow: rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px, rgba(0, 0, 0, 0.01) 0px 24px 32px;
+  border-radius: 12px;
+  top: 100%;
+  margin-top: 10px;
+  right: 10px;
+  color: rgb(13, 17, 28);
+  user-select: none;
+  gap: 16px;
+  padding: 1rem;
+  top: 30px;
+}
+.setting-mask{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  z-index: 1;
+}
+.right-slippage-input{
+  padding:5px 8px;
+  border-radius: 12px;
+  border: 1px solid rgb(210, 217, 238);
+  .slippageValue{
+    margin-right: 5px;
+    .adm-input-element{
+      text-align: right;
+    }
+    &.error{
+      .adm-input-element{
+        color: red
+      }
+    }
+  }
+}
+.left-status{
+  width: auto;
+  padding: 4px;
+  border: 1px solid rgb(210, 217, 238);
+  border-radius: 12px;
+  .status-item{
+    cursor: pointer;
+    padding: 6px 12px;
+    text-align: center;
+    border-radius: 12px;
+    &.active{
+      cursor: pointer;
+      padding: 6px 12px;
+      text-align: center;
+      border-radius: 12px;
+      background: rgb(232, 236, 251);
+      pointer-events: none;
+    }
+  }
+}
+.status-text{
+  font-size: 12px;
+  margin-top: 10px;
+  line-height: 16px;
+  color: rgb(177, 121, 0)
+}

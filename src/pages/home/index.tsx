@@ -9,7 +9,7 @@ import { allowance, getQuote, getSwapData, getTokens, transaction } from "@/api/
 import { formatAmount, nativeTokenAddress, parseAmount } from "@/utils";
 import { useRequest } from "ahooks";
 import { sendTransaction, watchNetwork, watchAccount } from '@wagmi/core'
-import { SwapContext } from "@/context/swapContext";
+import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput from "@/components/tokenInput";
 import SwapButton from "@/components/swapButton";
@@ -19,6 +19,8 @@ import { getBalance } from "@/api/ether";
 import BigNumber from "bignumber.js";
 import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
+import { SetOutline } from "antd-mobile-icons";
+import Setting from "@/components/Setting";
 type allowanceParams = Record<'tokenAddress' | 'walletAddress', string>
 type transactionParams = Record<'tokenAddress', string>
 const Home = (props: routeProps) => {
@@ -41,6 +43,37 @@ const Home = (props: routeProps) => {
   const [quoteData, setquoteData] = useState<any>(undefined)
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
+
+  const getTokenList = async () => {
+    const cacheTokens = sessionStorage.getItem(`${chainId}`)
+    let tokenList = undefined
+    if (cacheTokens) {
+      tokenList = JSON.parse(cacheTokens)
+    }else{
+      const res = await getTokens<{ "tokens": token }>(chainId)
+
+      if(res){
+        tokenList = res.data.tokens
+        sessionStorage.setItem(`${chainId}`, JSON.stringify(tokenList))
+      }else{
+        tokenList = {}
+      }
+    }
+    settokens({ ...tokenList })
+
+    if (swapContext) {
+      const token = tokenList[nativeTokenAddress] || {}
+
+      swapContext.swapFromData = {
+        tokenAddress: nativeTokenAddress,
+        ...token
+      }
+
+      swapContext.setswapFromData({
+        ...swapContext.swapFromData
+      })
+    }
+  }
   
   const resetData = () => {
     setToAmount('')
@@ -53,6 +86,7 @@ const Home = (props: routeProps) => {
       swapContext.setswapToData({
         ...swapContext.swapToData
       })
+
       swapContext.swapFromData = {
         tokenAddress: '',
       }
@@ -73,41 +107,10 @@ const Home = (props: routeProps) => {
     manual: true,
   });
 
-  watchNetwork((network) => {
+  watchNetwork(() => {
     networkChangeCancel()
     networkChangeRun()
   })
-
-  const getTokenList = async () => {
-    const cacheTokens = sessionStorage.getItem(`${chainId}`)
-    let tokenList = undefined
-    if (cacheTokens) {
-      tokenList = JSON.parse(cacheTokens)
-    }else{
-      const res = await getTokens<{
-        "tokens": token
-      }>(chainId)
-      if(res){
-        tokenList = res.data.tokens
-        sessionStorage.setItem(`${chainId}`, JSON.stringify(tokenList))
-      }else{
-        tokenList = {}
-      }
-    }
-    settokens({ ...tokenList })
-
-    if (swapContext) {
-      const token = tokenList[nativeTokenAddress]
-      swapContext.swapFromData = {
-        tokenAddress: nativeTokenAddress,
-        ...token
-      }
-
-      swapContext.setswapFromData({
-        ...swapContext.swapFromData
-      })
-    }
-  }
 
   // const [spenderAddress, setspenderAddress] = useState('')
   // const getSpender = () => {
@@ -118,10 +121,12 @@ const Home = (props: routeProps) => {
   //   })
   // }
   const [approveLoading, setapproveLoading] = useState(false)
+
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount) => {
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !tokens?.[fromTokenAddr]) {
       return Promise.reject('')
     }
+
     const parseAmountStr = tokens?.[fromTokenAddr] ? parseAmount(amount, tokens[fromTokenAddr]?.decimals) : '0'
     if (parseAmountStr === '0') return Promise.reject('')
 
@@ -131,6 +136,7 @@ const Home = (props: routeProps) => {
       amount: parseAmountStr,
       fee: 1
     })
+
     setquoteData(res.data)
     const toTokenAmount = formatAmount(res.data.toTokenAmount, res.data.toToken.decimals)
     if (swapContext?.fromAmount) setToAmount(toTokenAmount)
@@ -143,12 +149,13 @@ const Home = (props: routeProps) => {
       }
 
       const compared = BigNumber(balance?.formatted).comparedTo(amount)
-      console.log(compared, 'compared')
+
       if(compared === -1) {
         // Insufficient token balance	
         swapContext?.setStatus(4)
         return res
       }
+
       // allowance
       const allowance = await getAllowance(fromTokenAddr)
       const comparedAllowance = BigNumber(formatAmount(allowance.allowance, tokens[fromTokenAddr]?.decimals)).comparedTo(amount)
@@ -165,11 +172,13 @@ const Home = (props: routeProps) => {
 
   const getAllowance = async (tokenAddress: string) => {
     if (!address) return Promise.reject('Not found address')
+
     try {
       const allowanceData: allowanceParams = {
         tokenAddress,
         walletAddress: address
       }
+
       const result = await allowance<{
         allowance: string
       }, allowanceParams>(chainId, allowanceData)
@@ -186,6 +195,7 @@ const Home = (props: routeProps) => {
       }, transactionParams>(chainId, {
         tokenAddress,
       })
+
       return result.data
     } catch (error) {
       return Promise.reject(error)
@@ -193,13 +203,15 @@ const Home = (props: routeProps) => {
   }
 
   const { openConnectModal } = useConnectModal()
-  const swap = async () => {
+
+  const onClickSwap = async () => {
     if(!address){
       openConnectModal?.()
       return
     }
     setshowConfirmDialog(true)
   }
+
   const confirmSwap = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
     if (!tokenAddress) return
@@ -209,16 +221,18 @@ const Home = (props: routeProps) => {
       * 1. get allowance balance
       * 2. Generate data for calling the contract in order to allow the 1inch router to spend funds
       * 3. Using eth_sendTransaction and eth_getTransactionReceipt to retrieve authorization results.
-      * 4. Using eth_signTypedData_v4
       */
       setshowConfirmDialog(false)
+
       const result = await getAllowance(tokenAddress)
+
       const comparedAllowance = BigNumber(formatAmount(result.allowance, swapContext.swapFromData?.decimals)).comparedTo(swapContext.fromAmount)
 
       if (comparedAllowance === -1) {
         const transactionResult = await getTransaction(tokenAddress)
         // eth_sendTransaction
         setapproveLoading(true)
+
         const sendTransactionResult = await sendTransaction({
           mode: 'prepared',
           request: {
@@ -226,9 +240,12 @@ const Home = (props: routeProps) => {
             gasLimit: 50000
           },
         })
+
         // eth_getTransactionReceipt
         await sendTransactionResult.wait()
+
         setapproveLoading(false)
+
         await submitSwap()
         return
       }
@@ -259,16 +276,6 @@ const Home = (props: routeProps) => {
           description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toFixed(swapContext?.swapToData.decimals / 2)} ${swapContext?.swapToData.symbol}`
         })
       }
-      console.log({
-        fromTokenAddress,
-        toTokenAddress,
-        fromAddress: address,
-        amount: parseAmountStr,
-        slippage: swapContext?.slippage ? Number(swapContext.slippage) / 100 : 1,
-        referrerAddress: '0x971326424696d134b0EAEB37Aa1ED6Da18208211',
-        destReceiver: swapContext?.receivingAddress || '',
-        fee: 1
-      }, 'params ====')
 
       const result = await getSwapData<quoteData & {
         tx: {
@@ -279,12 +286,12 @@ const Home = (props: routeProps) => {
           to: `0x${string}`,
           value: string
         }
-      }, quoteParams & { slippage: number, fromAddress: `0x${string}`, referrerAddress: `0x${string}` }>(chainId, {
+      }, quoteParams & { slippage: string, fromAddress: `0x${string}`, referrerAddress: `0x${string}` }>(chainId, {
         fromTokenAddress,
         toTokenAddress,
         fromAddress: address,
         amount: parseAmountStr,
-        slippage: swapContext?.slippage ? Number(swapContext.slippage) / 100 : 1,
+        slippage: (swapContext?.slippage && Number(swapContext?.slippage)<50) ? swapContext.slippage : defaultSlippageValue,
         referrerAddress: '0x971326424696d134b0EAEB37Aa1ED6Da18208211',
         destReceiver: swapContext?.receivingAddress || '',
         fee: 1
@@ -298,6 +305,7 @@ const Home = (props: routeProps) => {
           gasLimit: gas
         },
       })
+      
       console.log(sendTransactionResult, 'sendTransactionResult')
       // eth_getTransactionReceipt
       const transferRes = await sendTransactionResult.wait()
@@ -350,7 +358,7 @@ const Home = (props: routeProps) => {
   const getFromInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,2})/g)?.[0] || ""
+      const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
       setInputChange(value)
     } else {
       swapContext?.setFromAmount('')
@@ -364,27 +372,27 @@ const Home = (props: routeProps) => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     
-    if(toTokenAddress && toTokenAddress){
+    if(toTokenAddress && fromTokenAddress){
       run(fromTokenAddress, toTokenAddress, value)
-      // if(Number(value)!==0) swapContext?.setStatus(99999)
     }
   }
 
-
   const getFromTokenChange = async (val: string) => {
-    // run(toTokenAddress, fromTokenAddress, val, )
     if (swapContext) {
       const token = tokens?.[val]
+
       swapContext.swapFromData = {
         tokenAddress: val,
         ...token
       }
+
       swapContext.setswapFromData({
         ...swapContext.swapFromData
       })
     }
 
     const toTokenAddress = swapContext!.swapToData.tokenAddress
+
     if(swapContext?.fromAmount && toTokenAddress){
       run(val, toTokenAddress, swapContext.fromAmount)
     }
@@ -393,19 +401,21 @@ const Home = (props: routeProps) => {
   const getToTokenChange = (val: string) => {
     if (swapContext) {
       const token = tokens?.[val]
+
       swapContext.swapToData = {
         tokenAddress: val,
         ...token
       }
+
       swapContext.setswapToData({
         ...swapContext.swapToData
       })
     }
 
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
+
     if(swapContext?.fromAmount && fromTokenAddress){
       run(fromTokenAddress, val, swapContext.fromAmount)
-      // swapContext?.setStatus(99999)
     }
   }
   
@@ -423,6 +433,7 @@ const Home = (props: routeProps) => {
         tokenAddress: swapFromData.tokenAddress,
         ...fromToken
       }
+
       swapContext.setswapToData({
         ...swapContext.swapToData
       })
@@ -431,6 +442,7 @@ const Home = (props: routeProps) => {
         tokenAddress: swapToData.tokenAddress,
         ...toToken
       }
+
       swapContext.setswapFromData({
         ...swapContext.swapFromData
       })
@@ -438,11 +450,6 @@ const Home = (props: routeProps) => {
       if(toAmount) run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount)
     }
   }
-
-  // const canSwap = useMemo(()=>{
-  //   return address && swapContext?.swapToData.tokenAddress && swapContext?.swapFromData.tokenAddress
-  // },[address, swapContext?.swapToData.tokenAddress, swapContext?.swapFromData.tokenAddress])
-  
 
   useEffect(()=>{
     if(!address){
@@ -462,10 +469,16 @@ const Home = (props: routeProps) => {
     
     // eslint-disable-next-line
   },[address, swapContext?.swapToData.tokenAddress, swapContext?.fromAmount])
+  
+  const [openSetting, setopenSetting] = useState(false)
+
   return <div className="swap-container">
       <div className="flex justify-between items-center swap-header">
         <p className="title">Swap</p>
-        {/* <SetOutline className="setting-icon" /> */}
+        <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
+          {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
+          <SetOutline className="setting-icon" onClick={()=>setopenSetting(true)}/>
+        </div>
       </div>
       <div>
         {tokens ? <TokenInput
@@ -494,8 +507,11 @@ const Home = (props: routeProps) => {
           // readOnly
         />: <Skeleton animated className="custom-skeleton" />}
       </div>
+
       <Quote data={quoteData} loading={swapLoading}/>
-      <SwapButton onClick={swap} loading={swapLoading} />
+
+      <SwapButton onClick={onClickSwap} loading={swapLoading} />
+
       <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={()=>setshowConfirmDialog(false)}>
         <div className="dialog-content p-20">
           <p className="confirm-title">Confirm Swap</p>
@@ -524,7 +540,10 @@ const Home = (props: routeProps) => {
           <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
         </div>
       </CenterPopup>
+
       <StatusDialog />
+
+      <Setting visible={openSetting} onClose={()=>setopenSetting(false)}/>
     </div >
 };
 export default Home;

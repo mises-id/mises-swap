@@ -94,8 +94,10 @@ function App() {
     div.appendChild(el)
     return <div dangerouslySetInnerHTML={{ __html: div.innerHTML }}></div>
   };
+
   const { chain } = useNetwork()
   const [error, seterror] = useState('')
+
   const getHealthcheck = () => {
     const chainId = chain?.id || 1;
     console.log(chains)
@@ -105,12 +107,11 @@ function App() {
       seterror('Wrong network, please switch network')
       return Promise.reject('Wrong network, please switch network')
     }
+
     return healthcheck<{
       status: 'OK'
     }>(chainId).then(res => {
-      if (res.data.status === 'OK') {
-        seterror('')
-      }
+      if (res.data.status === 'OK') seterror('')
     }).catch(err => {
       if (err.statusCode === 404) {
         seterror('Wrong network, please switch network')
