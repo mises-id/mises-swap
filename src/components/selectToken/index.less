@@ -1,24 +1,4 @@
 @media (prefers-color-scheme: dark) {
-  .token-item{
-    color: white;
-  }
-  .downOutline{
-    color: white;
-  }
-
-  .dialog-title{
-    color: white
-  }
-
-  .dialog-header-container{
-    border-bottom: 1px solid rgba(152, 161, 192, 0.24);
-  }
-  .token-balance{
-    color: white
-  }
-  .token-name{
-    color: white
-  }
 
   .search-input{
     input{
@@ -44,23 +24,6 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .token-item{
-    color: rgb(13, 17, 28);
-  }
-
-  .dialog-title{
-    color: rgb(13, 17, 28)
-  }
-  .token-balance{
-    color: rgb(13, 17, 28)
-  }
-  .token-name{
-    color: rgb(13, 17, 28)
-  }
-
-  .dialog-header-container{
-    border-bottom: 1px solid rgb(210, 217, 238);
-  }
   .search-input{
     input{
       border: 1px solid rgb(210, 217, 238);
@@ -86,7 +49,7 @@
 }
 .token-item{
   align-items: center;
-  background-color: rgb(232, 236, 251);
+  background-color: var(--widget-bg-color);
   opacity: 1;
   box-shadow: none;
   cursor: pointer;
@@ -104,6 +67,7 @@
   justify-content: space-between;
   margin-left: 12px;
   visibility: visible;
+  color: var(--theme-text-color)
 }
 .symbol{
   margin-left:10px;
@@ -112,6 +76,7 @@
 }
 .downOutline{
   font-size: 14px;
+  color:var(--icon-color)
 }
 .un-select-token-item{
   background: var(--adm-color-primary);
@@ -140,18 +105,22 @@
 .dialog-title{
   font-weight: 500;
   font-size: 16px;
+  color: var(--theme-text-color)
 }
 .dialog-header-container{
   padding: 20px;
+  border-bottom: 1px solid var(--border-color);
 }
 .token-balance{
   padding-right: 20px;
   font-size: 14px;
+  color: var(--theme-text-color)
 }
 .token-name{
   font-size: 16px;
   padding-bottom: 5px;
   display: block;
+  color: var(--theme-text-color)
 }
 .search-input-container{
   position: relative;
@@ -165,7 +134,6 @@
 }
 .search-input{
   margin-top: 16px;
-  // background: url(./static/media/search.2f68ccda.svg) 12px center / 20px 20px no-repeat scroll rgb(245, 246, 252);
   input{
     display: flex;
     padding: 16px 16px 16px 40px;

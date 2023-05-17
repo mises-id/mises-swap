@@ -12,14 +12,14 @@ import enUS from 'antd-mobile/es/locales/en-US'
 import { RecoilRoot } from "recoil"
 
 import '@rainbow-me/rainbowkit/styles.css';
-import { AvatarComponent, ConnectButton, getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { ConnectButton, getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { Chain, configureChains, createClient, useNetwork, WagmiConfig } from 'wagmi';
 import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
-import jazzicon from '@metamask/jazzicon'
 import { useState } from 'react';
 import { healthcheck } from './api/swap';
 import SwapProvider from './context/swapContext';
+import ConnectWallet from './components/ConnectWallet';
 function App() {
   const klaytnChain: Chain = {
     id: 8217,
@@ -43,35 +43,36 @@ function App() {
     },
     testnet: false,
   };
+  const chainList = [
+    mainnet,
+    bsc,
+    polygon,
+    optimism,
+    arbitrum,
+    {
+      ...gnosis,
+      iconUrl: '/images/gnosis.svg'
+    },
+    avalanche,
+    {
+      ...fantom,
+      iconUrl: '/images/fantom.svg'
+    },
+    {
+      ...klaytnChain,
+      iconUrl: '/images/klaytn.svg'
+    },
+    {
+      ...aurora,
+      iconUrl: '/images/aurora.svg'
+    },
+    {
+      ...zkSync,
+      iconUrl: '/images/zksync-era.svg'
+    },
+  ]
   const { chains, provider, webSocketProvider } = configureChains(
-    [
-      mainnet,
-      bsc,
-      polygon,
-      optimism,
-      arbitrum,
-      {
-        ...gnosis,
-        iconUrl: '/images/gnosis.svg'
-      },
-      avalanche,
-      {
-        ...fantom,
-        iconUrl: '/images/fantom.svg'
-      },
-      {
-        ...klaytnChain,
-        iconUrl: '/images/klaytn.svg'
-      },
-      {
-        ...aurora,
-        iconUrl: '/images/aurora.svg'
-      },
-      {
-        ...zkSync,
-        iconUrl: '/images/zksync-era.svg'
-      },
-    ],
+    chainList,
     [publicProvider()]
   );
 
@@ -88,22 +89,14 @@ function App() {
     webSocketProvider,
   });
 
-  const CustomAvatar: AvatarComponent = ({ address, ensImage, size }) => {
-    var el = jazzicon(size, address)
-    const div = document.createElement('div')
-    div.appendChild(el)
-    return <div dangerouslySetInnerHTML={{ __html: div.innerHTML }}></div>
-  };
-
   const { chain } = useNetwork()
   const [error, seterror] = useState('')
 
   const getHealthcheck = () => {
     const chainId = chain?.id || 1;
-    console.log(chains)
-    const isChain = chains.some(val=>`${val.id}` === `${chainId}`)
-    
-    if(!isChain) {
+    const isChain = chains.some(val => `${val.id}` === `${chainId}`)
+
+    if (!isChain) {
       seterror('Wrong network, please switch network')
       return Promise.reject('Wrong network, please switch network')
     }
@@ -124,21 +117,25 @@ function App() {
   return (
     <div className="App">
       <WagmiConfig client={wagmiClient}>
-        <RainbowKitProvider chains={chains} avatar={CustomAvatar}>
+        <RainbowKitProvider chains={chains}>
           <RecoilRoot>
             <ConfigProvider locale={enUS}>
               <div className='flex justify-between items-center px-10 py-10'>
                 {/* <Image width={80} src='/logo192.png' /> */}
                 <p className='swap-title'>Mises <span>Swap</span></p>
-                <div>
-                  <ConnectButton accountStatus="address" chainStatus="icon" />
-                </div>
+                <ConnectButton.Custom>
+                  {(props) => {
+                    const ready = props.mounted;
+                    if(!ready) return 
+                    return <ConnectWallet chains={chains} {...props} />
+                  }}
+                </ConnectButton.Custom>
               </div>
               <SwapProvider>
                 {!error ?
                   <div className='flex-1'>
                     <BrowserRouter>
-                      <Routes getHealthcheck={getHealthcheck}/>
+                      <Routes getHealthcheck={getHealthcheck} />
                     </BrowserRouter>
                   </div> :
                   <div className='flex-1 flex items-center justify-center'>

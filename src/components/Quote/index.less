@@ -1,10 +1,16 @@
 @media (prefers-color-scheme: dark) {
+  .textarea-container{
+    background-color: #0d111c;
+  }
 }
 
 @media (prefers-color-scheme: light) {
+  .textarea-container{
+    background-color: #f5f6fc;
+  }
 }
 .quote-header-view{
-  border: 1px solid rgb(210, 217, 238);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 16px;
   .loading{
@@ -16,13 +22,14 @@
 }
 .DownOutline{
   transition: all 0.3s;
+  color: var(--icon-color);
   &.up{
     transform: rotate(180deg);
   }
 }
 .advanced-swap-details{
   margin-top: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-color);
   padding-top: 12px;
   .swap-detail-label{
     color: rgb(119, 128, 160)
@@ -37,22 +44,26 @@
 .dialog-title{
   // padding: 10px;
   margin-bottom: 20px;
+  color: var(--theme-text-color);
 }
 .textarea-container{
   padding: 10px;
-  background-color: #eee;
   border-radius: 10px;
   font-size: 12px;
+  .adm-text-area-element{
+    color: var(--theme-text-color);
+  }
 }
 .dialog-btns{
-  border-top:1px solid #eee ;
+  border-top:1px solid var(--border-color) ;
   text-align: center;
   span{
     line-height: 50px;
     font-size: 16px;
     cursor: pointer;
     &:nth-child(1){
-      border-right: 1px solid #eee ;
+      border-right: 1px solid var(--border-color) ;
+      color: var(--theme-text-color);
     }
     &:nth-child(2){
       color: var(--adm-color-primary);
@@ -62,4 +73,10 @@
 .error-message{
   color: red;
   margin-top: 10px;
+}
+.swap-detail-value{
+  color: var(--theme-text-color);
+}
+.quote-token-item{
+  color: var(--theme-text-color);
 }

@@ -127,6 +127,7 @@ const Quote: FC<Iprops> = (props) => {
 
             <div className='flex justify-between items-center cursor-pointer' onClick={() => setisOpen(!isOpen)}>
               <span
+                className='quote-token-item'
                 onClick={e => {
                   e.stopPropagation()
                   settokenType(tokenType === 'from' ? 'to' : 'from');

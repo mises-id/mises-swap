@@ -6,7 +6,8 @@ import { useAccount, useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
 import { getBalance } from '@/api/ether'
 import { fetchFeeData } from '@wagmi/core'
-import { getUSDTPrice } from '@/hooks/usePrice'
+import { nativeTokenAddress } from '@/utils'
+// import { getUSDTPrice } from '@/hooks/usePrice'
 interface Iprops extends InputProps {
   tokens?: token,
   type: 'from' | 'to',
@@ -32,7 +33,7 @@ const TokenInput: FC<Iprops> = (props) => {
       })
     }
     if(props.tokenAddress) {
-      getUSDTPrice()
+      // getUSDTPrice()
       // formatUSD({
       //   chainShortName: 'bsc',
       //   tokenContractAddress: props.tokenAddress
@@ -43,11 +44,14 @@ const TokenInput: FC<Iprops> = (props) => {
   }, [props.tokenAddress, address])
 
   const toMax = async () => {
-    const feeData = await fetchFeeData({
-      chainId: chain?.id,
-      formatUnits: 'gwei',
-    })
-    console.log(feeData.formatted.gasPrice)
+    if(props.tokenAddress === nativeTokenAddress){
+      const feeData = await fetchFeeData({
+        formatUnits: 'wei',
+      })
+      console.log(feeData.formatted.gasPrice)
+
+      return 
+    }
     swapContext?.setFromAmount(tokenBalance)
     props.setInputChange?.(tokenBalance)
   }
@@ -73,6 +77,7 @@ const TokenInput: FC<Iprops> = (props) => {
         onChange={props.onTokenChange}
         type={props.type}
         tokens={props.tokens}
+        status={props.status}
         selectTokenAddress={props.tokenAddress} />
         
     </div>

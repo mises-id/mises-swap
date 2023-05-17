@@ -27,6 +27,7 @@ interface Iprops {
   selectTokenAddress?: string,
   onChange?: (value: string) => void,
   type: 'from' | 'to',
+  status: 'ready' | undefined,
 }
 
 const SelectTokens: FC<Iprops> = (props) => {
@@ -78,6 +79,9 @@ const SelectTokens: FC<Iprops> = (props) => {
 
   const [open, setopen] = useState(false)
   const showTokenList = () => {
+    if(props.status === 'ready'){
+      return 
+    }
     setopen(true)
     setsearchName('')
   }
@@ -140,7 +144,7 @@ const SelectTokens: FC<Iprops> = (props) => {
     }
   }
   return <div onClick={showTokenList}>
-    {tokenAddress ? <SelectedToken tokenAddress={tokenAddress} tokens={props.tokens}/> : <UnSelectedToken />}
+    {tokenAddress ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
     <CenterPopup
       visible={open}
       closeOnMaskClick

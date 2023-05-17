@@ -1,15 +1,25 @@
+@media (prefers-color-scheme: dark) {
+  .setting{
+    background-color: #0d111c;
+  }
+}
+@media (prefers-color-scheme: light) {
+  .setting{
+    background-color: white;
+  }
+
+}
 .setting{
   position: absolute;
   z-index: 2;
   width: 280px;
-  background-color: rgb(255, 255, 255);
-  border: 1px solid rgb(210, 217, 238);
+  border: 1px solid var(--border-color);
   box-shadow: rgba(0, 0, 0, 0.01) 0px 0px 1px, rgba(0, 0, 0, 0.04) 0px 4px 8px, rgba(0, 0, 0, 0.04) 0px 16px 24px, rgba(0, 0, 0, 0.01) 0px 24px 32px;
   border-radius: 12px;
   top: 100%;
   margin-top: 10px;
   right: 10px;
-  color: rgb(13, 17, 28);
+  color: var(--theme-text-color);
   user-select: none;
   gap: 16px;
   padding: 1rem;
@@ -26,7 +36,7 @@
 .right-slippage-input{
   padding:5px 8px;
   border-radius: 12px;
-  border: 1px solid rgb(210, 217, 238);
+  border: 1px solid var(--border-color);
   .slippageValue{
     margin-right: 5px;
     .adm-input-element{
@@ -39,10 +49,13 @@
     }
   }
 }
+.item-label{
+  color: rgb(152, 161, 192)
+}
 .left-status{
   width: auto;
   padding: 4px;
-  border: 1px solid rgb(210, 217, 238);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   .status-item{
     cursor: pointer;
@@ -54,7 +67,7 @@
       padding: 6px 12px;
       text-align: center;
       border-radius: 12px;
-      background: rgb(232, 236, 251);
+      background: var(--widget-bg-color);
       pointer-events: none;
     }
   }
