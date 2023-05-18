@@ -2,14 +2,15 @@ import { Input, InputProps } from 'antd-mobile'
 import { FC, useContext, useEffect, useState } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
-import { useAccount, useNetwork } from 'wagmi'
+import { useAccount, usePublicClient } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
 import { getBalance } from '@/api/ether'
 import { fetchFeeData } from '@wagmi/core'
 import { nativeTokenAddress } from '@/utils'
+import BigNumber from 'bignumber.js'
 // import { getUSDTPrice } from '@/hooks/usePrice'
 interface Iprops extends InputProps {
-  tokens?: token,
+  tokens?: token[],
   type: 'from' | 'to',
   tokenAddress?: string,
   onTokenChange?: (val: string) => void
@@ -21,7 +22,8 @@ const TokenInput: FC<Iprops> = (props) => {
   const { address } = useAccount()
   const [tokenBalance, settokenBalance] = useState('0')
   const swapContext = useContext(SwapContext)
-  const { chain } = useNetwork()
+  const publicClient = usePublicClient()
+
   useEffect(() => {
     // get native token balance
     if (address && props.tokenAddress) {
@@ -46,10 +48,33 @@ const TokenInput: FC<Iprops> = (props) => {
   const toMax = async () => {
     if(props.tokenAddress === nativeTokenAddress){
       const feeData = await fetchFeeData({
-        formatUnits: 'wei',
+        formatUnits: 'wei'
       })
-      console.log(feeData.formatted.gasPrice)
 
+      if(feeData.gasPrice && feeData.formatted.gasPrice && address) {
+        const data = await publicClient.estimateContractGas({
+          address: props.tokenAddress,
+          functionName: 'mint',
+          args: [69],
+          abi: [
+            {
+              name: 'mint',
+              type: 'function',
+              stateMutability: 'nonpayable',
+              inputs: [{ internalType: 'uint32', name: 'tokenId', type: 'uint32' }],
+              outputs: [],
+            },
+          ],
+          account: address,
+          gasPrice: feeData.gasPrice 
+        })
+
+        const gasFee = BigNumber(data.toString()).multipliedBy(10).multipliedBy(feeData.formatted.gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
+        console.log(gasFee, data.toString(), feeData.formatted.gasPrice)
+        const fromAmount = BigNumber(tokenBalance).minus(gasFee).toString()
+        swapContext?.setFromAmount(fromAmount)
+        props.setInputChange?.(fromAmount)
+      }
       return 
     }
     swapContext?.setFromAmount(tokenBalance)

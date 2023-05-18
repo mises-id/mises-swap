@@ -25,7 +25,7 @@ const Setting: FC<Iprops> = (props) => {
   }, [swapContext?.slippage])
 
   const slippageChange = (val: string) =>{
-    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,2})/g)?.[0] || ""
+    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,3})/g)?.[0] || ""
     swapContext?.setSlippage(value)
   }
   const isActive = useMemo(() => {
@@ -34,7 +34,7 @@ const Setting: FC<Iprops> = (props) => {
 
   const setSlipage = (type: 'custom' | 'auto') =>{
     if(type === 'custom'){
-      swapContext?.setSlippage(Number(defaultSlippageValue).toFixed(2))
+      swapContext?.setSlippage(Number(defaultSlippageValue).toFixed(3))
     } 
     if(type === 'auto'){
       swapContext?.setSlippage('')
@@ -52,7 +52,7 @@ const Setting: FC<Iprops> = (props) => {
             <span className='item-label'>Max Slippage</span>
 
             <div>
-              <span className='item-value'>{swapContext?.slippage ? `${Number(swapContext?.slippage).toFixed(2)} %` : 'Auto'}</span>
+              <span className='item-value'>{swapContext?.slippage ? `${Number(swapContext?.slippage).toFixed(3)} %` : 'Auto'}</span>
               <DownOutline className={`DownOutline ml-5 ${isOpen ? 'up' : ''}`} />
             </div>
           </div>

@@ -23,7 +23,7 @@ export const AutoSizer = _AutoSizer as unknown as FC<AutoSizerProps> & _AutoSize
 export const InfiniteLoader = _InfiniteLoader as unknown as FC<InfiniteLoaderProps> & _InfiniteLoader;
 
 interface Iprops {
-  tokens?: token,
+  tokens?: token[],
   selectTokenAddress?: string,
   onChange?: (value: string) => void,
   type: 'from' | 'to',
@@ -55,8 +55,7 @@ const SelectTokens: FC<Iprops> = (props) => {
     () => {
       if (props.tokens) {
         const searchQuery = searchName.toLocaleLowerCase()
-        const getTokenList = Object.keys(props.tokens)
-          .map(key => props.tokens && props.tokens[key]).filter(val => {
+        const getTokenList = props.tokens.filter(val => {
             if (searchName && val) {
               return val.symbol?.toLocaleLowerCase().indexOf(searchQuery) > -1 || val.name?.toLocaleLowerCase().indexOf(searchQuery) > -1
             }
@@ -107,7 +106,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         onClick={() => selectToken(item)}
         prefix={
           <Image
-            src={item?.logoURI}
+            src={item?.logo_uri}
             style={{ borderRadius: 20 }}
             fit='cover'
             width={36}
@@ -136,7 +135,7 @@ const SelectTokens: FC<Iprops> = (props) => {
     manual: true,
   });
 
-  const selectToken = (token?: token[number]) => {
+  const selectToken = (token?: token) => {
     if (swapContext && token && token.address !== toTokenAddress && token.address !== fromTokenAddress) {
       props.onChange?.(token.address)
       setopen(false)

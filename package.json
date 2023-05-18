@@ -9,7 +9,7 @@
     "@cfaester/enzyme-adapter-react-18": "^0.7.0",
     "@craco/craco": "^7.0.0-alpha.3",
     "@metamask/jazzicon": "^2.0.0",
-    "@rainbow-me/rainbowkit": "^0.12.09",
+    "@rainbow-me/rainbowkit": "^1.0.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^13.5.0",
@@ -44,7 +44,8 @@
     "react-virtualized": "^9.22.5",
     "recoil": "^0.7.3",
     "typescript": "^4.7.2",
-    "wagmi": "^0.12.10",
+    "viem": "^0.3.29",
+    "wagmi": "^1.0.5",
     "web-vitals": "^2.1.4",
     "web3": "^1.7.3"
   },

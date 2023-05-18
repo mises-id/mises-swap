@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js"
 import { BigNumberish, ethers } from "ethers"
 
 export function nowSec(): number {
@@ -27,4 +28,12 @@ export function shortenAddress(
   return `${address.slice(0, prefix)}...${address.slice(
     -TRUNCATED_ADDRESS_END_CHARS,
   )}`;
+}
+
+export function findToken(tokens: token[], address: string): token | undefined {
+  return tokens.find(token => token.address === address) || undefined;
+}
+
+export function networkFee(gasPrice: string, estimatedGas: string): string {
+  return BigNumber(estimatedGas).multipliedBy(gasPrice).dividedBy(BigNumber(10).pow(18)).toString()
 }

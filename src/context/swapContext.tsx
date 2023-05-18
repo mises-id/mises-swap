@@ -1,6 +1,4 @@
 import { Dispatch, FC, ReactNode, SetStateAction, createContext, useState } from "react";
-import { useAccount } from "wagmi";
-
 // type swapType = 'to' | 'from'
 interface swapData {
   tokenAddress: string,
@@ -8,8 +6,12 @@ interface swapData {
   decimals?: number
 };
 interface globalDialogMessageData {
-  type: 'error' | 'pending',
-  description: string
+  type: 'error' | 'pending' | 'success',
+  description: string,
+  info?: swapData & {
+    blockExplorer: string | undefined,
+    txHash: string
+  }
 }
 export type SwapContextType = {
   swapToData: swapData,
@@ -46,9 +48,9 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [slippage, setSlippage] = useState('')
 
-  const { address } = useAccount()
+  // const { address } = useAccount()
 
-  const [receivingAddress, setReceivingAddress] = useState(address)
+  const [receivingAddress, setReceivingAddress] = useState<`0x${string}` | undefined>(undefined)
 
   const [globalDialogMessage, setGlobalDialogMessage] = useState<globalDialogMessageData>()
   

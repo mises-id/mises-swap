@@ -1,8 +1,8 @@
 import { AuthenticationStatus, AvatarComponent, Chain } from '@rainbow-me/rainbowkit';
-import { Button, CenterPopup, Image, InfiniteScroll, List } from 'antd-mobile'
-import { CSSProperties, FC, useMemo, useState } from 'react'
+import { Button, CenterPopup, Image, List, Loading } from 'antd-mobile'
+import { CSSProperties, FC, useMemo, useRef, useState } from 'react'
 import ChainList from '../ChainList';
-import { shortenAddress } from '@/utils';
+import { formatAmount, networkFee, shortenAddress } from '@/utils';
 import jazzicon from '@metamask/jazzicon'
 import './index.less'
 
@@ -14,8 +14,10 @@ import {
   AutoSizerProps,
   InfiniteLoaderProps,
 } from 'react-virtualized';
-import { useConnect, useDisconnect, useNetwork } from 'wagmi';
+import { useAccount, useDisconnect, useNetwork } from 'wagmi';
 import { CloseOutline, LeftOutline } from 'antd-mobile-icons';
+import { useInfiniteScroll } from 'ahooks';
+import { getOrderList } from '@/api/swap';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -54,23 +56,16 @@ interface IProps {
   chains: Chain[]
 }
 
-interface historyItemToken {
-  address: string,
-  decimals: number,
-  logo_uri: string,
-  name: string,
-  symbol: string
-}
 interface historyItem {
   id: string,
-  chainID: 1,
-  from_address: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-  dest_receiver: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-  receipt_status: 1,
-  from_token: historyItemToken,
-  to_token: historyItemToken,
-  fromTokenAmount: string,
-  toTokenAmount: string,
+  chain_id: number,
+  from_address: string,
+  dest_receiver: string,
+  receipt_status: number,
+  from_token: token,
+  to_token: token,
+  from_token_amount: string,
+  to_token_amount: string,
   provider: {
     key: string,
     name: string,
@@ -78,7 +73,7 @@ interface historyItem {
   },
   contract_address: string,
   block_at: string,
-  tx:{
+  tx: {
     hash: string,
     gas: string,
     gas_used: string,
@@ -97,89 +92,13 @@ const ConnectWallet: FC<IProps> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
 
-  const [hisotryList, sethisotryList] = useState<historyItem[]>([{
-    id: '1',
-    chainID: 1,
-    from_address: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-    dest_receiver: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-    receipt_status: 1,
-    from_token: {
-      address: '0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153',
-      decimals: 18,
-      logo_uri: 'https://tokens.1inch.io/0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153.png',
-      name: 'Filecoin',
-      symbol: 'FIL'
-    },
-    to_token: {
-      address: '0x0d9319565be7f53cefe84ad201be3f40feae2740',
-      decimals: 18,
-      logo_uri: 'https://tokens.1inch.io/0x0d9319565be7f53cefe84ad201be3f40feae2740.png',
-      name: 'bDollar Share',
-      symbol: 'sBDO'
-    },
-    fromTokenAmount: '1234',
-    toTokenAmount: '5678',
-    provider: {
-      key: '',
-      name: '',
-      logo: '',
-    },
-    contract_address: '',
-    block_at: '',
-    tx:{
-      hash: '0x4835099f7470f9aca3424a18e9ff7cb102ae1df38cb3a0786045d472368690f9',
-      gas: '',
-      gas_used: '',
-      gas_price: '',
-      block_number: '',
-    },
-    fee: ''
-  },{
-    id: '1',
-    chainID: 1,
-    from_address: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-    dest_receiver: '0xa30792E3218b73200B5d610FE0aAC619d032B267',
-    receipt_status: 1,
-    from_token: {
-      address: '0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153',
-      decimals: 18,
-      logo_uri: 'https://tokens.1inch.io/0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153.png',
-      name: 'Filecoin',
-      symbol: 'FIL'
-    },
-    to_token: {
-      address: '0x0d9319565be7f53cefe84ad201be3f40feae2740',
-      decimals: 18,
-      logo_uri: 'https://tokens.1inch.io/0x0d9319565be7f53cefe84ad201be3f40feae2740.png',
-      name: 'bDollar Share',
-      symbol: 'sBDO'
-    },
-    fromTokenAmount: '1234',
-    toTokenAmount: '5678',
-    provider: {
-      key: '',
-      name: '',
-      logo: '',
-    },
-    contract_address: '',
-    block_at: '',
-    tx:{
-      hash: '0x4835099f7470f9aca3424a18e9ff7cb102ae1df38cb3a0786045d472368690f9',
-      gas: '',
-      gas_used: '',
-      gas_price: '',
-      block_number: '',
-    },
-    fee: ''
-  }])
-
   const FromToTokenIcon = (props: {
-    from_token: historyItemToken,
-    to_token: historyItemToken
+    from_token: token,
+    to_token: token
   }) => {
     return <div className='relative from-to-token-icon'>
-      {props.from_token.logo_uri ? <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon'/>: <div className='from-from-icon'>{props.from_token.symbol.split('')[0]}</div>}
-      {props.to_token.logo_uri ? <Image width={28} height={28} src={props.to_token.logo_uri} className='from-to-icon'/>: <div className='from-to-icon'>{props.to_token.symbol.split('')[0]}</div>}
+      {props.from_token.logo_uri ? <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon' /> : <div className='from-from-icon'>{props.from_token.symbol.split('')[0]}</div>}
+      {props.to_token.logo_uri ? <Image width={28} height={28} src={props.to_token.logo_uri} className='from-to-icon' /> : <div className='from-to-icon'>{props.to_token.symbol.split('')[0]}</div>}
     </div>
   }
   const rowRenderer = ({
@@ -191,7 +110,7 @@ const ConnectWallet: FC<IProps> = (props) => {
     key: string
     style: CSSProperties
   }) => {
-    const item = hisotryList[index]
+    const item: historyItem = data?.list[index]
     // const swapData = swapContext?.swapFromData
     // console.log(swapData)
     return (
@@ -200,14 +119,14 @@ const ConnectWallet: FC<IProps> = (props) => {
         style={style}
         className='history-item'
         arrow={false}
-        onClick={()=>showDetail(item)}
+        onClick={() => showDetail(item)}
         prefix={
-          <FromToTokenIcon from_token={item.from_token} to_token={item.to_token}/>
+          <FromToTokenIcon from_token={item.from_token} to_token={item.to_token} />
         }
         extra={
           <div className='pr-12 text-right'>
-            <p className='from-amount'>-{item.fromTokenAmount} {item.from_token.symbol}</p>
-            <p className='to-amount'>+{item.toTokenAmount} {item.to_token.symbol}</p>
+            <p className='from-amount'>-{formatAmount(item.from_token_amount, item.from_token.decimals)} {item.from_token.symbol}</p>
+            <p className='to-amount'>+{formatAmount(item.to_token_amount, item.to_token.decimals)} {item.to_token.symbol}</p>
           </div>
         }
       >
@@ -219,64 +138,63 @@ const ConnectWallet: FC<IProps> = (props) => {
   }
   const { disconnect } = useDisconnect()
 
-  const disconnectAccount = () =>{
+  const disconnectAccount = () => {
     disconnect()
     setisOpen(false)
   }
 
   const [detail, setdetail] = useState<historyItem | undefined>(undefined)
-  const showDetail = (item: historyItem) =>{
+  const showDetail = (item: historyItem) => {
     setdetail(item)
   }
+  const PAGE_SIZE = 10;
 
-  const [hasMore, sethasMore] = useState(true)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { chain } = useNetwork()
+  const { address } = useAccount()
+
+  const listRef = useRef<HTMLDivElement>(null)
+  const getLoadMoreList = async (page: number, pageSize: number): Promise<{
+    list: historyItem[]
+    isNoMore: boolean
+  }> => {
+    try {
+      if (address) {
+        const res = await getOrderList(address, {
+          chain_id: chain?.id,
+          page_size: pageSize,
+          page_num: page
+        })
+
+        const list = res.data.data
+
+        return {
+          list: list,
+          isNoMore: true,
+        }
+      }
+      return {
+        list: [],
+        isNoMore: false,
+      }
+
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+  const { data, reload, loading, loadingMore, noMore } = useInfiniteScroll(d => {
+    const page = d ? Math.ceil(d.list.length / PAGE_SIZE) + 1 : 1;
+    return getLoadMoreList(page, PAGE_SIZE);
+  }, {
+    target: listRef,
+    isNoMore: (d) => d?.isNoMore,
+    manual: true
+  });
   // const [pageNum, setpageNum] = useState(1)
   // const pageSize = 50;
-  const loadMore = async ()=>{
-    if (isLoading) return;
-    setIsLoading(true)
-    // return getData({
-    //   chainID: chainId,
-    //   page_size: pageSize,
-    //   page_num: pageNum
-    // }).then((res: any) => {
-    //   const hasMore = Array.isArray(res) ? !(res?.length < pageSize) : false;
-    //   currentCategary.hasMore = hasMore;
-    //   if (hasMore) currentCategary.pageNum = currentCategary.pageNum + 1;
-    //   if (!hasMore && !id) {
-    //     // get next category
-    //     const index = currentCategary.currentKeyIndex + 1;
-    //     const nextCategoryItem = category[index];
-    //     if (!nextCategoryItem) setHasMore(false);
-    //     if (nextCategoryItem) {
-    //       setactiveRequestKey(nextCategoryItem.id);
-    //       const hasActiveCategory = categoryListParams.some(val => val.id === nextCategoryItem.id)
-    //       if (!hasActiveCategory) {
-    //         categoryListParams.push({
-    //           ...nextCategoryItem,
-    //           ...defalutParams,
-    //           currentKeyIndex: index
-    //         })
-    //       }
-    //     }
-    //   }
-    //   renderList(res, currentCategaryIndex)
-    //   setIsLoading(false)
-    // }).catch(() => {
-    //   setIsLoading(false)
-    //   throw new Error('mock request failed')
-    // })
-  }
-  const {chain} = useNetwork()
-  const chainInfo = useMemo(()=>{
-    if(chain){
-      return chain.blockExplorers?.default
-    }
-    return undefined
-  }, [chain])
 
-  const goToScan = () =>{
+  const chainInfo = useMemo(() => chain ? chain.blockExplorers?.default : undefined, [chain])
+
+  const goToScan = () => {
     const url = `${chainInfo?.url}/tx/${detail?.tx.hash}`
     window.open(url, 'target=_blank')
   }
@@ -284,8 +202,11 @@ const ConnectWallet: FC<IProps> = (props) => {
     <div>
       {props.account ? <div className='flex items-center gap-5'>
         <ChainList chains={props.chains} chain={props.chain} openChainModal={props.openChainModal} />
-        
-        <div className='flex items-center account-info' onClick={() => setisOpen(true)}>
+
+        <div className='flex items-center account-info' onClick={() => {
+          setisOpen(true)
+          reload()
+        }}>
           <CustomAvatar address={props.account.address} size={24} />
           <span className='ml-10 account-address'>{shortenAddress(props.account.address)}</span>
         </div>
@@ -307,38 +228,106 @@ const ConnectWallet: FC<IProps> = (props) => {
             </div>
           </div>
 
-          <p className='account-history-title'>History</p>
+          {!loading && <p className='account-history-title'>History</p>}
           <List className='account-list-container' style={{
             '--prefix-padding-right': '0'
           }}>
-            {hisotryList.length === 0 && !isLoading && <div className='text-center pt-20'>No results found.</div>}
-            <AutoSizer disableHeight>
-              {({ width }: { width: number }) =>  (
+            {/* {hisotryList.length === 0 && !isLoading && <div className='text-center pt-20'>No results found.</div>} */}
+            {loading && <div className='loading flex items-center py-20 justify-center'>
+              <Loading />
+            </div>}
+
+            <AutoSizer disableHeight 
+                  ref={listRef}>
+              {({ width }: { width: number }) => (
                 <VirtualizedList
-                  rowCount={hisotryList.length}
+                  rowCount={data?.list.length || 0}
                   rowRenderer={rowRenderer}
                   width={width}
-                  height={hisotryList.length > 0 ? window.innerHeight / 2 : 0}
+                  height={window.innerHeight / 2}
                   rowHeight={76}
                   overscanRowCount={9}
                 />
               )}
             </AutoSizer>
           </List>
-          
-          {hasMore && <InfiniteScroll loadMore={loadMore} hasMore={hasMore} />}
+
+          {!noMore && !loading && loadingMore && <div className='text-center py-20 flex items-center justify-center'><Loading /></div>}
+
+          {noMore && data?.list && data.list.length > PAGE_SIZE && <p className='text-center py-20 flex items-center justify-center no-more-data'>No more data</p>}
 
           {detail && <div className='history-detail absolute p-16'>
             <div className='flex items-center justify-between'>
-              <LeftOutline fontSize={20} className='cursor-pointer' onClick={()=>{
+              <LeftOutline fontSize={20} className='cursor-pointer' onClick={() => {
                 setdetail(undefined)
-              }}/>
+              }} />
               <p className='detail-dialog-title text-xl'>Transaction details</p>
-              <CloseOutline fontSize={20} className='cursor-pointer' onClick={()=>{
+              <CloseOutline fontSize={20} className='cursor-pointer' onClick={() => {
                 setisOpen(false)
                 setdetail(undefined)
-              }}/>
+              }} />
             </div>
+            <div className='swap-token-item'>
+              <p className='token-item-title'>You sold</p>
+              <div className='flex justify-between items-center'>
+                <div className='token-info flex items-center gap-2 justify-center cursor-pointer'>
+                  <Image
+                      width={24}
+                      height={24}
+                      src={detail.from_token.logo_uri}
+                  />
+                  <span className='swap-token-item-name'>{detail.from_token.symbol}</span>
+                </div>
+                <div className='from-token-amount'>-{formatAmount(detail.from_token_amount, detail.from_token.decimals)}</div>
+              </div>
+            </div>
+            <div className='swap-token-item'>
+              <p className='token-item-title'>You bought</p>
+              <div className='flex justify-between items-center'>
+                <div className='token-info flex items-center gap-2 justify-center cursor-pointer'>
+                  <Image
+                      width={24}
+                      height={24}
+                      src={detail.to_token.logo_uri}
+                  />
+                  <span className='swap-token-item-name'>{detail.to_token.symbol}</span>
+                </div>
+                <div className='from-token-amount'>{formatAmount(detail.to_token_amount, detail.to_token.decimals)}</div>
+              </div>
+            </div>
+            <div className='detail-info'>
+              <p className='flex justify-between items-center pt-20'>
+                <span className='detail-info-label'>Time</span>
+                <span>{detail.block_at}</span>
+              </p>
+              <div className='flex justify-between items-center pt-20'>
+                <span className='detail-info-label'>Hash</span>
+                <div className='flex items-center gap-2'>
+                  <span>{shortenAddress(detail.tx.hash)}</span>
+                  <Image
+                      width={12}
+                      height={12}
+                      src='/images/copy.svg'
+                  />
+                </div>
+              </div>
+              <div className='flex justify-between items-center pt-20'>
+                <span className='detail-info-label'>Receiver</span>
+                <div className='flex items-center gap-2'>
+                  <span>{shortenAddress(detail.dest_receiver)}</span>
+                  <Image
+                      width={12}
+                      height={12}
+                      src='/images/copy.svg'
+                  />
+                </div>
+              </div>
+              <p className='flex justify-between items-center pt-20'>
+                <span className='detail-info-label'>Transaction cost</span>
+                <span>{networkFee(detail.tx.gas_used, detail.tx.gas_price)} </span>
+              </p>
+            </div>
+
             <Button shape='rounded' block color='primary' className='view-btn' onClick={goToScan}>View on {chainInfo?.name}</Button>
           </div>}
         </CenterPopup>

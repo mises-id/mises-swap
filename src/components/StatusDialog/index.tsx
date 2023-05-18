@@ -14,6 +14,16 @@ const StatusDialog: FC<Iprops> = (props) => {
   const dismiss = () => {
     swapContext?.setGlobalDialogMessage(undefined)
   }
+
+  const addToken = () => {
+    console.log(swapContext?.globalDialogMessage?.info)
+  }
+
+  const goToExplorer = () =>{
+    const info = swapContext?.globalDialogMessage?.info
+    if(info?.blockExplorer && info?.txHash) window.open(`${info?.blockExplorer}/tx/${info?.txHash}`, 'target=_blank')
+    dismiss()
+  }
   return (
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={dismiss} className='dialog-container'>
       {swapContext?.globalDialogMessage?.type === 'error' && <p className='status-dialog-title'>Error</p>}
@@ -22,9 +32,24 @@ const StatusDialog: FC<Iprops> = (props) => {
 
         {swapContext?.globalDialogMessage?.type === 'pending' && <Image src='/images/loading.svg' className='loading-icon' width={90} height={90} />}
 
+        {swapContext?.globalDialogMessage?.type === 'success' && <svg xmlns="http://www.w3.org/2000/svg" width="75px" height="75px" viewBox="0 0 24 24" fill="none" stroke="#4C82FB" strokeWidth="1" strokeLinecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></svg>}
+
         <div className='description'>{swapContext?.globalDialogMessage?.description}</div>
 
+        {swapContext?.globalDialogMessage?.info?.symbol &&
+          <div className='add-token-to-wallet flex items-center justify-center mt-10 mb-40' 
+          onClick={addToken}>
+            <span>Add {swapContext?.globalDialogMessage?.info?.symbol}</span>
+          </div>}
+
         {swapContext?.globalDialogMessage?.type === 'error' ? <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Dismiss</Button> : ''}
+
+        {swapContext?.globalDialogMessage?.type === 'success' ? <>
+          <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Close</Button>
+          <p className='text-center view-explorer mt-20 text-sm cursor-pointer' onClick={goToExplorer}>
+            View on Block Explorer
+          </p>
+        </> : ''}
       </div>
     </CenterPopup>
   )

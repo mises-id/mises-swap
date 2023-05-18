@@ -1,16 +1,18 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
-import { formatAmount, shortenAddress } from '@/utils';
+import { findToken, formatAmount, shortenAddress } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
-import { CenterPopup, TextArea } from 'antd-mobile';
+import { CenterPopup, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
+import { useAccount } from 'wagmi';
 interface Iprops {
   loading: boolean;
-  data: any
+  data: swapData | undefined
   status?: 'ready' | undefined
+  tokens: token[] | undefined
 }
 
 const Quote: FC<Iprops> = (props) => {
@@ -19,42 +21,63 @@ const Quote: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
   const slippage = swapContext?.slippage || defaultSlippageValue
   const [receivingAddress, setReceivingAddress] = useState<string>()
-
+  const { address } = useAccount()
   const tokenStr = useMemo(() => {
-    if (props.data) {
+    if (props.data && props.tokens) {
       const data = props.data
-      const fromAmount = formatAmount(data.fromTokenAmount, data.fromToken.decimals)
-      const toAmount = formatAmount(data.toTokenAmount, data.toToken.decimals)
-      const fromToken = tokenType === 'from' ? data.fromToken.symbol : data.toToken.symbol
-      const toToken = tokenType === 'from' ? data.toToken.symbol : data.fromToken.symbol
-
-      const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toNumber().toFixed(data.fromToken.decimals / 2) : BigNumber(fromAmount).dividedBy(toAmount).toNumber().toFixed(data.toToken.decimals / 2)
-
-      return `1 ${fromToken} = ${toAmountStr} ${toToken}`
+      const fromToken = findToken(props.tokens, data.from_token_address)
+      const toToken = findToken(props.tokens, data.to_token_address)
+      if(fromToken && toToken){
+        const fromAmount = formatAmount(data.from_token_amount, fromToken?.decimals)
+        const toAmount = formatAmount(data.to_token_amount, toToken?.decimals)
+        const fromTokenSymbol = tokenType === 'from' ? fromToken?.symbol : toToken?.symbol
+        const toTokenSymbol = tokenType === 'from' ? toToken?.symbol : fromToken?.symbol
+  
+        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toNumber().toFixed(fromToken?.decimals / 2) : BigNumber(fromAmount).dividedBy(toAmount).toNumber().toFixed(toToken?.decimals / 2)
+  
+        return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
+      }
     }
     return ''
 
-  }, [tokenType, props.data])
+  }, [tokenType, props.data, props.tokens])
+
+  const toToken = useMemo(() => {
+    if(props.data && props.tokens){
+      const toToken = findToken(props.tokens, props.data.to_token_address)
+      return toToken
+    }
+    return undefined
+    
+  }, [props.data, props.tokens])
 
   const minOutNumber = useMemo(() => {
-    if (props.data && slippage) {
+    if (props.data && slippage && props.tokens) {
       const data = props.data
-      const toAmount = formatAmount(data.toTokenAmount, data.toToken.decimals)
+      const toToken = findToken(props.tokens, data.to_token_address)
+
+      if(!toToken) return
+
+      const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippage) / 100)
-      return minNumber.toFixed(data.toToken.decimals / 2)
+      return minNumber.toFixed(toToken.decimals / 2)
     }
     return 0
 
-  }, [props.data, slippage])
+  }, [props.data, props.tokens, slippage])
 
   const expectedNumber = useMemo(() => {
-    if (props.data) {
+    if (props.data && props.tokens) {
       const data = props.data
-      const toAmount = formatAmount(data.toTokenAmount, data.toToken.decimals)
-      return BigNumber(toAmount).toNumber().toFixed(data.toToken.decimals / 2)
+      const toToken = findToken(props.tokens, data.to_token_address)
+
+      if(!toToken) return
+
+      const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
+      return BigNumber(toAmount).toNumber().toFixed(toToken.decimals / 2)
     }
     return 0
-  }, [props.data])
+  }, [props.data, props.tokens])
 
   const [gasPrice, setgasPrice] = useState('0')
   useEffect(() => {
@@ -71,8 +94,9 @@ const Quote: FC<Iprops> = (props) => {
   const networkFee = useMemo(() => {
     if (props.data) {
       const data = props.data
-      const estimatedGas = data.estimatedGas
-      if (gasPrice !== '0') {
+      const estimatedGas = data.estimate_gas_fee as unknown as string
+      
+      if (gasPrice !== '0' && estimatedGas) {
         return BigNumber(estimatedGas).multipliedBy(gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
       }
     }
@@ -99,7 +123,7 @@ const Quote: FC<Iprops> = (props) => {
     if(receivingAddress){
       const isAddress = ethers.utils.isAddress(receivingAddress)
       if(isAddress){
-        swapContext?.setReceivingAddress(receivingAddress)
+        swapContext?.setReceivingAddress(receivingAddress as address)
         setReceivingAddress('')
       }else {
         seterrorMessage('Address invalid')
@@ -152,7 +176,7 @@ const Quote: FC<Iprops> = (props) => {
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Receiving address</span>
                   <div className='swap-detail-value cursor-pointer'  onClick={showEditAddressDialog}>
-                    {shortenAddress(swapContext?.receivingAddress)}
+                    {shortenAddress(swapContext?.receivingAddress || address)}
                     {props.status !== 'ready' ? <EditSOutline className='edit ml-5'/> : ''}
                   </div>
                 </div>
@@ -163,20 +187,28 @@ const Quote: FC<Iprops> = (props) => {
 
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Minimum output</span>
-                  <span className='swap-detail-value'>{minOutNumber} {props.data.toToken.symbol}</span>
+                  <span className='swap-detail-value'>{minOutNumber} {toToken?.symbol}</span>
                 </div>
 
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Expected output</span>
-                  <span className='swap-detail-value'>{expectedNumber} {props.data.toToken.symbol}</span>
+                  <span className='swap-detail-value'>{expectedNumber} {toToken?.symbol}</span>
                 </div>
 
               </div>
               <div className='advanced-swap-details'>
-                <p className='flex items-center justify-between'>
+                <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Order routing</span>
-                  <span className='swap-detail-value'>~$0.10</span>
-                </p>
+                  <div className='flex items-center gap-2'>
+                    <Image
+                        width={20}
+                        height={20}
+                        style={{borderRadius: 100}}
+                        src={props.data.aggregator.logo}
+                    /> 
+                    <span className='swap-detail-value'>{props.data.aggregator.name || '123'}</span>
+                  </div>
+                </div>
               </div>
             </div>
             {/* <div className='flex items-center justify-between'>
