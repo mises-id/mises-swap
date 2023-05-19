@@ -1,5 +1,5 @@
 import { Input, InputProps } from 'antd-mobile'
-import { FC, useContext, useEffect, useState } from 'react'
+import { FC, RefObject, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount, usePublicClient } from 'wagmi'
@@ -8,6 +8,9 @@ import { getBalance } from '@/api/ether'
 import { fetchFeeData } from '@wagmi/core'
 import { nativeTokenAddress } from '@/utils'
 import BigNumber from 'bignumber.js'
+export interface tokenInputRef {
+  getBalanceFn: () => void
+}
 // import { getUSDTPrice } from '@/hooks/usePrice'
 interface Iprops extends InputProps {
   tokens?: token[],
@@ -15,7 +18,8 @@ interface Iprops extends InputProps {
   tokenAddress?: string,
   onTokenChange?: (val: string) => void
   setInputChange?: (val: string) => void
-  status?: 'ready' | undefined
+  status?: 'ready' | undefined,
+  ref?: RefObject<tokenInputRef>
 }
 
 const TokenInput: FC<Iprops> = (props) => {
@@ -24,15 +28,21 @@ const TokenInput: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
   const publicClient = usePublicClient()
 
-  useEffect(() => {
-    // get native token balance
-    if (address && props.tokenAddress) {
+  const getBalanceFn = () =>{
+    if(props.tokenAddress && address){
       getBalance(props.tokenAddress as address, address).then(res => {
         if (res) {
-          const num = Number(res.formatted) === 0 ? '0' : Number(res.formatted).toFixed(3)
+          const num = Number(res.formatted) === 0 ? '0' : res.formatted.substring(0,7)
           settokenBalance(num)
         }
       })
+    }
+  }
+
+  useEffect(() => {
+    // get native token balance
+    if (address && props.tokenAddress) {
+      getBalanceFn()
     }
     if(props.tokenAddress) {
       // getUSDTPrice()
@@ -43,8 +53,16 @@ const TokenInput: FC<Iprops> = (props) => {
       //   console.log(res)
       // })
     }
+    // eslint-disable-next-line
   }, [props.tokenAddress, address])
+  const {ref, ...inputProps} = props
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      getBalanceFn
+    })
+  )
   const toMax = async () => {
     if(props.tokenAddress === nativeTokenAddress){
       const feeData = await fetchFeeData({
@@ -70,10 +88,12 @@ const TokenInput: FC<Iprops> = (props) => {
         })
 
         const gasFee = BigNumber(data.toString()).multipliedBy(10).multipliedBy(feeData.formatted.gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
-        console.log(gasFee, data.toString(), feeData.formatted.gasPrice)
+        
         const fromAmount = BigNumber(tokenBalance).minus(gasFee).toString()
-        swapContext?.setFromAmount(fromAmount)
-        props.setInputChange?.(fromAmount)
+        if(BigNumber(fromAmount).comparedTo(0)> -1) {
+          swapContext?.setFromAmount(fromAmount)
+          props.setInputChange?.(fromAmount)
+        }
       }
       return 
     }
@@ -90,13 +110,12 @@ const TokenInput: FC<Iprops> = (props) => {
   //   }
   //   return 0
   // }, [props.tokenAddress])
-
   return <div className='token-container'>
     <div className='flex items-center'>
       <Input
         className='token-input flex-1'
         readOnly={props.status === 'ready'}
-        {...props} />
+        {...inputProps} />
         
       <SelectTokens
         onChange={props.onTokenChange}

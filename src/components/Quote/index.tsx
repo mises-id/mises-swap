@@ -1,13 +1,13 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
-import { findToken, formatAmount, shortenAddress } from '@/utils';
+import { findToken, formatAmount, nativeTokenAddress, shortenAddress } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
 import { CenterPopup, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
+import { useAccount, useNetwork } from 'wagmi';
 interface Iprops {
   loading: boolean;
   data: swapData | undefined
@@ -33,7 +33,7 @@ const Quote: FC<Iprops> = (props) => {
         const fromTokenSymbol = tokenType === 'from' ? fromToken?.symbol : toToken?.symbol
         const toTokenSymbol = tokenType === 'from' ? toToken?.symbol : fromToken?.symbol
   
-        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toNumber().toFixed(fromToken?.decimals / 2) : BigNumber(fromAmount).dividedBy(toAmount).toNumber().toFixed(toToken?.decimals / 2)
+        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, fromToken.decimals / 2) : BigNumber(fromAmount).dividedBy(toAmount).toString().substring(0, toToken.decimals / 2)
   
         return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
       }
@@ -60,7 +60,7 @@ const Quote: FC<Iprops> = (props) => {
 
       const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippage) / 100)
-      return minNumber.toFixed(toToken.decimals / 2)
+      return minNumber.toString().substring(0, toToken.decimals / 2)
     }
     return 0
 
@@ -74,7 +74,7 @@ const Quote: FC<Iprops> = (props) => {
       if(!toToken) return
 
       const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
-      return BigNumber(toAmount).toNumber().toFixed(toToken.decimals / 2)
+      return BigNumber(toAmount).toString().substring(0, toToken.decimals / 2)
     }
     return 0
   }, [props.data, props.tokens])
@@ -141,6 +141,9 @@ const Quote: FC<Iprops> = (props) => {
       return isOpen
     }
   }, [props.status, isOpen])
+
+  const {chain} = useNetwork()
+
   return (
     (props.loading || props.data) ?
       <div className='quote-view'>
@@ -182,7 +185,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
-                  <span className='swap-detail-value'>~${networkFee}</span>
+                  <span className='swap-detail-value'>{networkFee} {chain?.nativeCurrency.symbol}</span>
                 </div>
 
                 <div className='flex items-center justify-between'>
@@ -199,7 +202,9 @@ const Quote: FC<Iprops> = (props) => {
               <div className='advanced-swap-details'>
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Order routing</span>
-                  <div className='flex items-center gap-2'>
+                  <div className='flex items-center gap-2' onClick={()=>{
+                    
+                  }}>
                     <Image
                         width={20}
                         height={20}
@@ -224,7 +229,7 @@ const Quote: FC<Iprops> = (props) => {
           <div className='p-20'>
             <p className='dialog-title'>Set receiving address</p>
             <div className='textarea-container'>
-              <TextArea placeholder={swapContext?.receivingAddress} value={receivingAddress} onChange={getAddressChange}/>
+              <TextArea placeholder={swapContext?.receivingAddress || address} value={receivingAddress} onChange={getAddressChange}/>
             </div>
             {errorMessage && <div className='error-message'>{errorMessage}</div>}
           </div>

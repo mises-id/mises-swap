@@ -130,7 +130,7 @@ function App() {
                 </ConnectButton.Custom>
               </div>
               <SwapProvider>
-              <div className='flex-1'>
+              <div className='flex-1 flex flex-col'>
                 <BrowserRouter>
                   <Routes />
                 </BrowserRouter>

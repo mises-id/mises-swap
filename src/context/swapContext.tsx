@@ -1,3 +1,4 @@
+import { Timeout } from "ahooks/lib/useRequest/src/types";
 import { Dispatch, FC, ReactNode, SetStateAction, createContext, useState } from "react";
 // type swapType = 'to' | 'from'
 interface swapData {
@@ -13,6 +14,15 @@ interface globalDialogMessageData {
     txHash: string
   }
 }
+export interface notificationData {
+  type: 'reverted' | 'success',
+  text: string,
+  toToken?: token,
+  fromToken: token,
+  hash: string,
+  toTokenAmount?: string,
+  fromTokenAmount?: string
+}
 export type SwapContextType = {
   swapToData: swapData,
   setswapToData: Dispatch<SetStateAction<swapData>>
@@ -27,7 +37,11 @@ export type SwapContextType = {
   receivingAddress: `0x${string}` | undefined,
   setReceivingAddress: Dispatch<SetStateAction<`0x${string}` | undefined>>
   globalDialogMessage: globalDialogMessageData | undefined,
-  setGlobalDialogMessage: Dispatch<SetStateAction<globalDialogMessageData | undefined>>
+  setGlobalDialogMessage: Dispatch<SetStateAction<globalDialogMessageData | undefined>>,
+  notification: notificationData[], 
+  setNotification: Dispatch<SetStateAction<notificationData[]>>,
+  pushNotificationData: (params: notificationData)=>void,
+  removeNotificationData: (index: number) => void
 };
 interface Iprops {
   children?: ReactNode
@@ -54,6 +68,38 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [globalDialogMessage, setGlobalDialogMessage] = useState<globalDialogMessageData>()
   
+  const [notification, setNotification] = useState<notificationData[]>([])
+
+  // const [notificationTimeOut, setnotificationTimeOut] = useState([])
+  const [timeout, settimeout] = useState<Timeout | undefined>()
+  const createRemoveTask = (hash: string) =>{
+    const timeoutFn = setTimeout(() => {
+      const findItemIndex = notification.findIndex(val=>val.hash === hash)
+
+      if(findItemIndex > -1){
+        removeNotificationData(findItemIndex)
+      }else{
+        console.log('removeed')
+      }
+    }, 3000);
+    settimeout(timeoutFn)
+  }
+
+  const pushNotificationData = (params: notificationData) => {
+    notification.push(params)
+    setNotification([...notification])
+    createRemoveTask(params.hash)
+  }
+
+  const removeNotificationData = (index: number) => {
+    notification.splice(index, 1)
+    setNotification([...notification])
+    if(timeout) {
+      clearTimeout(timeout)
+      settimeout(undefined)
+    }
+    console.log('remove')
+  }
   return <SwapContext.Provider value={{
     swapToData,
     setswapToData,
@@ -68,7 +114,11 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     receivingAddress, 
     setReceivingAddress,
     globalDialogMessage, 
-    setGlobalDialogMessage
+    setGlobalDialogMessage,
+    notification, 
+    setNotification,
+    pushNotificationData,
+    removeNotificationData
   }}>{children}</SwapContext.Provider>;
 };
 

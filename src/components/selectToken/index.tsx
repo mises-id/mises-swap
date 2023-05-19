@@ -72,7 +72,7 @@ const SelectTokens: FC<Iprops> = (props) => {
   const UnSelectedToken = () => {
     return <div className='un-select-token-item flex'>
       <div>Select token</div>
-      <DownOutline className='downOutline' />
+      <DownOutline className='unselect-downOutline'/>
     </div>
   }
 

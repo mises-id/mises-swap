@@ -1,6 +1,6 @@
 
 import "./index.less";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
@@ -11,7 +11,7 @@ import { useRequest } from "ahooks";
 import { sendTransaction, watchNetwork, watchAccount, waitForTransaction } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
-import TokenInput from "@/components/tokenInput";
+import TokenInput, { tokenInputRef } from "@/components/tokenInput";
 import SwapButton from "@/components/swapButton";
 import { Button, CenterPopup, Skeleton } from "antd-mobile";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -111,7 +111,7 @@ const Home = (props: routeProps) => {
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount) => {
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
 
-    if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken) {
+    if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
     }
 
@@ -151,15 +151,15 @@ const Home = (props: routeProps) => {
           swapContext?.setStatus(4)
           return res
         }
+        if(fromTokenAddr !== nativeTokenAddress){
+          // allowance
+          const allowance = await getAllowance(fromTokenAddr, firstTrade.aggregator.contract_address)
 
-        // allowance
-        const allowance = await getAllowance(fromTokenAddr, firstTrade.aggregator.contract_address)
+          const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(amount)
 
-        const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(amount)
+          swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
 
-        if (comparedAllowance === -1) {
-          swapContext?.setStatus(9)
-        } else {
+        }else {
           swapContext?.setStatus(99999)
         }
       }
@@ -187,13 +187,14 @@ const Home = (props: routeProps) => {
     }
   }
 
-  const getTransaction = async (tokenAddress: string) => {
+  const getTransaction = async (tokenAddress: string,contract_address: string) => {
     try {
       const result = await transaction<{
         data: trade
-      }, transactionParams & { chain_id: number }>({
+      }, transactionParams & { chain_id: number, aggregator_address: string }>({
         chain_id: chainId,
         token_address: tokenAddress,
+        aggregator_address: contract_address
       })
 
       return result.data
@@ -209,7 +210,67 @@ const Home = (props: routeProps) => {
       openConnectModal?.()
       return
     }
-    setshowConfirmDialog(true)
+    if (swapContext?.status === 9) {
+      approve()
+    }
+    if (swapContext?.status === 99999) {
+      setshowConfirmDialog(true)
+    }
+  }
+
+  const approve = async () => {
+    const tokenAddress = swapContext?.swapFromData.tokenAddress
+    if (!tokenAddress && tokenAddress!==nativeTokenAddress) return
+
+    try {
+      const contract_address = quoteData?.aggregator?.contract_address
+      if (contract_address) {
+        setapproveLoading(true)
+        const result = await getAllowance(tokenAddress, contract_address)
+
+        const comparedAllowance = swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
+
+        if (comparedAllowance === -1) {
+          const transactionResult = await getTransaction(tokenAddress, contract_address)
+          // eth_sendTransaction
+
+          const { gas_price, ...params } = transactionResult.data
+          const { hash } = await sendTransaction({
+            ...params,
+            gasPrice: gas_price,
+          })
+
+          // // eth_getTransactionReceipt
+          const data = await waitForTransaction({
+            hash: hash,
+          })
+          swapContext?.pushNotificationData({
+            type: 'success',
+            fromToken: swapContext?.swapFromData as unknown as token,
+            hash: hash,
+            text: 'Approved',
+          })
+          console.log(data)
+
+          setapproveLoading(false)
+
+          await submitSwap()
+        }
+      }
+    } catch (error: any) {
+      setapproveLoading(false)
+      if(error.message){
+        swapContext?.setGlobalDialogMessage({
+          type: 'error',
+          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : error.message
+        })
+        return 
+      }
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: 'Unknown error'
+      })
+    }
   }
 
   const confirmSwap = async () => {
@@ -224,37 +285,10 @@ const Home = (props: routeProps) => {
       */
       setshowConfirmDialog(false)
 
-      if (quoteData?.trade?.to) {
-        const result = await getAllowance(tokenAddress, quoteData?.trade?.to)
-
-        const comparedAllowance = BigNumber(formatAmount(result.data.allowance, swapContext.swapFromData?.decimals)).comparedTo(swapContext.fromAmount)
-
-        if (comparedAllowance === -1) {
-          const transactionResult = await getTransaction(tokenAddress)
-          // eth_sendTransaction
-          setapproveLoading(true)
-
-          const { gas_price, ...params } = transactionResult.data
-          const { hash } = await sendTransaction({
-            ...params,
-            gasPrice: gas_price,
-          })
-
-          // // eth_getTransactionReceipt
-          console.log(hash)
-          const data = await waitForTransaction({
-            hash: hash,
-          })
-          console.log(data)
-
-          setapproveLoading(false)
-
-          await submitSwap()
-          return
-        }
-      }
+      await approve()
 
       await submitSwap()
+
     } catch (error: any) {
       setapproveLoading(false)
 
@@ -282,7 +316,7 @@ const Home = (props: routeProps) => {
 
         swapContext.setGlobalDialogMessage({
           type: 'pending',
-          description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toFixed(swapContext?.swapToData.decimals / 2)} ${swapContext?.swapToData.symbol}`
+          description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toString().substring(0, swapContext?.swapToData.decimals / 2)} ${swapContext?.swapToData.symbol}`
         })
       }
 
@@ -306,7 +340,7 @@ const Home = (props: routeProps) => {
         return
       }
 
-      const {gas_price, ...params} = firstTrade.trade
+      const { gas_price, ...params } = firstTrade.trade
 
       const { hash } = await sendTransaction({
         ...params,
@@ -323,10 +357,6 @@ const Home = (props: routeProps) => {
           ...swapContext!.swapToData
         }
       })
-      swapContext?.setGlobalDialogMessage({
-        type: 'success',
-        description: 'Transaction submitted'
-      })
 
       // eth_getTransactionReceipt
       console.log(hash)
@@ -334,6 +364,19 @@ const Home = (props: routeProps) => {
         hash: hash,
       })
 
+      if(data.status === 'success') {
+        swapContext?.pushNotificationData({
+          type: data.status,
+          fromToken: swapContext!.swapFromData as unknown as token,
+          toToken: swapContext!.swapToData as unknown as token,
+          hash: hash,
+          fromTokenAmount: swapContext?.fromAmount,
+          toTokenAmount: toAmount,
+          text: 'Swapped',
+        })
+        fromInputRef.current?.getBalanceFn()
+        toInputRef.current?.getBalanceFn()
+      }
       console.log(data)
 
       // if (swapContext) {
@@ -498,80 +541,90 @@ const Home = (props: routeProps) => {
 
   const [openSetting, setopenSetting] = useState(false)
 
-  return <div className="swap-container">
-    <div className="flex justify-between items-center swap-header">
-      <p className="title">Swap</p>
-      <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
-        {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
-        <SetOutline className="setting-icon" onClick={() => setopenSetting(true)} />
-      </div>
-    </div>
-    <div>
-      {tokens ? <TokenInput
-        type="from"
-        onChange={getFromInputChange}
-        onTokenChange={getFromTokenChange}
-        setInputChange={setInputChange}
-        tokens={tokens}
-        tokenAddress={swapContext?.swapFromData.tokenAddress}
-        placeholder='0'
-        pattern='^[0-9]*[.,]?[0-9]*$'
-        inputMode='decimal'
-        value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
+  const successClose = () =>{
+    swapContext?.setFromAmount('')
+    setToAmount('')
+  }
 
-      <div className="switch-token flex items-center justify-center" onClick={switchToken}>
-        <i className="iconfont icon-xiajiantou"></i>
-      </div>
-
-      {tokens ? <TokenInput
-        type="to"
-        tokens={tokens}
-        value={toAmount}
-        onTokenChange={getToTokenChange}
-        placeholder='0'
-        tokenAddress={swapContext?.swapToData.tokenAddress}
-      // readOnly
-      /> : <Skeleton animated className="custom-skeleton" />}
-    </div>
-
-    <Quote tokens={tokens} data={quoteData} loading={swapLoading} />
-
-    <SwapButton onClick={onClickSwap} loading={swapLoading} />
-
-    <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
-      <div className="dialog-content p-20">
-        <p className="confirm-title">Confirm Swap</p>
-        <div>
-          <TokenInput
-            type="from"
-            tokens={tokens}
-            status="ready"
-            tokenAddress={swapContext?.swapFromData.tokenAddress}
-            placeholder='0'
-            value={swapContext?.fromAmount} />
-
-          <div className="switch-token flex items-center justify-center">
-            <i className="iconfont icon-xiajiantou"></i>
-          </div>
-
-          <TokenInput
-            type="to"
-            status="ready"
-            tokens={tokens}
-            value={toAmount}
-            tokenAddress={swapContext?.swapToData.tokenAddress}
-          />
+  const fromInputRef = useRef<tokenInputRef>(null)
+  const toInputRef = useRef<tokenInputRef>(null)
+  return <div className="overflow-hidden relative flex-1">
+    <div className="swap-container">
+      <div className="flex justify-between items-center swap-header">
+        <p className="title">Swap</p>
+        <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
+          {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
+          <SetOutline className="setting-icon" onClick={() => setopenSetting(true)} />
         </div>
-        <Quote data={quoteData} tokens={tokens} loading={swapLoading} status="ready" />
-        <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
       </div>
-    </CenterPopup>
+      <div>
+        {tokens ? <TokenInput
+          type="from"
+          onChange={getFromInputChange}
+          onTokenChange={getFromTokenChange}
+          setInputChange={setInputChange}
+          tokens={tokens}
+          tokenAddress={swapContext?.swapFromData.tokenAddress}
+          placeholder='0'
+          ref={fromInputRef}
+          pattern='^[0-9]*[.,]?[0-9]*$'
+          inputMode='decimal'
+          value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
 
-    <StatusDialog />
+        <div className="switch-token flex items-center justify-center" onClick={switchToken}>
+          <i className="iconfont icon-xiajiantou"></i>
+        </div>
 
-    <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
+        {tokens ? <TokenInput
+          type="to"
+          tokens={tokens}
+          value={toAmount}
+          ref={toInputRef}
+          onTokenChange={getToTokenChange}
+          placeholder='0'
+          tokenAddress={swapContext?.swapToData.tokenAddress}
+        // readOnly
+        /> : <Skeleton animated className="custom-skeleton" />}
+      </div>
 
+      <Quote tokens={tokens} data={quoteData} loading={swapLoading} />
+
+      <SwapButton onClick={onClickSwap} loading={swapLoading} />
+
+      <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
+        <div className="dialog-content p-20">
+          <p className="confirm-title">Confirm Swap</p>
+          <div>
+            <TokenInput
+              type="from"
+              tokens={tokens}
+              status="ready"
+              tokenAddress={swapContext?.swapFromData.tokenAddress}
+              placeholder='0'
+              value={swapContext?.fromAmount} />
+
+            <div className="switch-token flex items-center justify-center">
+              <i className="iconfont icon-xiajiantou"></i>
+            </div>
+
+            <TokenInput
+              type="to"
+              status="ready"
+              tokens={tokens}
+              value={toAmount}
+              tokenAddress={swapContext?.swapToData.tokenAddress}
+            />
+          </div>
+          <Quote data={quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+          <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
+        </div>
+      </CenterPopup>
+
+      <StatusDialog successClose={successClose}/>
+
+      <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
+    </div >
     <Notification />
-  </div >
+  </div>
 };
 export default Home;

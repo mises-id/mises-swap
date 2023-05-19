@@ -3,7 +3,7 @@ import { Button, CenterPopup, CenterPopupProps, Image } from 'antd-mobile'
 import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
 interface Iprops extends CenterPopupProps {
-
+  successClose?: ()=>void;
 }
 const StatusDialog: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
@@ -45,7 +45,10 @@ const StatusDialog: FC<Iprops> = (props) => {
         {swapContext?.globalDialogMessage?.type === 'error' ? <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Dismiss</Button> : ''}
 
         {swapContext?.globalDialogMessage?.type === 'success' ? <>
-          <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Close</Button>
+          <Button block color="primary" className="dismiss-btn" onClick={()=>{
+            dismiss()
+            props.successClose?.()
+          }}>Close</Button>
           <p className='text-center view-explorer mt-20 text-sm cursor-pointer' onClick={goToExplorer}>
             View on Block Explorer
           </p>
