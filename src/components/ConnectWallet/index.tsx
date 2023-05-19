@@ -15,6 +15,7 @@ import {
 } from 'react-virtualized';
 import HistoryList from '../HistoryList';
 import CustomAvatar from '../CustomAvatar';
+import { useAccount } from 'wagmi';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -55,7 +56,7 @@ interface IProps {
 const ConnectWallet: FC<IProps> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
-
+  const { address } = useAccount()
   return (
     <div>
       {props.account ? <div className='flex items-center gap-2'>
@@ -64,8 +65,8 @@ const ConnectWallet: FC<IProps> = (props) => {
         <div className='flex items-center account-info' onClick={() => {
           setisOpen(true)
         }}>
-          <CustomAvatar address={props.account.address} size={24} />
-          <span className='ml-10 account-address'>{shortenAddress(props.account.address)}</span>
+          {address && <CustomAvatar address={address} size={24} />}
+          <span className='ml-10 account-address'>{shortenAddress(address)}</span>
         </div>
         <HistoryList visible={isOpen} onClose={()=>setisOpen(false)}/>
       </div> :

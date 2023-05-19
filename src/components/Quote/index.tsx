@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
-import { findToken, formatAmount, nativeTokenAddress, shortenAddress } from '@/utils';
+import { findToken, formatAmount, shortenAddress } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'

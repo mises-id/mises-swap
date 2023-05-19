@@ -1,5 +1,5 @@
 import { Input, InputProps } from 'antd-mobile'
-import { FC, RefObject, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import { Ref, forwardRef, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount, usePublicClient } from 'wagmi'
@@ -18,11 +18,10 @@ interface Iprops extends InputProps {
   tokenAddress?: string,
   onTokenChange?: (val: string) => void
   setInputChange?: (val: string) => void
-  status?: 'ready' | undefined,
-  ref?: RefObject<tokenInputRef>
+  status?: 'ready' | undefined
 }
 
-const TokenInput: FC<Iprops> = (props) => {
+const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const { address } = useAccount()
   const [tokenBalance, settokenBalance] = useState('0')
   const swapContext = useContext(SwapContext)
@@ -30,6 +29,7 @@ const TokenInput: FC<Iprops> = (props) => {
 
   const getBalanceFn = () =>{
     if(props.tokenAddress && address){
+      console.log(props.tokenAddress, address)
       getBalance(props.tokenAddress as address, address).then(res => {
         if (res) {
           const num = Number(res.formatted) === 0 ? '0' : res.formatted.substring(0,7)
@@ -55,8 +55,8 @@ const TokenInput: FC<Iprops> = (props) => {
     }
     // eslint-disable-next-line
   }, [props.tokenAddress, address])
-  const {ref, ...inputProps} = props
-
+  
+  const {...inputProps} = props
   useImperativeHandle(
     ref,
     () => ({
@@ -138,4 +138,4 @@ const TokenInput: FC<Iprops> = (props) => {
     </div>}
   </div>
 }
-export default TokenInput
+export default forwardRef(TokenInput)

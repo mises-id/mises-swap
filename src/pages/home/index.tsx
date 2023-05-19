@@ -61,13 +61,12 @@ const Home = (props: routeProps) => {
     settokens([...tokenList])
 
     if (swapContext) {
-      const token = tokenList[nativeTokenAddress] || {}
+      const token = findToken(tokenList, nativeTokenAddress) || {}
 
       swapContext.swapFromData = {
         tokenAddress: nativeTokenAddress,
         ...token
       }
-
       swapContext.setswapFromData({
         ...swapContext.swapFromData
       })
@@ -129,6 +128,7 @@ const Home = (props: routeProps) => {
       const [firstTrade] = res.data.data
       if (firstTrade.error) {
         swapContext?.setStatus(11)
+        setquoteData(undefined)
         return
       }
 
@@ -313,7 +313,7 @@ const Home = (props: routeProps) => {
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
       if (swapContext) {
-
+        setapproveLoading(true)
         swapContext.setGlobalDialogMessage({
           type: 'pending',
           description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toString().substring(0, swapContext?.swapToData.decimals / 2)} ${swapContext?.swapToData.symbol}`
@@ -371,11 +371,13 @@ const Home = (props: routeProps) => {
           toToken: swapContext!.swapToData as unknown as token,
           hash: hash,
           fromTokenAmount: swapContext?.fromAmount,
-          toTokenAmount: toAmount,
+          toTokenAmount: toAmount.substring(0,6),
           text: 'Swapped',
         })
         fromInputRef.current?.getBalanceFn()
         toInputRef.current?.getBalanceFn()
+        setapproveLoading(false)
+        cancel()
       }
       console.log(data)
 
@@ -384,6 +386,7 @@ const Home = (props: routeProps) => {
       // }
 
     } catch (error: any) {
+      setapproveLoading(false)
       if (!swapContext) return
 
       if (error.description) {
@@ -418,8 +421,8 @@ const Home = (props: routeProps) => {
   watchAccount(account => {
     cancel()
     run()
+    resetInputData()
   })
-
   const swapLoading = useMemo(() => {
     return loading || approveLoading
   }, [loading, approveLoading])
@@ -541,9 +544,10 @@ const Home = (props: routeProps) => {
 
   const [openSetting, setopenSetting] = useState(false)
 
-  const successClose = () =>{
+  const resetInputData = () =>{
     swapContext?.setFromAmount('')
     setToAmount('')
+    setquoteData(undefined)
   }
 
   const fromInputRef = useRef<tokenInputRef>(null)
@@ -620,9 +624,17 @@ const Home = (props: routeProps) => {
         </div>
       </CenterPopup>
 
-      <StatusDialog successClose={successClose}/>
+      <StatusDialog successClose={resetInputData}/>
 
       <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
+      {/* <Button onClick={()=>{
+        console.log(fromInputRef, toInputRef)
+        fromInputRef.current?.getBalanceFn()
+        toInputRef.current?.getBalanceFn()
+        setapproveLoading(false)
+        setquoteData(undefined)
+        console.log(swapLoading, loading, approveLoading)
+      }}>reset</Button> */}
     </div >
     <Notification />
   </div>
