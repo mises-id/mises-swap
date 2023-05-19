@@ -118,52 +118,57 @@ const Home = (props: routeProps) => {
 
     if (parseAmountStr === '0') return Promise.reject('')
 
-    const res = await getQuote<{ data: swapData[] }, quoteParams>({
-      chain_id: chainId,
-      from_token_address: fromTokenAddr,
-      to_token_address: toTokenAddr,
-      amount: parseAmountStr
-    })
-    if (res.data.data.length) {
-      const [firstTrade] = res.data.data
-      if (firstTrade.error) {
-        swapContext?.setStatus(11)
-        setquoteData(undefined)
+    try {
+      const res = await getQuote<{ data: swapData[] }, quoteParams>({
+        chain_id: chainId,
+        from_token_address: fromTokenAddr,
+        to_token_address: toTokenAddr,
+        amount: parseAmountStr
+      })
+      if (res.data.data.length) {
+        const [firstTrade] = res.data.data
+        if (firstTrade.error) {
+          swapContext?.setStatus(11)
+          setquoteData(undefined)
+          return
+        }
+  
+        setquoteData(firstTrade)
+        const toToken = findToken(tokens, firstTrade.to_token_address)
+        const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
+        if (swapContext?.fromAmount) setToAmount(toTokenAmount)
+  
+        // get balance
+        if (address) {
+          const balance = await getBalance(fromTokenAddr as address, address)
+          if (!balance?.formatted) {
+            return res
+          }
+  
+          const compared = BigNumber(balance?.formatted).comparedTo(amount)
+  
+          if (compared === -1) {
+            // Insufficient token balance	
+            swapContext?.setStatus(4)
+            return res
+          }
+          if(fromTokenAddr !== nativeTokenAddress){
+            // allowance
+            const allowance = await getAllowance(fromTokenAddr, firstTrade.aggregator.contract_address)
+  
+            const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(amount)
+  
+            swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
+  
+          }else {
+            swapContext?.setStatus(99999)
+          }
+        }
         return
       }
-
-      setquoteData(firstTrade)
-      const toToken = findToken(tokens, firstTrade.to_token_address)
-      const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
-      if (swapContext?.fromAmount) setToAmount(toTokenAmount)
-
-      // get balance
-      if (address) {
-        const balance = await getBalance(fromTokenAddr as address, address)
-        if (!balance?.formatted) {
-          return res
-        }
-
-        const compared = BigNumber(balance?.formatted).comparedTo(amount)
-
-        if (compared === -1) {
-          // Insufficient token balance	
-          swapContext?.setStatus(4)
-          return res
-        }
-        if(fromTokenAddr !== nativeTokenAddress){
-          // allowance
-          const allowance = await getAllowance(fromTokenAddr, firstTrade.aggregator.contract_address)
-
-          const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(amount)
-
-          swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
-
-        }else {
-          swapContext?.setStatus(99999)
-        }
-      }
-      return
+    } catch (error) {
+      swapContext?.setStatus(11)
+      setquoteData(undefined)
     }
   }
 
