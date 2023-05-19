@@ -1,6 +1,6 @@
 import { getOrderList } from '@/api/swap'
 import { formatAmount, networkFee, shortenAddress } from '@/utils'
-import { Button, CenterPopup, CenterPopupProps, Image, List, Loading } from 'antd-mobile'
+import { Button, CenterPopup, CenterPopupProps, ErrorBlock, Image, List, Loading, Toast } from 'antd-mobile'
 import React, { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useDisconnect, useNetwork } from 'wagmi'
 import {
@@ -15,6 +15,7 @@ import { CloseOutline, LeftOutline } from 'antd-mobile-icons'
 import { useInfiniteScroll } from 'ahooks'
 import CustomAvatar from '../CustomAvatar'
 import './index.less'
+import dayjs from 'dayjs'
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
 export type VirtualizedListType = typeof VirtualizedList;
@@ -151,9 +152,9 @@ const HistoryList: FC<IProps> = (props) => {
     manual: true
   });
   useEffect(() => {
-    if(isOpen) reload()
+    if(isOpen && address && chain?.id) reload()
     // eslint-disable-next-line
-  }, [isOpen])
+  }, [isOpen, address, chain])
   
   // const [pageNum, setpageNum] = useState(1)
   // const pageSize = 50;
@@ -165,6 +166,17 @@ const HistoryList: FC<IProps> = (props) => {
     window.open(url, 'target=_blank')
   }
   
+  const copy = (text: string) => {
+    const input = document.createElement('input');
+    input.setAttribute('readonly', 'readonly');
+    input.setAttribute('value', text);
+    document.body.appendChild(input);
+    input.setSelectionRange(0, 9999);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    Toast.show('Copyed')
+  }
   return (
     <CenterPopup visible={isOpen} closeOnMaskClick showCloseButton className='dialog-container' onClose={() => {
       props.onClose?.()
@@ -187,6 +199,9 @@ const HistoryList: FC<IProps> = (props) => {
         '--prefix-padding-right': '0',
         'height': window.innerHeight / 2
       }}>
+
+        {!loading && !data?.list.length && <ErrorBlock status='empty' description=""/>}
+
         {/* {hisotryList.length === 0 && !isLoading && <div className='text-center pt-20'>No results found.</div>} */}
         {loading && <div className='loading flex items-center py-20 justify-center'>
           <Loading />
@@ -228,7 +243,7 @@ const HistoryList: FC<IProps> = (props) => {
           }} />
         </div>
         <div className='flex flex-col justify-between' style={{height: 'calc(100% - 40px)'}}>
-          <div className='flex-none'>
+          <div className='flex-none relative'>
             <div className='swap-token-item'>
               <p className='token-item-title'>You sold</p>
               <div className='flex justify-between items-center'>
@@ -242,6 +257,9 @@ const HistoryList: FC<IProps> = (props) => {
                 </div>
                 <div className='from-token-amount text-2xl'>-{formatAmount(detail.from_token_amount, detail.from_token.decimals)}</div>
               </div>
+            </div>
+            <div className="switch-history-token flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
             </div>
             <div className='swap-token-item'>
               <p className='token-item-title'>You bought</p>
@@ -262,11 +280,11 @@ const HistoryList: FC<IProps> = (props) => {
             <div className='detail-info'>
               <p className='flex justify-between items-center pt-20'>
                 <span className='detail-info-label'>Time</span>
-                <span className='detail-info-value'>{detail.block_at}</span>
+                <span className='detail-info-value'>{dayjs(Number(detail.block_at) * 1000).format('DD.MM.YYYY HH:mm')}</span>
               </p>
               <div className='flex justify-between items-center pt-20'>
                 <span className='detail-info-label'>Hash</span>
-                <div className='flex items-center gap-2 cursor-pointer'>
+                <div className='flex items-center gap-2 cursor-pointer' onClick={()=>copy(detail.tx.hash)}>
                   <span className='detail-info-value'>{shortenAddress(detail.tx.hash)}</span>
                   <Image
                     width={12}
@@ -277,7 +295,7 @@ const HistoryList: FC<IProps> = (props) => {
               </div>
               <div className='flex justify-between items-center pt-20'>
                 <span className='detail-info-label'>Receiver</span>
-                <div className='flex items-center gap-2 cursor-pointer'>
+                <div className='flex items-center gap-2 cursor-pointer'  onClick={()=>copy(detail.dest_receiver)}>
                   <span className='detail-info-value'>{shortenAddress(detail.dest_receiver)}</span>
                   <Image
                     width={12}

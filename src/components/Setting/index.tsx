@@ -26,7 +26,8 @@ const Setting: FC<Iprops> = (props) => {
 
   const slippageChange = (val: string) =>{
     const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,3})/g)?.[0] || ""
-    swapContext?.setSlippage(value)
+    
+    if(Number(value) <= 100) swapContext?.setSlippage(value)
   }
   const isActive = useMemo(() => {
     return swapContext?.slippage ? 'Custom' : 'Auto'
@@ -68,6 +69,7 @@ const Setting: FC<Iprops> = (props) => {
                   <Input
                     placeholder={Number(defaultSlippageValue).toFixed(2)}
                     value={swapContext?.slippage}
+                    maxLength={3}
                     onChange={slippageChange}
                     className={`slippageValue ${swapContext?.slippage && Number(swapContext?.slippage) > 50 ? 'error' : ''}`} />
                   %

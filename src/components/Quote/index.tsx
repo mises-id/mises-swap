@@ -30,10 +30,13 @@ const Quote: FC<Iprops> = (props) => {
       if(fromToken && toToken){
         const fromAmount = formatAmount(data.from_token_amount, fromToken?.decimals)
         const toAmount = formatAmount(data.to_token_amount, toToken?.decimals)
-        const fromTokenSymbol = tokenType === 'from' ? fromToken?.symbol : toToken?.symbol
-        const toTokenSymbol = tokenType === 'from' ? toToken?.symbol : fromToken?.symbol
-  
-        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, fromToken.decimals / 2) : BigNumber(fromAmount).dividedBy(toAmount).toString().substring(0, toToken.decimals / 2)
+        const showFromToken = tokenType === 'from' ? fromToken : toToken
+        const showToToken = tokenType === 'from' ? toToken : fromToken
+        const fromTokenSymbol = showFromToken.symbol
+        const toTokenSymbol = showToToken.symbol
+        const toAmountNumber = BigNumber(fromAmount).dividedBy(toAmount)
+        const toTokenCompared = toAmountNumber.comparedTo(0.00001) > -1
+        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, fromToken.decimals / 2) : (toTokenCompared ? toAmountNumber.toString().substring(0, 7) : '<0.00001')
   
         return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
       }
@@ -81,13 +84,16 @@ const Quote: FC<Iprops> = (props) => {
 
   const [gasPrice, setgasPrice] = useState('0')
   useEffect(() => {
-    fetchFeeData({
-      formatUnits: 'wei',
-    }).then(res => {
-      if (res.formatted.gasPrice) {
-        setgasPrice(res.formatted.gasPrice)
-      }
-    })
+    if(props.data){
+      fetchFeeData({
+        formatUnits: 'wei',
+      }).then(res => {
+        if (res.formatted.gasPrice) {
+          setgasPrice(res.formatted.gasPrice)
+        }
+      })
+    }
+    if(!props.data) setisOpen(false)
   }, [props.data])
 
 
@@ -174,7 +180,7 @@ const Quote: FC<Iprops> = (props) => {
 
             </div>
 
-            <div className='details-box' style={{ height: showDetail ? 170 : 0 }}>
+            <div className='details-box' style={{ height: showDetail ? 196 : 0 }}>
               <div className="advanced-swap-details flex flex-col gap-4">
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Receiving address</span>
@@ -186,6 +192,11 @@ const Quote: FC<Iprops> = (props) => {
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
                   <span className='swap-detail-value'>{networkFee} {chain?.nativeCurrency.symbol}</span>
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <span className='swap-detail-label'>Mises fee</span>
+                  <span className='swap-detail-value'>{props.data.fee}%</span>
                 </div>
 
                 <div className='flex items-center justify-between'>

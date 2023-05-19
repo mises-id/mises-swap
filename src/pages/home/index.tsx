@@ -8,7 +8,7 @@ import { routeProps } from "@/routes";
 import { allowance, getQuote, getTokens, trades, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount } from "@/utils";
 import { useRequest } from "ahooks";
-import { sendTransaction, watchNetwork, watchAccount, waitForTransaction } from '@wagmi/core'
+import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
@@ -77,6 +77,7 @@ const Home = (props: routeProps) => {
     setToAmount('')
     cancel()
     settokens(undefined)
+    resetInputData()
     if (swapContext) {
       swapContext.swapToData = {
         tokenAddress: '',
@@ -140,7 +141,7 @@ const Home = (props: routeProps) => {
   
         // get balance
         if (address) {
-          const balance = await getBalance(fromTokenAddr as address, address)
+          const balance = await getBalance(fromTokenAddr as address, address, chain as Chain)
           if (!balance?.formatted) {
             return res
           }
@@ -342,6 +343,8 @@ const Home = (props: routeProps) => {
           type: 'error',
           description: firstTrade.error || 'Unknown error'
         })
+
+        setapproveLoading(false)
         return
       }
 
@@ -419,16 +422,38 @@ const Home = (props: routeProps) => {
   const { run, cancel, loading } = useRequest(quote, {
     debounceWait: 350,
     manual: true,
-    pollingInterval: 5000,
+    pollingInterval: 10000,
     pollingWhenHidden: false,
   });
+  
+  const resetInputData = async () =>{
+    swapContext?.setFromAmount('')
+    setToAmount('')
+    setquoteData(undefined)
+
+    fromInputRef.current?.getBalanceFn()
+    toInputRef.current?.getBalanceFn()
+  }
+
+  const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
+    debounceWait: 350,
+    manual: true,
+  });
+
+  watchNetwork(() => {
+    networkChangeCancel()
+    networkChangeRun()
+  })
+
 
   watchAccount(account => {
     cancel()
     run()
-    resetInputData()
+    accountChangeCancel()
+    accountChangeRun()
   })
   const swapLoading = useMemo(() => {
+    console.log(loading, approveLoading)
     return loading || approveLoading
   }, [loading, approveLoading])
 
@@ -523,7 +548,7 @@ const Home = (props: routeProps) => {
       swapContext.setswapFromData({
         ...swapContext.swapFromData
       })
-
+      console.log(toAmount, 'toAmounttoAmounttoAmount===')
       if (toAmount) run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount)
     }
   }
@@ -531,16 +556,22 @@ const Home = (props: routeProps) => {
   useEffect(() => {
     if (!address) {
       swapContext?.setStatus(1) // unconnect 
+      setquoteData(undefined)
+      cancel()
       return
     }
 
     if (!swapContext?.swapToData.tokenAddress || !swapContext?.swapFromData.tokenAddress) {
       swapContext?.setStatus(2) // un select token
+      setquoteData(undefined)
+      cancel()
       return
     }
 
     if (!swapContext?.fromAmount) {
       swapContext?.setStatus(3) // unset amount
+      setquoteData(undefined)
+      cancel()
       return
     }
 
@@ -549,14 +580,9 @@ const Home = (props: routeProps) => {
 
   const [openSetting, setopenSetting] = useState(false)
 
-  const resetInputData = () =>{
-    swapContext?.setFromAmount('')
-    setToAmount('')
-    setquoteData(undefined)
-  }
-
   const fromInputRef = useRef<tokenInputRef>(null)
   const toInputRef = useRef<tokenInputRef>(null)
+  
   return <div className="overflow-hidden relative flex-1">
     <div className="swap-container">
       <div className="flex justify-between items-center swap-header">
@@ -581,7 +607,7 @@ const Home = (props: routeProps) => {
           value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
 
         <div className="switch-token flex items-center justify-center" onClick={switchToken}>
-          <i className="iconfont icon-xiajiantou"></i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
         </div>
 
         {tokens ? <TokenInput
@@ -613,7 +639,7 @@ const Home = (props: routeProps) => {
               value={swapContext?.fromAmount} />
 
             <div className="switch-token flex items-center justify-center">
-              <i className="iconfont icon-xiajiantou"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
             </div>
 
             <TokenInput

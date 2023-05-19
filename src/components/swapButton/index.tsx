@@ -30,7 +30,6 @@ const SwapButton: FC<Iprops> = (props) => {
     let message = swapStatus[status as status]
 
     if(status && [4, 9].includes(status)){
-      console.log(swapContext?.swapFromData, 'swapContext?.swapFromDataswapContext?.swapFromData===')
       const token = swapContext?.swapFromData
       const fn = swapStatus[status as status] as any
       message = fn(token?.symbol)

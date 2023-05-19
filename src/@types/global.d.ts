@@ -42,4 +42,5 @@ interface swapData {
   error: string
   fetch_time: string
   trade?: trade | null
+  fee: number
 }
