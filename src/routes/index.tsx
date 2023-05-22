@@ -27,12 +27,12 @@ const SuspenseWrapper = (Child: ChildT, cutomFallBack?: CutomFallBackT): any => 
     </React.Suspense>
   )
 }
-const Routes = (props: routeProps) => {
+const Routes = () => {
   const RouterList = useRoutes([
     {
       path: '/',
       element: SuspenseWrapper(
-        () => <Home {...props}/>
+        () => <Home/>
       ),
     },
     { path: '*', element: <Navigate to="/" replace /> }

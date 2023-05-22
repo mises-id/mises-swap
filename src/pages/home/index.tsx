@@ -452,10 +452,7 @@ const Home = (props: routeProps) => {
     accountChangeCancel()
     accountChangeRun()
   })
-  const swapLoading = useMemo(() => {
-    console.log(loading, approveLoading)
-    return loading || approveLoading
-  }, [loading, approveLoading])
+  const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
 
   const getFromInputChange = (val: string) => {
     cancel()

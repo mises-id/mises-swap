@@ -1,5 +1,5 @@
-import { Input, InputProps } from 'antd-mobile'
-import { Ref, forwardRef, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import { Input, InputProps, Skeleton } from 'antd-mobile'
+import { Ref, forwardRef, useContext, useImperativeHandle } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
@@ -25,55 +25,40 @@ interface Iprops extends InputProps {
 
 const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const { address } = useAccount()
-  const [tokenBalance, settokenBalance] = useState('0')
   const swapContext = useContext(SwapContext)
 
   const { chain } = useNetwork()
   const getBalanceFn = async () => {
-    if (props.tokenAddress && address && chain?.id) {
-      console.log(props.tokenAddress, address)
-      getBalance(props.tokenAddress as address, address, chain).then(res => {
-        if (res) {
-          const num = Number(res.formatted) === 0 ? '0' : res.formatted.substring(0, 7)
-          settokenBalance(num)
-        }else{
-          settokenBalance('0')
-        }
-      }).catch(err=>{
-        console.log(err)
-        settokenBalance('0')
-      })
+    const { tokenAddress } = props
+    if (tokenAddress && address && chain?.id) {
+      const res = await getBalance(tokenAddress as address, address, chain)
+      if (res) {
+        const num = Number(res.formatted) === 0 ? '0' : res.formatted?.substring(0, 7)
+        return num
+      }
     }
+    return '0'
   }
-  const { run, cancel } = useRequest(getBalanceFn,{
+  
+  const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
+    manual: false,
+    retryCount: 3,
     debounceWait: 350,
-    manual: true,
+    refreshDeps: [address, props.tokenAddress, chain?.id]
   })
 
-  useEffect(() => {
-    // get native token balance
-    if (address && props.tokenAddress) {
-      settokenBalance('0')
-      cancel()
-      run()
-    }
-    // if (props.tokenAddress) {
-    //   // getUSDTPrice()
-    //   // formatUSD({
-    //   //   chainShortName: 'bsc',
-    //   //   tokenContractAddress: props.tokenAddress
-    //   // }).then(res=>{
-    //   //   console.log(res)
-    //   // })
-    // }
-    // eslint-disable-next-line
-  }, [props.tokenAddress, address])
+  // useEffect(() => {
+  //   cancel()
+  //   refresh()
+  //   // eslint-disable-next-line
+  // }, [address, props.tokenAddress, chain?.id])
 
   const { ...inputProps } = props
+
   useImperativeHandle(
     ref,
     () => ({
-      getBalanceFn
+      getBalanceFn: refresh
     })
   )
 
@@ -96,7 +81,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
       if (firstTrade && !firstTrade.error && firstTrade.estimate_gas_fee && feeData.formatted.gasPrice) {
         const gasFee = BigNumber(firstTrade.estimate_gas_fee).multipliedBy(feeData.formatted.gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
 
-        const fromAmount = BigNumber(tokenBalance).minus(gasFee).toString()
+        const fromAmount = BigNumber(tokenBalance || 0).minus(gasFee).toString()
 
         if (BigNumber(fromAmount).comparedTo(0) > -1) {
           swapContext?.setFromAmount(fromAmount)
@@ -106,8 +91,8 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
       return
     }
-    swapContext?.setFromAmount(tokenBalance)
-    props.setInputChange?.(tokenBalance)
+    swapContext?.setFromAmount(tokenBalance || '0')
+    props.setInputChange?.(tokenBalance || '0')
   }
 
   return <div className='token-container'>
@@ -125,7 +110,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         selectTokenAddress={props.tokenAddress} />
 
     </div>
-    {props.status !== 'ready' && <div className='flex justify-between'>
+    {props.status !== 'ready' && !loading && <div className='flex justify-between'>
       <div>
         {/* $ {formatUsd} */}
       </div>
@@ -136,6 +121,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         </>}
       </div>
     </div>}
+    {props.tokenAddress && address && loading && <div className='flex justify-end'><Skeleton animated className="custom-token-skeleton" /></div>}
   </div>
 }
 export default forwardRef(TokenInput)

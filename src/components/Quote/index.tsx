@@ -58,12 +58,11 @@ const Quote: FC<Iprops> = (props) => {
     if (props.data && slippage && props.tokens) {
       const data = props.data
       const toToken = findToken(props.tokens, data.to_token_address)
-
       if(!toToken) return
 
       const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippage) / 100)
-      return minNumber.toString().substring(0, toToken.decimals / 2)
+      return minNumber.toString().substring(0, 7)
     }
     return 0
 
@@ -77,7 +76,7 @@ const Quote: FC<Iprops> = (props) => {
       if(!toToken) return
 
       const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
-      return BigNumber(toAmount).toString().substring(0, toToken.decimals / 2)
+      return BigNumber(toAmount).toString().substring(0, 7)
     }
     return 0
   }, [props.data, props.tokens])
