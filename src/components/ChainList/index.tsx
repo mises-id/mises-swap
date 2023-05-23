@@ -1,6 +1,6 @@
 import { Button, Image, Mask } from 'antd-mobile';
 import { CloseCircleFill, DownOutline } from 'antd-mobile-icons';
-import React, { FC, useContext, useEffect, useMemo } from 'react'
+import React, { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
 
 import { useChainId, useSwitchNetwork } from 'wagmi'
@@ -32,17 +32,30 @@ const ChainList: FC<IProps> = (props) => {
     // eslint-disable-next-line
   }, [chainId, props.chain, swapContext?.chainId])
   
-  const { switchNetwork } = useSwitchNetwork()
+  const [isConnectId, setisConnectId] = useState<number | undefined>()
+
+  const { switchNetwork } = useSwitchNetwork({
+    onSuccess(data) {
+      swapContext?.setChainId(data.id)
+      setFalse()
+      setisConnectId(undefined)
+    },
+    onSettled() {
+      setisConnectId(undefined)
+    },
+  })
+
   const switchChain = (val: Chain) => {
-    swapContext?.setChainId(val.id)
     if (props.chain) {
       switchNetwork?.(val.id)
+      setisConnectId(val.id)
+      return 
     }
+    swapContext?.setChainId(val.id)
     setFalse()
   }
 
   useEffect(() => {
-    console.log(props.chain)
     if(props.chain?.id) swapContext?.setChainId(props.chain?.id)
     // eslint-disable-next-line
   }, [props.chain])
@@ -60,24 +73,33 @@ const ChainList: FC<IProps> = (props) => {
       </Button>}
 
       {isOpen && <div>
-        <Mask visible={isOpen} onMaskClick={() => setFalse()} />
+        <Mask visible={isOpen} onMaskClick={() => {
+          setFalse()
+          setisConnectId(undefined)
+        }} />
         <div className='switch-network-container'>
           <p className='switch-networks-title flex items-center justify-between'>
             <span>Switch Networks</span>
-            <CloseCircleFill className='chain-close-item cursor-pointer' onClick={() => setFalse()}/>
+            <CloseCircleFill className='chain-close-item cursor-pointer' onClick={() => {
+              setFalse()
+              setisConnectId(undefined)
+            }}/>
           </p>
           <div className='chain-list-scroller'>
             {chainList.map((val, index) => {
               const item = val as any
               return <div key={index}
-                className={`flex gap-2 chain-item items-center cursor-pointer ${swapContext?.chainId === val.id ? 'chain-active' : ''}`}
+              className={`flex gap-2 chain-item items-center cursor-pointer justify-between ${(swapContext?.chainId === val.id && !isConnectId) || isConnectId === val.id ? 'chain-active' : ''}`}
                 onClick={()=>switchChain(val)}>
-                <Image
-                  width={28}
-                  height={28}
-                  src={item.iconUrl}
-                />
-                <span>{item.name}</span>
+                <div className='flex gap-2 items-center'>
+                  <Image
+                    width={28}
+                    height={28}
+                    src={item.iconUrl}
+                  />
+                  <span className='network-name'>{item.name}</span>
+                </div>
+                {isConnectId === val.id && <div className='isconnect-loading'>isConnect</div>}
               </div>
             })}
           </div>
