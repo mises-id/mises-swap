@@ -61,8 +61,13 @@ const SelectTokens: FC<Iprops> = (props) => {
             }
             return val
           })
-        const findAllNameList = getTokenList.filter(val => val?.symbol?.toLocaleLowerCase() === searchQuery.toLocaleLowerCase())
-        return findAllNameList.length > 0 ? findAllNameList : getTokenList
+        if(searchQuery){
+          return getTokenList
+          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
+          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase() === searchQuery ? -1 : 1)
+        }else{
+          return getTokenList
+        }
       }
       return []
     },
@@ -70,7 +75,7 @@ const SelectTokens: FC<Iprops> = (props) => {
   )
 
   const UnSelectedToken = () => {
-    return <div className='un-select-token-item flex'>
+    return <div className={`un-select-token-item flex ${props.tokens?.length ? '' : 'disabled'}`}>
       <div>Select token</div>
       <DownOutline className='unselect-downOutline'/>
     </div>
@@ -78,7 +83,7 @@ const SelectTokens: FC<Iprops> = (props) => {
 
   const [open, setopen] = useState(false)
   const showTokenList = () => {
-    if(props.status === 'ready'){
+    if(props.status === 'ready' || props.tokens?.length === 0){
       return 
     }
     setopen(true)
@@ -143,7 +148,7 @@ const SelectTokens: FC<Iprops> = (props) => {
     }
   }
   return <div onClick={showTokenList}>
-    {tokenAddress ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
+    {tokenAddress && props.tokens?.length ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
     <CenterPopup
       visible={open}
       closeOnMaskClick
