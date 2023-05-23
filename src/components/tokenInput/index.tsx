@@ -52,7 +52,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
     manual: false,
     retryCount: 3,
-    debounceWait: 350,
+    debounceWait: 550,
     refreshDeps: [address, props.tokenAddress, chain?.id]
   })
 

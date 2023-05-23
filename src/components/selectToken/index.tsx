@@ -136,7 +136,7 @@ const SelectTokens: FC<Iprops> = (props) => {
   }
 
   const { run } = useRequest(search, {
-    debounceWait: 350,
+    debounceWait: 550,
     manual: true,
   });
 

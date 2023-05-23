@@ -99,7 +99,7 @@ const ChainList: FC<IProps> = (props) => {
                   />
                   <span className='network-name'>{item.name}</span>
                 </div>
-                {isConnectId === val.id && <div className='isconnect-loading'>isConnect</div>}
+                {isConnectId === val.id && <div className='isconnect-loading'>connecting</div>}
               </div>
             })}
           </div>

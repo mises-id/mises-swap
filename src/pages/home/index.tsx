@@ -100,7 +100,7 @@ const Home = (props: routeProps) => {
   }
 
   const { run: networkChangeRun, cancel: networkChangeCancel } = useRequest(resetData, {
-    debounceWait: 350,
+    debounceWait: 550,
     manual: true,
   });
 
@@ -448,7 +448,7 @@ const Home = (props: routeProps) => {
     }
   }
   const { run, cancel, loading } = useRequest(quote, {
-    debounceWait: 350,
+    debounceWait: 550,
     manual: true,
     pollingInterval: 10000,
     pollingWhenHidden: false,
@@ -464,7 +464,7 @@ const Home = (props: routeProps) => {
   }
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
-    debounceWait: 350,
+    debounceWait: 550,
     manual: true,
   });
 
