@@ -12,12 +12,26 @@ import enUS from 'antd-mobile/es/locales/en-US'
 import { RecoilRoot } from "recoil"
 
 import '@rainbow-me/rainbowkit/styles.css';
-import { ConnectButton, getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { ConnectButton, RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { Chain, configureChains, createConfig,  WagmiConfig } from 'wagmi';
 import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import SwapProvider from './context/swapContext';
 import ConnectWallet from './components/ConnectWallet';
+import {
+  injectedWallet,
+  metaMaskWallet,
+  okxWallet,
+  phantomWallet,
+  argentWallet,
+  trustWallet,
+  walletConnectWallet,
+  ledgerWallet,
+  coinbaseWallet
+} from '@rainbow-me/rainbowkit/wallets';
+import { bitskiWallet } from './wallets/bitskiWallet';
+import { bitkeepWallet } from './wallets/bitkeepWallet';
+
 function App() {
   const klaytnChain: Chain = {
     id: 8217,
@@ -73,12 +87,31 @@ function App() {
     chainList,
     [publicProvider()]
   );
-
-  const { connectors } = getDefaultWallets({
-    appName: 'Mises Swap',
-    projectId: '86a06f8526c8d8b550b13c46a013cb91',
-    chains,
-  });
+  const projectId = '86a06f8526c8d8b550b13c46a013cb91' 
+  // const { connectors } = getDefaultWallets({
+  //   appName: 'Mises Swap',
+  //   projectId: '86a06f8526c8d8b550b13c46a013cb91',
+  //   chains,
+  // });
+  const connectors = connectorsForWallets([
+  {
+    groupName: 'Recommended',
+    wallets: [
+      injectedWallet({ chains }),
+      metaMaskWallet({ projectId, chains }),
+      coinbaseWallet({ chains, appName: 'My RainbowKit App' }),
+      bitskiWallet({ chains }),
+      okxWallet({ projectId, chains }),
+      // imTokenWallet({ projectId, chains }),
+      phantomWallet({ chains }),
+      argentWallet({ chains }),
+      bitkeepWallet({ chains }),
+      trustWallet({ projectId, chains }),
+      walletConnectWallet({ projectId, chains }),
+      ledgerWallet({ projectId, chains })
+    ],
+  }
+]);
 
   const wagmiClient = createConfig({
     autoConnect: true,

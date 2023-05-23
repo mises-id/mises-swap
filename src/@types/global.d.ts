@@ -15,6 +15,7 @@ interface quoteParams {
   slippage?: number,
   from_address?: string,
   dest_receiver?: string,
+  aggregator_address?: string
 }
 
 interface aggregator{

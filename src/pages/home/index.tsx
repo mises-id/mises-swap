@@ -5,7 +5,7 @@ import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { routeProps } from "@/routes";
-import { allowance, getQuote, getTokens, trades, transaction } from "@/api/swap";
+import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount } from "@/utils";
 import { useRequest } from "ahooks";
 import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain } from '@wagmi/core'
@@ -108,7 +108,7 @@ const Home = (props: routeProps) => {
 
   const [approveLoading, setapproveLoading] = useState(false)
 
-  const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount) => {
+  const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
 
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
@@ -135,29 +135,37 @@ const Home = (props: routeProps) => {
         }
   
         setquoteData(firstTrade)
+
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
-        if (swapContext?.fromAmount) setToAmount(toTokenAmount)
+        if (swapContext?.fromAmount && quoteType === 'from') setToAmount(toTokenAmount)
+
+        if (quoteType === 'to') {
+          swapContext?.setFromAmount(toTokenAmount)
+        }
   
         // get balance
         if (address) {
-          const balance = await getBalance(fromTokenAddr as address, address, chain as Chain)
+          const getBalanceAddress = (quoteType === 'from' ? fromTokenAddr : toTokenAddr) as address
+          const balance = await getBalance(getBalanceAddress, address, chain as Chain)
+
           if (!balance?.formatted) {
             return res
           }
   
-          const compared = BigNumber(balance?.formatted).comparedTo(amount)
-  
+          const compared = BigNumber(balance?.formatted).comparedTo(quoteType === 'from' ? amount : toTokenAmount)
+
           if (compared === -1) {
             // Insufficient token balance	
             swapContext?.setStatus(4)
             return res
           }
-          if(fromTokenAddr !== nativeTokenAddress){
+          
+          if(getBalanceAddress !== nativeTokenAddress){
             // allowance
-            const allowance = await getAllowance(fromTokenAddr, firstTrade.aggregator.contract_address)
+            const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
   
-            const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(amount)
+            const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(quoteType === 'from' ? amount : toTokenAmount)
   
             swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
   
@@ -318,25 +326,37 @@ const Home = (props: routeProps) => {
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
+      const aggregatorAddress = quoteData?.aggregator.contract_address
+
+      if(!aggregatorAddress){
+        swapContext?.setGlobalDialogMessage({
+          type: 'error',
+          description:'Not found aggregator address'
+        })
+        return
+      }
+
       if (swapContext) {
         setapproveLoading(true)
         swapContext.setGlobalDialogMessage({
           type: 'pending',
-          description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toString().substring(0, swapContext?.swapToData.decimals / 2)} ${swapContext?.swapToData.symbol}`
+          description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toString().substring(0, 7)} ${swapContext?.swapToData.symbol}`
         })
       }
 
-      const result = await trades<{ data: swapData[] }, quoteParams>({
+      const result = await trade<{ data: swapData }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddress,
         to_token_address: toTokenAddress,
         from_address: address,
         amount: parseAmountStr,
         slippage: (swapContext?.slippage && Number(swapContext?.slippage) < 50) ? Number(swapContext.slippage) / 100 : Number(defaultSlippageValue) / 100,
-        dest_receiver: swapContext?.receivingAddress
+        dest_receiver: swapContext?.receivingAddress,
+        aggregator_address: aggregatorAddress
+        
       })
 
-      const [firstTrade] = result.data.data
+      const firstTrade = result.data.data
 
       if (!firstTrade || !firstTrade?.trade) {
         swapContext?.setGlobalDialogMessage({
@@ -458,21 +478,42 @@ const Home = (props: routeProps) => {
     cancel()
     if (val) {
       const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
-      setInputChange(value)
+      setFromInputChange(value)
     } else {
       swapContext?.setFromAmount('')
       setToAmount('')
     }
   }
+  const getToInputChange = (val: string) => {
+    cancel()
+    if (val) {
+      const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+      setToAmount(value)
+      setToInputChange(value)
+    } else {
+      // swapContext?.setFromAmount('')
+      setToAmount('')
+    }
+  }
+  const setToInputChange = (value: string) => {
+    // swapContext?.setFromAmount(value)
+    // setToAmount('')
+    const fromTokenAddress = swapContext!.swapFromData.tokenAddress
+    const toTokenAddress = swapContext!.swapToData.tokenAddress
 
-  const setInputChange = (value: string) => {
+    if (toTokenAddress && fromTokenAddress) {
+      run(toTokenAddress, fromTokenAddress, value, 'to')
+    }
+  }
+
+  const setFromInputChange = (value: string) => {
     swapContext?.setFromAmount(value)
     setToAmount('')
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
 
     if (toTokenAddress && fromTokenAddress) {
-      run(fromTokenAddress, toTokenAddress, value)
+      run(fromTokenAddress, toTokenAddress, value, 'from')
     }
   }
 
@@ -579,6 +620,10 @@ const Home = (props: routeProps) => {
 
   const fromInputRef = useRef<tokenInputRef>(null)
   const toInputRef = useRef<tokenInputRef>(null)
+
+  const dismissClose = ()=>{
+    setapproveLoading(false)
+  }
   
   return <div className="overflow-hidden relative flex-1">
     <div className="swap-container">
@@ -594,7 +639,7 @@ const Home = (props: routeProps) => {
           type="from"
           onChange={getFromInputChange}
           onTokenChange={getFromTokenChange}
-          setInputChange={setInputChange}
+          setInputChange={setFromInputChange}
           tokens={tokens}
           tokenAddress={swapContext?.swapFromData.tokenAddress}
           placeholder='0'
@@ -612,6 +657,7 @@ const Home = (props: routeProps) => {
           tokens={tokens}
           value={toAmount}
           ref={toInputRef}
+          onChange={getToInputChange}
           onTokenChange={getToTokenChange}
           placeholder='0'
           tokenAddress={swapContext?.swapToData.tokenAddress}
@@ -652,7 +698,7 @@ const Home = (props: routeProps) => {
         </div>
       </CenterPopup>
 
-      <StatusDialog successClose={resetInputData}/>
+      <StatusDialog successClose={resetInputData} dismissClose={dismissClose}/>
 
       <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
       {/* <Button onClick={()=>{

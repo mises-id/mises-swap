@@ -61,7 +61,7 @@ const SelectTokens: FC<Iprops> = (props) => {
             }
             return val
           })
-        const findAllNameList = getTokenList.filter(val => val?.symbol?.toLocaleLowerCase() === `searchQuery`)
+        const findAllNameList = getTokenList.filter(val => val?.symbol?.toLocaleLowerCase() === searchQuery.toLocaleLowerCase())
         return findAllNameList.length > 0 ? findAllNameList : getTokenList
       }
       return []
@@ -116,7 +116,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         description={item?.symbol}
         extra={
           <div className='token-balance'>
-            <span>0</span>
+            {/* <span>0</span> */}
             {tokenAddress === item?.address && <CheckOutline className='selected-icon' />}
           </div>
         }

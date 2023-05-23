@@ -4,6 +4,7 @@ import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
 interface Iprops extends CenterPopupProps {
   successClose?: ()=>void;
+  dismissClose?: ()=>void;
 }
 const StatusDialog: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
@@ -13,6 +14,7 @@ const StatusDialog: FC<Iprops> = (props) => {
 
   const dismiss = () => {
     swapContext?.setGlobalDialogMessage(undefined)
+    props.dismissClose?.()
   }
 
   const addToken = () => {

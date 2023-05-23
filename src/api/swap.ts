@@ -50,9 +50,9 @@ export function getSwapData<T=any,P=any>(chainId: number, params: P): AxiosPromi
   })
 }
 
-export function trades<T=any,P=any>(params: P): AxiosPromise<T>{
+export function trade<T=any,P=any>(params: P): AxiosPromise<T>{
   return swapRequest({
-    url: `/trades`,
+    url: `/trade`,
     params
   })
 }
