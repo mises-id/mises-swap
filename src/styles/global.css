@@ -188,6 +188,10 @@
   margin-top:20px;
 }
 
+.ml-2{
+  margin-left:2px;
+}
+
 .block{
   display:block;
 }
@@ -246,6 +250,12 @@
 
 .overflow-hidden{
   overflow:hidden;
+}
+
+.truncate{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
 .rounded{

@@ -33,14 +33,17 @@ const Home = (props: routeProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const { chain } = useNetwork()
-  const chainId = chain?.id || 1
+  const swapContext = useContext(SwapContext)
 
+  const { chain } = useNetwork()
+
+  const chainId = chain?.id || swapContext?.chainId || 1
   const [tokens, settokens] = useState<token[] | undefined>(undefined)
   const [toAmount, setToAmount] = useState('')
-  const swapContext = useContext(SwapContext)
   const { address } = useAccount()
   const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
+  const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
+  // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
 
@@ -105,18 +108,25 @@ const Home = (props: routeProps) => {
     networkChangeCancel()
     networkChangeRun()
   })
+  
+  useEffect(() => {
+    if(swapContext?.chainId) {
+      networkChangeCancel()
+      networkChangeRun()
+    }
+    // eslint-disable-next-line
+  }, [swapContext?.chainId])
+  
 
   const [approveLoading, setapproveLoading] = useState(false)
 
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
-
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
     }
-
+    
     const parseAmountStr = fromToken ? parseAmount(amount, fromToken?.decimals) : '0'
-
     if (parseAmountStr === '0') return Promise.reject('')
 
     try {
@@ -133,13 +143,11 @@ const Home = (props: routeProps) => {
           setquoteData(undefined)
           return
         }
-  
         setquoteData(firstTrade)
 
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
         if (swapContext?.fromAmount && quoteType === 'from') setToAmount(toTokenAmount)
-
         if (quoteType === 'to') {
           swapContext?.setFromAmount(toTokenAmount)
         }
@@ -482,6 +490,8 @@ const Home = (props: routeProps) => {
     } else {
       swapContext?.setFromAmount('')
       setToAmount('')
+      setquoteData(undefined)
+      setapproveLoading(false)
     }
   }
   const getToInputChange = (val: string) => {
@@ -491,8 +501,10 @@ const Home = (props: routeProps) => {
       setToAmount(value)
       setToInputChange(value)
     } else {
-      // swapContext?.setFromAmount('')
+      swapContext?.setFromAmount('')
       setToAmount('')
+      setquoteData(undefined)
+      setapproveLoading(false)
     }
   }
   const setToInputChange = (value: string) => {
@@ -511,7 +523,6 @@ const Home = (props: routeProps) => {
     setToAmount('')
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
-
     if (toTokenAddress && fromTokenAddress) {
       run(fromTokenAddress, toTokenAddress, value, 'from')
     }
@@ -534,7 +545,7 @@ const Home = (props: routeProps) => {
     const toTokenAddress = swapContext!.swapToData.tokenAddress
 
     if (swapContext?.fromAmount && toTokenAddress) {
-      run(val, toTokenAddress, swapContext.fromAmount)
+      run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
   }
 
@@ -553,21 +564,30 @@ const Home = (props: routeProps) => {
     }
 
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
-
     if (swapContext?.fromAmount && fromTokenAddress) {
-      run(fromTokenAddress, val, swapContext.fromAmount)
+      run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
   }
 
   const switchToken = () => {
-    setToAmount('')
-    swapContext?.setFromAmount(toAmount)
-
+    if(swapLoading) {
+      return
+    }
+    
     if (swapContext) {
       const swapToData = swapContext.swapToData
       const swapFromData = swapContext.swapFromData
       const fromToken = tokens?.length && findToken(tokens, swapFromData.tokenAddress)
       const toToken = tokens?.length && findToken(tokens, swapToData.tokenAddress)
+      cancel()
+      
+      currentSwitchType === 'from' ? 
+      run(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to') : 
+      run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, 'from')
+      setcurrentSwitchType(currentSwitchType === 'from' ? 'to' : 'from')
+
+      setToAmount(swapContext.fromAmount)
+      swapContext?.setFromAmount(toAmount)
 
       swapContext.swapToData = {
         tokenAddress: swapFromData.tokenAddress,
@@ -586,16 +606,19 @@ const Home = (props: routeProps) => {
       swapContext.setswapFromData({
         ...swapContext.swapFromData
       })
-      console.log(toAmount, 'toAmounttoAmounttoAmount===')
-      if (toAmount) run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount)
+      // console.log(swapContext.fromAmount, 'toAmounttoAmounttoAmount===')
+      // console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to')
+      if (swapContext.fromAmount) {
+        
+      }
     }
   }
 
   useEffect(() => {
     if (!address) {
       swapContext?.setStatus(1) // unconnect 
-      setquoteData(undefined)
-      cancel()
+      // setquoteData(undefined)
+      // cancel()
       return
     }
 
@@ -608,8 +631,8 @@ const Home = (props: routeProps) => {
 
     if (!swapContext?.fromAmount) {
       swapContext?.setStatus(3) // unset amount
-      setquoteData(undefined)
-      cancel()
+      // setquoteData(undefined)
+      // cancel()
       return
     }
 
@@ -648,7 +671,7 @@ const Home = (props: routeProps) => {
           inputMode='decimal'
           value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
 
-        <div className="switch-token flex items-center justify-center" onClick={switchToken}>
+        <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
         </div>
 

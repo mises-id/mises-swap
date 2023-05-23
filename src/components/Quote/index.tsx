@@ -25,25 +25,28 @@ const Quote: FC<Iprops> = (props) => {
   const tokenStr = useMemo(() => {
     if (props.data && props.tokens) {
       const data = props.data
-      const fromToken = findToken(props.tokens, data.from_token_address)
-      const toToken = findToken(props.tokens, data.to_token_address)
+      const fromToken = swapContext?.swapFromData
+      const toToken = swapContext?.swapToData
       if(fromToken && toToken){
-        const fromAmount = formatAmount(data.from_token_amount, fromToken?.decimals)
-        const toAmount = formatAmount(data.to_token_amount, toToken?.decimals)
+        const from_token_amount = fromToken.tokenAddress === data.from_token_address ? data.from_token_amount : data.to_token_amount
+        const to_token_amount = fromToken.tokenAddress === data.from_token_address ? data.to_token_amount : data.from_token_amount
+        
+        const fromAmount = formatAmount(from_token_amount, fromToken?.decimals)
+        const toAmount = formatAmount(to_token_amount, toToken?.decimals)
         const showFromToken = tokenType === 'from' ? fromToken : toToken
         const showToToken = tokenType === 'from' ? toToken : fromToken
         const fromTokenSymbol = showFromToken.symbol
         const toTokenSymbol = showToToken.symbol
         const toAmountNumber = BigNumber(fromAmount).dividedBy(toAmount)
         const toTokenCompared = toAmountNumber.comparedTo(0.00001) > -1
-        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, fromToken.decimals / 2) : (toTokenCompared ? toAmountNumber.toString().substring(0, 7) : '<0.00001')
+        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, 7) : (toTokenCompared ? toAmountNumber.toString().substring(0, 7) : '<0.00001')
   
         return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
       }
     }
     return ''
 
-  }, [tokenType, props.data, props.tokens])
+  }, [props.data, props.tokens, swapContext?.swapFromData, swapContext?.swapToData, tokenType])
 
   const toToken = useMemo(() => {
     if(props.data && props.tokens){
@@ -149,7 +152,6 @@ const Quote: FC<Iprops> = (props) => {
   }, [props.status, isOpen])
 
   const {chain} = useNetwork()
-
   return (
     (props.loading || props.data) ?
       <div className='quote-view'>
@@ -180,15 +182,15 @@ const Quote: FC<Iprops> = (props) => {
 
             </div>
 
-            <div className='details-box' style={{ height: showDetail ? 196 : 0 }}>
+            <div className='details-box' style={{ height: showDetail ? ((swapContext?.receivingAddress || address) ? 196 : 170) : 0 }}>
               <div className="advanced-swap-details flex flex-col gap-4">
-                <div className='flex items-center justify-between'>
+                {(swapContext?.receivingAddress || address) &&<div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Receiving address</span>
                   <div className='swap-detail-value cursor-pointer'  onClick={showEditAddressDialog}>
                     {shortenAddress(swapContext?.receivingAddress || address)}
                     {props.status !== 'ready' ? <EditSOutline className='edit ml-5'/> : ''}
                   </div>
-                </div>
+                </div>}
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
                   <span className='swap-detail-value'>{`${networkFee}`.substring(0, 7)} {chain?.nativeCurrency.symbol}</span>

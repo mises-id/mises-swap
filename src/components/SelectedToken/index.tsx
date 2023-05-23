@@ -19,7 +19,7 @@ const SelectedToken = memo((props: Iprops) => {
         height={24}
         src={currentToken?.logo_uri}
       />
-      <span className='symbol'>{currentToken?.symbol}</span>
+      <span className='symbol truncate' style={{maxWidth: 100}}>{currentToken?.symbol}</span>
     </div>
     {props.status !== 'ready' && <DownOutline className='downOutline' />}
   </div>

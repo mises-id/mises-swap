@@ -16,7 +16,7 @@ const headers:{[key: string]: string} = {
 const request = axios.create({
   headers,
   baseURL: 'https://api.test.mises.site/api/v1/swap',
-  timeout: 10000,
+  timeout: 5000,
 });
 
 // add request interceptors
@@ -37,7 +37,6 @@ request.interceptors.response.use((response: AxiosResponse) => {
   return Promise.reject(data);
 },err=>{
   const { data } = err.response;
-  console.log(data, 1243)
   return Promise.reject(data);
 });
 

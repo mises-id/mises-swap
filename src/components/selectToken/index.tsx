@@ -113,7 +113,7 @@ const SelectTokens: FC<Iprops> = (props) => {
             height={36}
           />
         }
-        description={item?.symbol}
+        description={<div className='truncate' style={{maxWidth: 200}}>{item?.symbol}</div> }
         extra={
           <div className='token-balance'>
             {/* <span>0</span> */}
@@ -121,7 +121,7 @@ const SelectTokens: FC<Iprops> = (props) => {
           </div>
         }
       >
-        <span className='token-name'>{item?.name}</span>
+        <span className='token-name truncate' style={{maxWidth: 200}}>{item?.name}</span>
       </List.Item>
     )
   }
