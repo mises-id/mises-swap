@@ -1,5 +1,7 @@
 interface Window {
-  bitkeep: any
+  bitkeep: any,
+  misesWallet: any,
+  ethereum: any
 }
 interface globalThis {
   IS_REACT_ACT_ENVIRONMENT: boolean

@@ -12,7 +12,7 @@ export const bitskiWallet = ({
   chains,
   ...options
 }: BitskiWalletOptions & InjectedConnectorOptions): Wallet => {
-  const ethereum = window.ethereum as WindowProvider
+  const ethereum = window.ethereum as WindowProvider || {}
 
   const isInjected =
     typeof window !== 'undefined' && typeof ethereum.isBitski !== 'undefined';

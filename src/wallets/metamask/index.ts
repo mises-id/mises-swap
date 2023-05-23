@@ -1,4 +1,4 @@
-import { isAndroid } from '@/utils';
+import { isAndroid, isMisesBrowser } from '@/utils';
 import { Chain, Wallet, getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 import type { InjectedConnectorOptions } from '@wagmi/core/dist/connectors/injected';
 import { WindowProvider } from 'wagmi';
@@ -68,7 +68,7 @@ export const metaMaskWallet = ({
   // in window.providers scenarios with multiple wallets injected.
   const isMetaMaskInjected =
     typeof window !== 'undefined' &&
-    typeof window.ethereum !== 'undefined' &&
+    typeof ethereum !== 'undefined' &&
     (ethereum.providers?.some(isMetaMask) || ethereum.isMetaMask);
   const shouldUseWalletConnect = !isMetaMaskInjected;
 
@@ -101,7 +101,7 @@ export const metaMaskWallet = ({
                 providers
                   ? providers.find(isMetaMask)
                   : typeof window !== 'undefined'
-                  ? window.ethereum
+                  ? ethereum
                   : undefined,
               ...options,
             },
@@ -109,10 +109,10 @@ export const metaMaskWallet = ({
 
       const getUri = async () => {
         const provider: any = await connector.getProvider()
-
-        return isAndroid()
-          ? provider.connector.uri
-          : `https://metamask.app.link/wc?uri=${encodeURIComponent(provider.connector.uri)}`;
+        if(isAndroid() && isMisesBrowser()){
+          return 'https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn'
+        }
+        return `https://metamask.app.link/wc?uri=${encodeURIComponent(provider.connector.uri)}`;
       };
 
       return {

@@ -65,3 +65,8 @@ export function isIOS(): boolean {
 export function isMobile(): boolean {
   return isAndroid() || isIOS();
 }
+
+
+export function isMisesBrowser(): boolean {
+  return window.misesWallet
+}
