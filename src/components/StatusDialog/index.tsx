@@ -2,6 +2,7 @@ import { SwapContext } from '@/context/swapContext'
 import { Button, CenterPopup, CenterPopupProps, Image } from 'antd-mobile'
 import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
+import { useWalletClient } from 'wagmi';
 interface Iprops extends CenterPopupProps {
   successClose?: ()=>void;
   dismissClose?: ()=>void;
@@ -16,9 +17,20 @@ const StatusDialog: FC<Iprops> = (props) => {
     swapContext?.setGlobalDialogMessage(undefined)
     props.dismissClose?.()
   }
-
+  const aaa = useWalletClient()
   const addToken = () => {
-    console.log(swapContext?.globalDialogMessage?.info)
+    const {tokenAddress, decimals, symbol } = swapContext?.globalDialogMessage?.info as any
+
+    if(tokenAddress && decimals && symbol) {
+      aaa.data?.watchAsset({
+        type: 'ERC20',
+        options: {
+          address: tokenAddress,
+          decimals: decimals,
+          symbol: symbol,
+        }
+      })
+    }
   }
 
   const goToExplorer = () =>{
