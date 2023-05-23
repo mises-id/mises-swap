@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
-import { findToken, formatAmount, shortenAddress } from '@/utils';
+import { formatAmount, shortenAddress } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'
@@ -50,40 +50,41 @@ const Quote: FC<Iprops> = (props) => {
 
   const toToken = useMemo(() => {
     if(props.data && props.tokens){
-      const toToken = findToken(props.tokens, props.data.to_token_address)
+      const toToken = swapContext?.swapToData
       return toToken
     }
     return undefined
     
-  }, [props.data, props.tokens])
+  }, [props.data, props.tokens, swapContext?.swapToData])
 
   const minOutNumber = useMemo(() => {
     if (props.data && slippage && props.tokens) {
       const data = props.data
-      const toToken = findToken(props.tokens, data.to_token_address)
+      const toToken = swapContext?.swapToData
       if(!toToken) return
 
-      const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
+      const from_token_amount = toToken.tokenAddress === data.to_token_address ? data.to_token_amount : data.from_token_amount
+      const toAmount = formatAmount(from_token_amount, toToken?.decimals)
       const slippageValue =  Number(slippage) < 50 ? slippage : defaultSlippageValue
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippageValue) / 100)
       return minNumber.toString().substring(0, 7)
     }
     return 0
 
-  }, [props.data, props.tokens, slippage])
+  }, [props.data, props.tokens, slippage, swapContext?.swapToData])
 
   const expectedNumber = useMemo(() => {
     if (props.data && props.tokens) {
       const data = props.data
-      const toToken = findToken(props.tokens, data.to_token_address)
-
+      const toToken = swapContext?.swapToData
       if(!toToken) return
 
-      const toAmount = formatAmount(data.to_token_amount, toToken.decimals)
+      const from_token_amount = toToken.tokenAddress === data.to_token_address ? data.to_token_amount : data.from_token_amount
+      const toAmount = formatAmount(from_token_amount, toToken?.decimals)
       return BigNumber(toAmount).toString().substring(0, 7)
     }
     return 0
-  }, [props.data, props.tokens])
+  }, [props.data, props.tokens, swapContext?.swapToData])
 
   const [gasPrice, setgasPrice] = useState('0')
   useEffect(() => {

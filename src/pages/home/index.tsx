@@ -565,6 +565,7 @@ const Home = (props: routeProps) => {
 
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     if (swapContext?.fromAmount && fromTokenAddress) {
+      setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
   }
