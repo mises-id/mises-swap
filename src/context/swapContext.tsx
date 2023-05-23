@@ -41,7 +41,9 @@ export type SwapContextType = {
   notification: notificationData[], 
   setNotification: Dispatch<SetStateAction<notificationData[]>>,
   pushNotificationData: (params: notificationData)=>void,
-  removeNotificationData: (index: number) => void
+  removeNotificationData: (index: number) => void,
+  chainId: number, 
+  setChainId: Dispatch<SetStateAction<number>>
 };
 interface Iprops {
   children?: ReactNode
@@ -67,6 +69,8 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [receivingAddress, setReceivingAddress] = useState<`0x${string}` | undefined>(undefined)
 
   const [globalDialogMessage, setGlobalDialogMessage] = useState<globalDialogMessageData>()
+
+  const [chainId, setChainId] = useState<number>(1)
   
   const [notification, setNotification] = useState<notificationData[]>([])
 
@@ -78,8 +82,6 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
       if(findItemIndex > -1){
         removeNotificationData(findItemIndex)
-      }else{
-        console.log('removeed')
       }
     }, 3000);
     settimeout(timeoutFn)
@@ -98,7 +100,6 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
       clearTimeout(timeout)
       settimeout(undefined)
     }
-    console.log('remove')
   }
   return <SwapContext.Provider value={{
     swapToData,
@@ -118,7 +119,9 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     notification, 
     setNotification,
     pushNotificationData,
-    removeNotificationData
+    removeNotificationData,
+    chainId, 
+    setChainId
   }}>{children}</SwapContext.Provider>;
 };
 
