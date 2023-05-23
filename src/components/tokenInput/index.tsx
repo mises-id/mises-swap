@@ -5,11 +5,9 @@ import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
 import { getBalance } from '@/api/ether'
-import { nativeTokenAddress, parseAmount } from '@/utils'
-import { getQuote } from '@/api/swap'
+import { nativeTokenAddress } from '@/utils'
 import BigNumber from 'bignumber.js'
-import { fetchFeeData } from '@wagmi/core'
-import { useRequest, useToggle } from 'ahooks'
+import { useRequest } from 'ahooks'
 export interface tokenInputRef {
   getBalanceFn: () => void
 }
