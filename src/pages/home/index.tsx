@@ -515,6 +515,7 @@ const Home = (props: routeProps) => {
 
     if (toTokenAddress && fromTokenAddress) {
       run(toTokenAddress, fromTokenAddress, value, 'to')
+      setcurrentSwitchType('to')
     }
   }
 
@@ -524,6 +525,7 @@ const Home = (props: routeProps) => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (toTokenAddress && fromTokenAddress) {
+      setcurrentSwitchType('from')
       run(fromTokenAddress, toTokenAddress, value, 'from')
     }
   }
@@ -585,6 +587,13 @@ const Home = (props: routeProps) => {
       currentSwitchType === 'from' ? 
       run(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to') : 
       run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, 'from')
+      if(currentSwitchType === 'from'){
+        console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, currentSwitchType)
+      }else{
+        console.log(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, currentSwitchType)
+      }
+      
+      
       setcurrentSwitchType(currentSwitchType === 'from' ? 'to' : 'from')
 
       setToAmount(swapContext.fromAmount)
