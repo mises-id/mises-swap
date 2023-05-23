@@ -78,6 +78,13 @@ body,html,#root,.App{
   .dialog-container{
     --min-width: 90vw;
   }
+  /* .mises-title{
+    display: none;
+  } */
+
+  .swap-title{
+    font-size: 18px;
+  }
 }
 @media screen and (min-width:401px){
   .dialog-container{

@@ -188,10 +188,6 @@
   margin-top:20px;
 }
 
-.ml-2{
-  margin-left:2px;
-}
-
 .block{
   display:block;
 }
@@ -422,6 +418,14 @@ body,html,#root,.App{
 @media screen and (max-width:400px){
   .dialog-container{
     --min-width: 90vw;
+  }
+
+  /* .mises-title{
+    display: none;
+  } */
+
+  .swap-title{
+    font-size: 18px;
   }
 }
 
