@@ -39,7 +39,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const getBalanceFn = async () => {
     const { tokenAddress } = props
     setIsSetedMax(false)
-    if (tokenAddress && address && chain?.id) {
+    if (tokenAddress && address && chain?.id && props.tokens?.length) {
       const res = await getBalance(tokenAddress as address, address, chain)
       if (res) {
         const num = Number(res.formatted) === 0 ? '0' : res.formatted?.substring(0, 7)
@@ -112,7 +112,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         selectTokenAddress={props.tokenAddress} />
 
     </div>
-    {props.status !== 'ready' && !loading && <div className='flex justify-between'>
+    {props.status !== 'ready' && !loading && !!props.tokens?.length && <div className='flex justify-between'>
       <div>
         {/* $ {formatUsd} */}
       </div>

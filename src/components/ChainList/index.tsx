@@ -1,9 +1,9 @@
-import { Image, Mask } from 'antd-mobile';
+import { Button, Image, Mask } from 'antd-mobile';
 import { CloseCircleFill, DownOutline } from 'antd-mobile-icons';
-import React, { FC, useContext, useMemo } from 'react'
+import React, { FC, useContext, useEffect, useMemo } from 'react'
 import './index.less'
 
-import { useChainId } from 'wagmi'
+import { useChainId, useSwitchNetwork } from 'wagmi'
 import { Chain } from '@rainbow-me/rainbowkit';
 import { useBoolean } from 'ahooks';
 import { chainList } from '@/App';
@@ -31,20 +31,34 @@ const ChainList: FC<IProps> = (props) => {
     return chainList.find(chain => chain.id === (props.chain ? chainId : swapContext?.chainId))
     // eslint-disable-next-line
   }, [chainId, props.chain, swapContext?.chainId])
-
-  const openModal = () => {
+  
+  const { switchNetwork } = useSwitchNetwork()
+  const switchChain = (val: Chain) => {
+    swapContext?.setChainId(val.id)
     if (props.chain) {
-      props.openChainModal()
-      return
+      switchNetwork?.(val.id)
     }
-    setTrue()
+    setFalse()
   }
+
+  useEffect(() => {
+    console.log(props.chain)
+    if(props.chain?.id) swapContext?.setChainId(props.chain?.id)
+    // eslint-disable-next-line
+  }, [props.chain])
+  
+
   return (
     <>
-      <div className='flex items-center current-chain' onClick={openModal}>
+      {currentChain?.iconUrl && <div className='flex items-center current-chain' onClick={setTrue}>
         <Image width={20} height={20} src={currentChain?.iconUrl as string} />
         <DownOutline className='ml-10 downoutline' />
-      </div>
+      </div>}
+
+      {!currentChain.iconUrl && <Button color='danger' size='small' shape='rounded' onClick={setTrue}>
+        Wrong Network
+      </Button>}
+
       {isOpen && <div>
         <Mask visible={isOpen} onMaskClick={() => setFalse()} />
         <div className='switch-network-container'>
@@ -57,10 +71,7 @@ const ChainList: FC<IProps> = (props) => {
               const item = val as any
               return <div key={index}
                 className={`flex gap-2 chain-item items-center cursor-pointer ${swapContext?.chainId === val.id ? 'chain-active' : ''}`}
-                onClick={() => {
-                  swapContext?.setChainId(val.id)
-                  setFalse()
-                }}>
+                onClick={()=>switchChain(val)}>
                 <Image
                   width={28}
                   height={28}

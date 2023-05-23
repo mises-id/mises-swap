@@ -61,7 +61,7 @@ const ConnectWallet: FC<IProps> = (props) => {
     <div className='flex items-center'>
       <ChainList chains={props.chains} chain={props.chain} openChainModal={props.openChainModal} />
       <div className='ml-10'>
-        {props.account ? <div className='flex items-center gap-2'>
+        {props.account && props.chain?.iconUrl && <div className='flex items-center gap-2'>
           <div className='flex items-center account-info' onClick={() => {
             setisOpen(true)
           }}>
@@ -69,8 +69,8 @@ const ConnectWallet: FC<IProps> = (props) => {
             <span className='ml-10 account-address'>{shortenAddress(address)}</span>
           </div>
           <HistoryList visible={isOpen} onClose={()=>setisOpen(false)}/>
-        </div> :
-          <Button size='small' onClick={props.openConnectModal} shape='rounded' color='primary' className='connect-btn'>Connect Wallet</Button>}
+        </div>}
+        {!props.account && <Button size='small' onClick={props.openConnectModal} shape='rounded' color='primary' className='connect-btn'>Connect</Button>}
       </div>
     </div>
   )
