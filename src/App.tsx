@@ -21,8 +21,7 @@ import ConnectWallet from './components/ConnectWallet';
 import {
   injectedWallet,
   walletConnectWallet,
-  ledgerWallet,
-  coinbaseWallet
+  ledgerWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
@@ -118,7 +117,7 @@ function App() {
       wallets: [
         injectedWallet({ chains }),
         metaMaskWallet({ projectId, chains }),
-        coinbaseWallet({ chains, appName: 'Mises Swap' }),
+        // coinbaseWallet({ chains, appName: 'Mises Swap' }),
         bitskiWallet({ chains }),
         okxWallet({ projectId, chains }),
         // imTokenWallet({ projectId, chains }),
@@ -127,7 +126,7 @@ function App() {
         bitkeepWallet({ chains }),
         trustWallet({ projectId, chains }),
         walletConnectWallet({ projectId, chains }),
-        ledgerWallet({ projectId, chains })
+        ledgerWallet({ projectId, chains }),
       ],
     }
   ]);
@@ -173,7 +172,7 @@ function App() {
               <SwapProvider>
                 <div className='flex justify-between items-center px-10 py-10'>
                   {/* <Image width={80} src='/logo192.png' /> */}
-                  <p className='swap-title'>Mises <span>Swap</span></p>
+                  <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
                   <ConnectButton.Custom>
                     {(props) => {
                       const ready = props.mounted;
