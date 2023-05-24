@@ -8,7 +8,7 @@ import { routeProps } from "@/routes";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
 import { useRequest } from "ahooks";
-import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain } from '@wagmi/core'
+import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
@@ -183,8 +183,13 @@ const Home = (props: routeProps) => {
         }
         return
       }
-    } catch (error) {
-      swapContext?.setStatus(11)
+    } catch (error: any) {
+      if(error.message && error.message === "timeout of 5000ms exceeded") {
+        swapContext?.setStatus(12)
+      }else{
+        swapContext?.setStatus(11)
+      }
+      
       setquoteData(undefined)
     }
   }
@@ -323,8 +328,8 @@ const Home = (props: routeProps) => {
 
   const submitSwap = async () => {
     // eth_signTypedData_v4
-    // const sign = await signTypedData()
-
+    const walletClient = await getWalletClient({ chainId })
+    console.log(walletClient, 'walletClient')
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
