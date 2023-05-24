@@ -29,17 +29,23 @@ const SwapButton: FC<Iprops> = (props) => {
   const text = useMemo((): string=>{
     let message = swapStatus[status as status]
 
-    if(status && [4, 9].includes(status)){
+    if(status && typeof status === 'number' && [4, 9].includes(status)){
       const token = swapContext?.swapFromData
       const fn = swapStatus[status as status] as any
       message = fn(token?.symbol)
+    }
+    
+    if(status && typeof status === 'string' ){
+      return status
     }
     return message as string
   // eslint-disable-next-line
   }, [status, swapContext?.swapFromData.tokenAddress])
 
   const isDisabled = useMemo(()=>{
-    return (status && ![99999, 1, 9].includes(status)) || false
+    const isNumberStatus = typeof status === 'number' && ![99999, 1, 9].includes(status)
+    
+    return (status && (typeof status === 'string' || isNumberStatus)) || false
   }, [status])
 
   return <Button

@@ -30,8 +30,8 @@ export type SwapContextType = {
   setswapFromData: Dispatch<SetStateAction<swapData>>
   fromAmount: string,
   setFromAmount: Dispatch<SetStateAction<string>>
-  status: number,
-  setStatus: Dispatch<SetStateAction<number>>
+  status: number | string,
+  setStatus: Dispatch<SetStateAction<number | string>>
   slippage: string,
   setSlippage: Dispatch<SetStateAction<string>>
   receivingAddress: `0x${string}` | undefined,
@@ -60,7 +60,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [fromAmount, setFromAmount] = useState('')
 
-  const [status, setStatus] = useState(1)
+  const [status, setStatus] = useState<number | string>(1)
 
   const [slippage, setSlippage] = useState('')
 

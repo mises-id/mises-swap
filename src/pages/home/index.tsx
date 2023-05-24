@@ -139,7 +139,7 @@ const Home = (props: routeProps) => {
       if (res.data.data.length) {
         const [firstTrade] = res.data.data
         if (firstTrade.error) {
-          swapContext?.setStatus(11)
+          swapContext?.setStatus(firstTrade.error)
           setquoteData(undefined)
           return
         }
