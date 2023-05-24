@@ -1,5 +1,5 @@
 import { getOrderList } from '@/api/swap'
-import { formatAmount, networkFee, shortenAddress } from '@/utils'
+import { formatAmount, networkFee, shortenAddress, substringAmount } from '@/utils'
 import { Button, CenterPopup, CenterPopupProps, ErrorBlock, Image, List, Loading, Toast } from 'antd-mobile'
 import React, { CSSProperties, FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useDisconnect, useNetwork } from 'wagmi'
@@ -89,7 +89,7 @@ const HistoryList: FC<IProps> = (props) => {
         extra={
           <div className='pr-12 text-right'>
             <p className='from-amount'>-{formatAmount(item.from_token_amount, item.from_token.decimals)} {item.from_token.symbol}</p>
-            <p className='to-amount'>+{formatAmount(item.to_token_amount, item.to_token.decimals).substring(0, item.to_token.decimals / 2)} {item.to_token.symbol}</p>
+            <p className='to-amount'>+{substringAmount(formatAmount(item.to_token_amount, item.to_token.decimals))} {item.to_token.symbol}</p>
           </div>
         }
       >
@@ -272,7 +272,7 @@ const HistoryList: FC<IProps> = (props) => {
                   />
                   <span className='swap-token-item-name'>{detail.to_token.symbol}</span>
                 </div>
-                <div className='to-token-amount text-2xl'>{formatAmount(detail.to_token_amount, detail.to_token.decimals).substring(0, detail.to_token.decimals / 2)}</div>
+                <div className='to-token-amount text-2xl'>{substringAmount(formatAmount(detail.to_token_amount, detail.to_token.decimals))}</div>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
 import { Image } from 'antd-mobile'
 import { CloseOutline } from 'antd-mobile-icons'
+import { substringAmount } from '@/utils'
 interface IProps {
 
 }
@@ -21,7 +22,7 @@ const Notification:FC<IProps> = ()=> {
   const swapText = (val: notificationData) =>{
     const {toToken,fromToken,toTokenAmount,fromTokenAmount} = val
     if(!toTokenAmount || !fromTokenAmount || !toToken) return fromToken.symbol
-    return `${fromTokenAmount} ${fromToken.symbol} for ${toTokenAmount.substring(0, toToken.decimals)} ${toToken.symbol}`
+    return `${fromTokenAmount} ${fromToken.symbol} for ${substringAmount(toTokenAmount)} ${toToken.symbol}`
   }
 
   const FromToTokenIcon = (props: {

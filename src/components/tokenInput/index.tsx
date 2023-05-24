@@ -5,7 +5,7 @@ import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
 import { getBalance } from '@/api/ether'
-import { nativeTokenAddress } from '@/utils'
+import { nativeTokenAddress, substringAmount } from '@/utils'
 import BigNumber from 'bignumber.js'
 import { useRequest } from 'ahooks'
 export interface tokenInputRef {
@@ -42,7 +42,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if (tokenAddress && address && chain?.id && props.tokens?.length) {
       const res = await getBalance(tokenAddress as address, address, chain)
       if (res) {
-        const num = Number(res.formatted) === 0 ? '0' : res.formatted?.substring(0, 7)
+        const num = Number(res.formatted) === 0 ? '0' : substringAmount(res.formatted)
         return num
       }
     }

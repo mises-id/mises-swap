@@ -1,6 +1,6 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
-import { formatAmount, shortenAddress } from '@/utils';
+import { formatAmount, shortenAddress, substringAmount } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { fetchFeeData } from '@wagmi/core'
@@ -39,7 +39,7 @@ const Quote: FC<Iprops> = (props) => {
         const toTokenSymbol = showToToken.symbol
         const toAmountNumber = BigNumber(fromAmount).dividedBy(toAmount)
         const toTokenCompared = toAmountNumber.comparedTo(0.00001) > -1
-        const toAmountStr = tokenType === 'from' ? BigNumber(toAmount).dividedBy(fromAmount).toString().substring(0, 7) : (toTokenCompared ? toAmountNumber.toString().substring(0, 7) : '<0.00001')
+        const toAmountStr = tokenType === 'from' ? substringAmount(BigNumber(toAmount).dividedBy(fromAmount).toString()) : (toTokenCompared ? substringAmount(toAmountNumber.toString()) : '<0.00001')
   
         return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
       }
@@ -67,7 +67,7 @@ const Quote: FC<Iprops> = (props) => {
       const toAmount = formatAmount(from_token_amount, toToken?.decimals)
       const slippageValue =  Number(slippage) < 50 ? slippage : defaultSlippageValue
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippageValue) / 100)
-      return minNumber.toString().substring(0, 7)
+      return substringAmount(minNumber.toString())
     }
     return 0
 
@@ -81,7 +81,7 @@ const Quote: FC<Iprops> = (props) => {
 
       const from_token_amount = toToken.tokenAddress === data.to_token_address ? data.to_token_amount : data.from_token_amount
       const toAmount = formatAmount(from_token_amount, toToken?.decimals)
-      return BigNumber(toAmount).toString().substring(0, 7)
+      return substringAmount(BigNumber(toAmount).toString())
     }
     return 0
   }, [props.data, props.tokens, swapContext?.swapToData])
@@ -194,7 +194,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>}
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
-                  <span className='swap-detail-value'>{`${networkFee}`.substring(0, 7)} {chain?.nativeCurrency.symbol}</span>
+                  <span className='swap-detail-value'>{substringAmount(`${networkFee}`)} {chain?.nativeCurrency.symbol}</span>
                 </div>
 
                 <div className='flex items-center justify-between'>

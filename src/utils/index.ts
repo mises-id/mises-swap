@@ -70,3 +70,19 @@ export function isMobile(): boolean {
 export function isMisesBrowser(): boolean {
   return window.misesWallet
 }
+
+export function substringAmount(amount: string): string {
+  if(!amount) {
+    return amount
+  }
+
+  const maxLen = 6;
+
+  const subAmount = amount.split('.');
+
+  if(subAmount[1]?.length > maxLen) {
+    return `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+  }
+
+  return amount
+}

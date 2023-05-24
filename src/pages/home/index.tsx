@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { routeProps } from "@/routes";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
-import { findToken, formatAmount, nativeTokenAddress, parseAmount } from "@/utils";
+import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
 import { useRequest } from "ahooks";
 import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
@@ -346,9 +346,11 @@ const Home = (props: routeProps) => {
 
       if (swapContext) {
         setapproveLoading(true)
+        const fromTokenAmount = `${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol}`
+        const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(toAmount).toString())} ${swapContext?.swapToData.symbol}`
         swapContext.setGlobalDialogMessage({
           type: 'pending',
-          description: `Waiting for confirmation Swapping ${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol} for ${swapContext?.swapToData.decimals && BigNumber(toAmount).toString().substring(0, 7)} ${swapContext?.swapToData.symbol}`
+          description: `Waiting for confirmation Swapping ${fromTokenAmount} for ${toTokenAmount}`
         })
       }
 
@@ -407,7 +409,7 @@ const Home = (props: routeProps) => {
           toToken: swapContext!.swapToData as unknown as token,
           hash: hash,
           fromTokenAmount: swapContext?.fromAmount,
-          toTokenAmount: toAmount.substring(0,6),
+          toTokenAmount: substringAmount(toAmount),
           text: 'Swapped',
         })
         fromInputRef.current?.getBalanceFn()
