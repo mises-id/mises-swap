@@ -17,12 +17,12 @@ const StatusDialog: FC<Iprops> = (props) => {
     swapContext?.setGlobalDialogMessage(undefined)
     props.dismissClose?.()
   }
-  const aaa = useWalletClient()
+  const walletClient = useWalletClient()
   const addToken = () => {
     const {tokenAddress, decimals, symbol } = swapContext?.globalDialogMessage?.info as any
 
     if(tokenAddress && decimals && symbol) {
-      aaa.data?.watchAsset({
+      walletClient.data?.watchAsset({
         type: 'ERC20',
         options: {
           address: tokenAddress,

@@ -36,8 +36,8 @@ request.interceptors.response.use((response: AxiosResponse) => {
   Toast.show(data.msg);
   return Promise.reject(data);
 },err=>{
-  const { data } = err.response;
-  return Promise.reject(data);
+  const { data } = err?.response || {};
+  return Promise.reject(data || err);
 });
 
 export default request;

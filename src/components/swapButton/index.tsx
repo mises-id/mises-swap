@@ -15,7 +15,8 @@ const swapStatus = {
   8: 'Not enough allowance',
   9: (token: string)=>`Approve use of ${token}`,
   10: 'Approval pending',
-  11: 'No payment channel found'
+  11: 'No payment channel found',
+  12: 'Network error, retrying'
 }
 
 export type status = keyof typeof swapStatus
@@ -47,12 +48,12 @@ const SwapButton: FC<Iprops> = (props) => {
     
     return (status && (typeof status === 'string' || isNumberStatus)) || false
   }, [status])
-
+  
   return <Button
     onClick={props?.onClick}
     block
     {...props}
-    color="primary"
+    color={status===12 ? 'danger' : "primary"}
     disabled={isDisabled}
     className='swap-button'>{text}</Button>
 }

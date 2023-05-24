@@ -138,31 +138,6 @@ function App() {
     webSocketPublicClient,
   });
 
-  // const { chain } = useNetwork()
-  // const [error, seterror] = useState('')
-
-  // const getHealthcheck = () => {
-  //   const chainId = chain?.id || 1;
-  //   const isChain = chains.some(val => `${val.id}` === `${chainId}`)
-
-  //   if (!isChain) {
-  //     seterror('Wrong network, please switch network')
-  //     return Promise.reject('Wrong network, please switch network')
-  //   }
-
-  //   return healthcheck<{
-  //     status: 'OK'
-  //   }>(chainId).then(res => {
-  //     if (res.data.status === 'OK') seterror('')
-  //   }).catch(err => {
-  //     if (err.statusCode === 404) {
-  //       seterror('Wrong network, please switch network')
-  //       return
-  //     }
-  //     seterror(err.message)
-  //   })
-  // }
-
   return (
     <div className="App">
       <WagmiConfig config={wagmiClient}>

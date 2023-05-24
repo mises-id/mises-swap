@@ -15,7 +15,6 @@ export const phantomWallet = ({
 }: PhantomWalletOptions & InjectedConnectorOptions): Wallet => {
   const isInjected =
     typeof window !== 'undefined' && !!((window as any).phantom as any)?.ethereum;
-  console.log(isInjected, 1222)
   const shouldUseWalletConnect = !isInjected;
   
   return {
