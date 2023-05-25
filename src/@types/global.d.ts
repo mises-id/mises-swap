@@ -4,7 +4,8 @@ interface token {
   "name": string,
   "address": address,
   "decimals": number,
-  "logo_uri": string
+  "logo_uri": string,
+  'balance'?: string
 }
 
 interface quoteParams {

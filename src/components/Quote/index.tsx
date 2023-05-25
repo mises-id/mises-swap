@@ -7,7 +7,8 @@ import { fetchFeeData } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
 import { CenterPopup, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
-import { useAccount, useNetwork } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { chainList } from '@/App';
 interface Iprops {
   loading: boolean;
   data: swapData | undefined
@@ -152,7 +153,16 @@ const Quote: FC<Iprops> = (props) => {
     }
   }, [props.status, isOpen])
 
-  const {chain} = useNetwork()
+  // const {chain} = useNetwork()
+
+  const nativeCurrency = useMemo(() => {
+    if(swapContext?.chainId) {
+      const chain = chainList.find(chain => chain.id === swapContext!.chainId)
+      if(chain) return chain.nativeCurrency
+    }
+    // eslint-disable-next-line
+  }, [swapContext?.chainId])
+
   return (
     (props.loading || props.data) ?
       <div className='quote-view'>
@@ -194,7 +204,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>}
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
-                  <span className='swap-detail-value'>{substringAmount(`${networkFee}`)} {chain?.nativeCurrency.symbol}</span>
+                  <span className='swap-detail-value'>{substringAmount(`${networkFee}`)} {nativeCurrency?.symbol}</span>
                 </div>
 
                 <div className='flex items-center justify-between'>
@@ -215,7 +225,7 @@ const Quote: FC<Iprops> = (props) => {
               </div>
               <div className='advanced-swap-details'>
                 <div className='flex items-center justify-between'>
-                  <span className='swap-detail-label'>Order routing</span>
+                  <span className='swap-detail-label'>Best routing</span>
                   <div className='flex items-center gap-2' onClick={()=>{
                     
                   }}>

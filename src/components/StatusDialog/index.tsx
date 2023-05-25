@@ -3,17 +3,33 @@ import { Button, CenterPopup, CenterPopupProps, Image } from 'antd-mobile'
 import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
 import { useWalletClient } from 'wagmi';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { logEvent } from 'firebase/analytics';
 interface Iprops extends CenterPopupProps {
   successClose?: ()=>void;
   dismissClose?: ()=>void;
 }
 const StatusDialog: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
+  const analytics = useAnalytics()
+
   const isOpen = useMemo(() => {
+    if(!!swapContext?.globalDialogMessage?.type && swapContext?.globalDialogMessage?.type !== 'pending') {
+      logEvent(analytics, `swap_${swapContext?.globalDialogMessage?.type}`, {
+        error_message: swapContext?.globalDialogMessage?.description || "swap-error-message" 
+      })
+    }
+
     return !!swapContext?.globalDialogMessage?.type
+
+    // eslint-disable-next-line
   }, [swapContext?.globalDialogMessage])
 
   const dismiss = () => {
+    if(swapContext?.globalDialogMessage?.description === 'timeout of 5000ms exceeded') {
+      window.location.reload()
+      return 
+    }
     swapContext?.setGlobalDialogMessage(undefined)
     props.dismissClose?.()
   }
@@ -38,6 +54,7 @@ const StatusDialog: FC<Iprops> = (props) => {
     if(info?.blockExplorer && info?.txHash) window.open(`${info?.blockExplorer}/tx/${info?.txHash}`, 'target=_blank')
     dismiss()
   }
+  if(swapContext?.globalDialogMessage?.description) console.log(swapContext?.globalDialogMessage?.description, '=====submiterror====')
   return (
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={dismiss} className='dialog-container'>
       {swapContext?.globalDialogMessage?.type === 'error' && <p className='status-dialog-title'>Error</p>}

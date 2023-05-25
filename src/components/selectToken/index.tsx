@@ -14,6 +14,7 @@ import {
 import { useRequest } from 'ahooks';
 import { SwapContext } from '@/context/swapContext';
 import SelectedToken from '../SelectedToken';
+import { substringAmount } from '@/utils';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -65,8 +66,9 @@ const SelectTokens: FC<Iprops> = (props) => {
           return getTokenList
           .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
           .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase() === searchQuery ? -1 : 1)
+          .sort((a, b) => (a.balance || b.balance) !=='0' ? -1 : 1)
         }else{
-          return getTokenList
+          return getTokenList.sort((a, b) => (a.balance || b.balance) !=='0' ? -1 : 1)
         }
       }
       return []
@@ -121,7 +123,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         description={<div className='truncate' style={{maxWidth: 200}}>{item?.symbol}</div> }
         extra={
           <div className='token-balance'>
-            {/* <span>0</span> */}
+            <span>{substringAmount(item.balance) || 0}</span>
             {tokenAddress === item?.address && <CheckOutline className='selected-icon' />}
           </div>
         }

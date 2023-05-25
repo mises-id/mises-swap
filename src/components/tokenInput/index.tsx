@@ -1,13 +1,11 @@
-import { Input, InputProps, Skeleton } from 'antd-mobile'
-import { Ref, forwardRef, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { Input, InputProps } from 'antd-mobile'
+import { Ref, forwardRef, useContext, useMemo, useState } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
-import { getBalance } from '@/api/ether'
 import { nativeTokenAddress, substringAmount } from '@/utils'
 import BigNumber from 'bignumber.js'
-import { useRequest } from 'ahooks'
 export interface tokenInputRef {
   getBalanceFn: () => void
 }
@@ -28,7 +26,8 @@ interface Iprops extends InputProps {
   tokenAddress?: string,
   onTokenChange?: (val: string) => void
   setInputChange?: (val: string) => void
-  status?: 'ready' | undefined
+  status?: 'ready' | undefined,
+  isTokenLoading?: boolean
 }
 
 const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
@@ -36,25 +35,40 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const swapContext = useContext(SwapContext)
 
   const { chain } = useNetwork()
-  const getBalanceFn = async () => {
-    const { tokenAddress } = props
-    setIsSetedMax(false)
-    if (tokenAddress && address && chain?.id && props.tokens?.length) {
-      const res = await getBalance(tokenAddress as address, address, chain)
-      if (res) {
-        const num = Number(res.formatted) === 0 ? '0' : substringAmount(res.formatted)
-        return num
-      }
+  // const getBalanceFn = useCallback(async () => {
+  //     const { tokenAddress } = props
+  //     setIsSetedMax(false)
+  //     if (tokenAddress && address && chain?.id && props.tokens?.length) {
+  //       // const res = await getBalance(tokenAddress as address, address, chain)
+  //       // if (res) {
+  //       //   const num = Number(res.formatted) === 0 ? '0' : substringAmount(res.formatted)
+  //       //   return num
+  //       // }
+  //       const findToken = props.tokens.find(val=>val.address === tokenAddress)
+  //       if(findToken){
+  //         console.log(findToken)
+  //         return findToken.balance ? formatAmount(findToken.balance) : 0
+  //       }
+  //     }
+  //     return '0'
+  //   },
+  //   // eslint-disable-next-line
+  //   [props.tokens, props.tokenAddress],
+  // )
+  const tokenBalance = useMemo(()=> {
+    if (props.tokenAddress && address && chain?.id && props.tokens?.length) {
+      const findToken = props.tokens.find(val=>val.address === props.tokenAddress)
+      return findToken && findToken.balance ? substringAmount(findToken.balance) : '0'
     }
     return '0'
-  }
+  }, [props.tokenAddress, props.tokens, address, chain])
   
-  const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
-    manual: false,
-    retryCount: 3,
-    debounceWait: 550,
-    refreshDeps: [address, props.tokenAddress, chain?.id]
-  })
+  // const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
+  //   manual: false,
+  //   retryCount: 3,
+  //   debounceWait: 550,
+  //   refreshDeps: [address, props.tokenAddress, chain?.id]
+  // })
 
   // useEffect(() => {
   //   cancel()
@@ -64,15 +78,14 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
   const { ...inputProps } = props
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      getBalanceFn: refresh
-    })
-  )
+  // useImperativeHandle(
+  //   ref,
+  //   () => ({
+  //     getBalanceFn: ()=>{}
+  //   })
+  // )
   
   const [isSetedMax, setIsSetedMax] = useState(false)
-
   const toMax = async () => {
     if(chain?.id){
       setIsSetedMax(true)
@@ -97,6 +110,27 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     return props.tokenAddress && address && BigNumber(tokenBalance || 0).comparedTo(gasFee) > -1
   }, [props.tokenAddress, address, tokenBalance, chain?.id])
 
+  // const fetchUSDFn = async () => {
+  //   if(props.tokenAddress && props.tokens?.length){
+  //     const token = props.tokens.find(token=> token.address === props.tokenAddress)
+  //     if(token) {
+  //       return await fetchUSD(token.symbol)
+  //     }
+  //   }
+  // }
+  // const { data: USDprice, loading: USDloading } = useRequest(fetchUSDFn, {
+  //   manual: false,
+  //   retryCount: 3,
+  //   debounceWait: 550,
+  //   refreshDeps: [props.tokenAddress]
+  // })
+  
+  // const priceValue = useMemo(() => {
+  //   if(inputProps.value) {
+  //     return BigNumber(inputProps.value).multipliedBy(USDprice).toFixed(2)
+  //   }
+  //   // eslint-disable-next-line
+  // }, [inputProps.value])
   return <div className='token-container'>
     <div className='flex items-center'>
       <Input
@@ -112,18 +146,18 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         selectTokenAddress={props.tokenAddress} />
 
     </div>
-    {props.status !== 'ready' && !loading && !!props.tokens?.length && <div className='flex justify-between'>
+    {props.status !== 'ready' &&<div className='flex justify-between h-14 mb-5'>
       <div>
-        {/* $ {formatUsd} */}
+        {/* {priceValue && <span>$ {priceValue}</span>}
+        {props.status !== 'ready' && props.tokenAddress  && USDloading && <div className='flex justify-end'><Skeleton animated className="custom-fiat-skeleton" /></div>} */}
       </div>
       <div>
-        {props.tokenAddress && address && <>
+        {props.tokenAddress && address && !props.isTokenLoading && <>
           Balance: {tokenBalance}
           {props.type === 'from' && tokenBalance !== '0' && showMax && !isSetedMax && <span onClick={toMax} className='max'>Max</span>}
         </>}
       </div>
     </div>}
-    {props.status !== 'ready' && props.tokenAddress && address && loading && <div className='flex justify-end'><Skeleton animated className="custom-token-skeleton" /></div>}
   </div>
 }
 export default forwardRef(TokenInput)

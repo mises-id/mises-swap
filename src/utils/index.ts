@@ -71,7 +71,7 @@ export function isMisesBrowser(): boolean {
   return window.misesWallet
 }
 
-export function substringAmount(amount: string): string {
+export function substringAmount(amount: string | undefined): string | undefined{
   if(!amount) {
     return amount
   }

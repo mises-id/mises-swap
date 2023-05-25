@@ -4,11 +4,10 @@ import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
-import { routeProps } from "@/routes";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useRequest } from "ahooks";
-import { sendTransaction, watchNetwork, watchAccount, waitForTransaction, Chain, getWalletClient } from '@wagmi/core'
+import { useAsyncEffect, useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
@@ -20,18 +19,26 @@ import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
 import { SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
-import { getBalance } from "@/api/ether";
+import { getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
-const Home = (props: routeProps) => {
+const Home = () => {
   // firebase
   const analytics = useAnalytics()
-  useEffect(() => {
+
+  useAsyncEffect(async () => {
     logEvent(analytics, 'open_swap_page')
-    getTokenList()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+    const getTokens = await getTokenList()
+
+    if (getTokens?.length) {
+      const tokenList = await getTokenListBalance(getTokens)
+
+      settokens([...tokenList])
+    }
+  }, []);
+
 
   const swapContext = useContext(SwapContext)
 
@@ -47,40 +54,92 @@ const Home = (props: routeProps) => {
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
 
-  const getTokenList = async () => {
-    const cacheTokens = sessionStorage.getItem(`${chainId}`)
-    let tokenList = undefined
-    if (cacheTokens) {
-      tokenList = JSON.parse(cacheTokens)
-    } else {
-      const res = await getTokens<{ "data": token[] }>(chainId)
-      if (res) {
-        tokenList = res.data.data
-        sessionStorage.setItem(`${chainId}`, JSON.stringify(tokenList))
-      } else {
-        tokenList = []
+  const [isTokenLoading, { setTrue, setFalse }] = useBoolean(true);
+
+  const getTokenListBalance = async (tokenList: token[]) => {
+    const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
+    const tokensToDetect = tokenList.map((val: token) => {
+      const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
+      return tokenAddress.toLocaleLowerCase()
+    })
+    if (address && chain) {
+      console.log('call balances')
+      setTrue()
+
+      tokenList = tokenList.map(val => {
+        val.balance = '0'
+        return val
+      })
+
+      try {
+        const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
+        for (const key in data) {
+          const balance = data[key];
+          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress ? nativeTokenAddress : `${key}`;
+          const tokenIndex = tokenList?.findIndex(val => val.address === tokenAddress) || -1
+          if (tokenIndex > -1) {
+            tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
+            // console.log(tokenList[tokenIndex], tokenAddress, key)
+          }
+        }
+        setFalse()
+        return tokenList
+
+      } catch (error: any) {
+        console.log(error)
+        logEvent(analytics, `swap_error`, {
+          error_message: error.message || 'Unknown error'
+        })
+        setFalse()
+        return tokenList
       }
     }
-    settokens([...tokenList])
-
-    if (swapContext) {
-      const token = findToken(tokenList, nativeTokenAddress) || {}
-
-      swapContext.swapFromData = {
-        tokenAddress: nativeTokenAddress,
-        ...token
+    return tokenList
+  }
+  const getTokenList = async () => {
+    try {
+      const cacheTokens = sessionStorage.getItem(`${chainId}`)
+      let tokenList: token[] = []
+      if (cacheTokens) {
+        tokenList = JSON.parse(cacheTokens)
+      } else {
+        const res = await getTokens<{ "data": token[] }>(chainId)
+        if (res) {
+          tokenList = res.data.data
+          sessionStorage.setItem(`${chainId}`, JSON.stringify(tokenList))
+        } else {
+          tokenList = []
+        }
       }
-      swapContext.setswapFromData({
-        ...swapContext.swapFromData
+      settokens([...tokenList])
+
+      if (swapContext) {
+        const token = findToken(tokenList, nativeTokenAddress) || {}
+
+        swapContext.swapFromData = {
+          tokenAddress: nativeTokenAddress,
+          ...token
+        }
+        swapContext.setswapFromData({
+          ...swapContext.swapFromData
+        })
+      }
+      return tokenList
+
+    } catch (error: any) {
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: error.message || "Unknown error"
       })
+      return []
     }
   }
 
-  const resetData = () => {
+  const resetData = async () => {
     setToAmount('')
     cancel()
     settokens(undefined)
-    resetInputData()
+
     if (swapContext) {
       swapContext.swapToData = {
         tokenAddress: '',
@@ -96,7 +155,9 @@ const Home = (props: routeProps) => {
         ...swapContext.swapFromData
       })
     }
-    return getTokenList()
+
+    const getTokens = await getTokenList()
+    resetInputData(getTokens)
   }
 
   const { run: networkChangeRun, cancel: networkChangeCancel } = useRequest(resetData, {
@@ -104,19 +165,15 @@ const Home = (props: routeProps) => {
     manual: true,
   });
 
-  watchNetwork(() => {
-    networkChangeCancel()
-    networkChangeRun()
-  })
-  
-  useEffect(() => {
-    if(swapContext?.chainId) {
-      networkChangeCancel()
-      networkChangeRun()
-    }
-    // eslint-disable-next-line
-  }, [swapContext?.chainId])
-  
+  // useEffect(() => {
+  //   if(swapContext?.chainId) {
+  //     networkChangeCancel()
+  //     networkChangeRun()
+  //   }
+  //   console.log('swapContext?.chainId')
+  //   // eslint-disable-next-line
+  // }, [swapContext?.chainId])
+
 
   const [approveLoading, setapproveLoading] = useState(false)
 
@@ -125,7 +182,7 @@ const Home = (props: routeProps) => {
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
     }
-    
+
     const parseAmountStr = fromToken ? parseAmount(amount, fromToken?.decimals) : '0'
     if (parseAmountStr === '0') return Promise.reject('')
 
@@ -151,45 +208,47 @@ const Home = (props: routeProps) => {
         if (quoteType === 'to') {
           swapContext?.setFromAmount(toTokenAmount)
         }
-  
+
         // get balance
         if (address) {
+          const fromToken = findToken(tokens, firstTrade.from_token_address)
+          const token = quoteType === 'from' ? fromToken : toToken;
           const getBalanceAddress = (quoteType === 'from' ? fromTokenAddr : toTokenAddr) as address
-          const balance = await getBalance(getBalanceAddress, address, chain as Chain)
+          // const balance = await getBalance(getBalanceAddress, address, chain as Chain)
 
-          if (!balance?.formatted) {
-            return res
-          }
-  
-          const compared = BigNumber(balance?.formatted).comparedTo(quoteType === 'from' ? amount : toTokenAmount)
+          // if (!token?.balance) {
+          //   return res
+          // }
+
+          const compared = BigNumber(token?.balance || '0').comparedTo(quoteType === 'from' ? amount : toTokenAmount)
 
           if (compared === -1) {
             // Insufficient token balance	
             swapContext?.setStatus(4)
             return res
           }
-          
-          if(getBalanceAddress !== nativeTokenAddress){
+
+          if (getBalanceAddress !== nativeTokenAddress) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
-  
+
             const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(quoteType === 'from' ? amount : toTokenAmount)
-  
+
             swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
-  
-          }else {
+
+          } else {
             swapContext?.setStatus(99999)
           }
         }
         return
       }
     } catch (error: any) {
-      if(error.message && error.message === "timeout of 5000ms exceeded") {
+      if (error.message && error.message === "timeout of 5000ms exceeded") {
         swapContext?.setStatus(12)
-      }else{
+      } else {
         swapContext?.setStatus(11)
       }
-      
+
       setquoteData(undefined)
     }
   }
@@ -214,7 +273,7 @@ const Home = (props: routeProps) => {
     }
   }
 
-  const getTransaction = async (tokenAddress: string,contract_address: string) => {
+  const getTransaction = async (tokenAddress: string, contract_address: string) => {
     try {
       const result = await transaction<{
         data: trade
@@ -247,7 +306,7 @@ const Home = (props: routeProps) => {
 
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
-    if (!tokenAddress && tokenAddress!==nativeTokenAddress) return
+    if (!tokenAddress && tokenAddress !== nativeTokenAddress) return
 
     try {
       const contract_address = quoteData?.aggregator?.contract_address
@@ -286,12 +345,12 @@ const Home = (props: routeProps) => {
       }
     } catch (error: any) {
       setapproveLoading(false)
-      if(error.message){
+      if (error.message) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : error.message
         })
-        return 
+        return
       }
       swapContext?.setGlobalDialogMessage({
         type: 'error',
@@ -341,10 +400,10 @@ const Home = (props: routeProps) => {
 
       const aggregatorAddress = quoteData?.aggregator.contract_address
 
-      if(!aggregatorAddress){
+      if (!aggregatorAddress) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
-          description:'Not found aggregator address'
+          description: 'Not found aggregator address'
         })
         return
       }
@@ -359,7 +418,7 @@ const Home = (props: routeProps) => {
         })
       }
 
-      const result = await trade<{ data: swapData }, quoteParams>({
+      const tradeParams = {
         chain_id: chainId,
         from_token_address: fromTokenAddress,
         to_token_address: toTokenAddress,
@@ -368,8 +427,9 @@ const Home = (props: routeProps) => {
         slippage: (swapContext?.slippage && Number(swapContext?.slippage) < 50) ? Number(swapContext.slippage) / 100 : Number(defaultSlippageValue) / 100,
         dest_receiver: swapContext?.receivingAddress,
         aggregator_address: aggregatorAddress
-        
-      })
+      }
+
+      const result = await trade<{ data: swapData }, quoteParams>(tradeParams)
 
       const firstTrade = result.data.data
 
@@ -385,6 +445,14 @@ const Home = (props: routeProps) => {
 
       const { gas_price, ...params } = firstTrade.trade
 
+
+      if (tradeParams.from_token_address !== params.from || tradeParams.to_token_address !== params.to || tradeParams.amount !== params.value.toString()) {
+        swapContext?.setGlobalDialogMessage({
+          type: 'error',
+          description: 'Internal error, please try again'
+        })
+        return
+      }
       const { hash } = await sendTransaction({
         ...params,
         gasPrice: gas_price,
@@ -407,7 +475,7 @@ const Home = (props: routeProps) => {
         hash: hash,
       })
 
-      if(data.status === 'success') {
+      if (data.status === 'success') {
         swapContext?.pushNotificationData({
           type: data.status,
           fromToken: swapContext!.swapFromData as unknown as token,
@@ -417,8 +485,6 @@ const Home = (props: routeProps) => {
           toTokenAmount: substringAmount(toAmount),
           text: 'Swapped',
         })
-        fromInputRef.current?.getBalanceFn()
-        toInputRef.current?.getBalanceFn()
         setapproveLoading(false)
         cancel()
       }
@@ -460,14 +526,16 @@ const Home = (props: routeProps) => {
     pollingInterval: 10000,
     pollingWhenHidden: false,
   });
-  
-  const resetInputData = async () =>{
+
+  const resetInputData = async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
     setToAmount('')
     setquoteData(undefined)
-
-    fromInputRef.current?.getBalanceFn()
-    toInputRef.current?.getBalanceFn()
+    const tokenList = paramTokens || tokens
+    if (tokenList?.length) {
+      const tokenBalanceList = await getTokenListBalance(tokenList)
+      settokens([...tokenBalanceList])
+    }
   }
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
@@ -475,18 +543,20 @@ const Home = (props: routeProps) => {
     manual: true,
   });
 
-  watchNetwork(() => {
+  useUpdateEffect(() => {
     networkChangeCancel()
     networkChangeRun()
-  })
+    console.log("watchNetwork")
+  }, [chainId])
 
-
-  watchAccount(account => {
+  useUpdateEffect(() => {
     cancel()
     run()
     accountChangeCancel()
     accountChangeRun()
-  })
+    console.log("watchAccount")
+  }, [address])
+
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
 
   const getFromInputChange = (val: string) => {
@@ -580,27 +650,27 @@ const Home = (props: routeProps) => {
   }
 
   const switchToken = () => {
-    if(swapLoading) {
+    if (swapLoading) {
       return
     }
-    
+
     if (swapContext) {
       const swapToData = swapContext.swapToData
       const swapFromData = swapContext.swapFromData
       const fromToken = tokens?.length && findToken(tokens, swapFromData.tokenAddress)
       const toToken = tokens?.length && findToken(tokens, swapToData.tokenAddress)
       cancel()
-      
-      currentSwitchType === 'from' ? 
-      run(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to') : 
-      run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, 'from')
-      if(currentSwitchType === 'from'){
+
+      currentSwitchType === 'from' ?
+        run(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to') :
+        run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, 'from')
+      if (currentSwitchType === 'from') {
         console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, currentSwitchType)
-      }else{
+      } else {
         console.log(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, currentSwitchType)
       }
-      
-      
+
+
       setcurrentSwitchType(currentSwitchType === 'from' ? 'to' : 'from')
 
       setToAmount(swapContext.fromAmount)
@@ -626,7 +696,7 @@ const Home = (props: routeProps) => {
       // console.log(swapContext.fromAmount, 'toAmounttoAmounttoAmount===')
       // console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to')
       if (swapContext.fromAmount) {
-        
+
       }
     }
   }
@@ -661,10 +731,10 @@ const Home = (props: routeProps) => {
   const fromInputRef = useRef<tokenInputRef>(null)
   const toInputRef = useRef<tokenInputRef>(null)
 
-  const dismissClose = ()=>{
+  const dismissClose = () => {
     setapproveLoading(false)
   }
-  
+
   return <div className="overflow-hidden relative flex-1">
     <div className="swap-container">
       <div className="flex justify-between items-center swap-header">
@@ -683,6 +753,7 @@ const Home = (props: routeProps) => {
           tokens={tokens}
           tokenAddress={swapContext?.swapFromData.tokenAddress}
           placeholder='0'
+          isTokenLoading={isTokenLoading}
           ref={fromInputRef}
           pattern='^[0-9]*[.,]?[0-9]*$'
           inputMode='decimal'
@@ -738,7 +809,7 @@ const Home = (props: routeProps) => {
         </div>
       </CenterPopup>
 
-      <StatusDialog successClose={resetInputData} dismissClose={dismissClose}/>
+      <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />
 
       <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
       {/* <Button onClick={()=>{

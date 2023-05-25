@@ -76,3 +76,5 @@ declare module "*.module.scss" {
   export default classes
   declare module "*.scss"
 }
+
+declare module 'single-call-balance-checker-abi';

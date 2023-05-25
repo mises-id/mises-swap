@@ -188,12 +188,24 @@
   margin-top:20px;
 }
 
+.mb-10{
+  margin-bottom:10px;
+}
+
+.mb-5{
+  margin-bottom:5px;
+}
+
 .block{
   display:block;
 }
 
 .flex{
   display:flex;
+}
+
+.h-14{
+  height:14px;
 }
 
 .h-screen{

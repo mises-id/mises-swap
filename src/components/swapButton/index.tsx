@@ -55,6 +55,7 @@ const SwapButton: FC<Iprops> = (props) => {
     {...props}
     color={status===12 ? 'danger' : "primary"}
     disabled={isDisabled}
+    loadingText='Finding best routing'
     className='swap-button'>{text}</Button>
 }
 export default SwapButton

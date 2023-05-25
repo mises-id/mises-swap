@@ -30,7 +30,7 @@ import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
 // import { coinbaseWallet } from './wallets/coinbase';
-const klaytnChain: Chain = {
+export const klaytnChain: Chain = {
   id: 8217,
   name: 'Klaytn Mainnet Cypress',
   network: 'Klaytn Mainnet Cypress',
@@ -74,16 +74,16 @@ export const chainList = [
     iconUrl: '/images/arb.svg'
   },
   {
-    ...gnosis,
-    iconUrl: '/images/gnosis.svg'
-  },
-  {
     ...avalanche,
     iconUrl: '/images/ava.svg'
   },
   {
     ...fantom,
     iconUrl: '/images/fantom.svg'
+  },
+  {
+    ...gnosis,
+    iconUrl: '/images/gnosis.svg'
   },
   {
     ...klaytnChain,
