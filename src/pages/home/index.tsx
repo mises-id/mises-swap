@@ -161,7 +161,7 @@ const Home = () => {
     }
 
     const getTokens = await getTokenList()
-    resetInputData(getTokens)
+    accountChangeRun(getTokens)
   }
 
   const { run: networkChangeRun, cancel: networkChangeCancel } = useRequest(resetData, {
@@ -450,12 +450,6 @@ const Home = () => {
         })
         return
       }
-      console.log({
-        ...params,
-        gasPrice: gas_price,
-        gas: gas_limit as any,
-        chainId,
-      }, 'gas_pricegas_pricegas_pricegas_pricegas_pricegas_price')
 
       const { hash } = await sendTransaction({
         ...params,
@@ -547,7 +541,7 @@ const Home = () => {
     debounceWait: 550,
     manual: true,
   });
-  
+
   useUpdateEffect(() => {
     networkChangeCancel()
     networkChangeRun()

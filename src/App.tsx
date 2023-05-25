@@ -21,11 +21,12 @@ import ConnectWallet from './components/ConnectWallet';
 import {
   injectedWallet,
   walletConnectWallet,
-  ledgerWallet
+  ledgerWallet,
+  metaMaskWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
-import { metaMaskWallet } from './wallets/metamask';
+// import { metaMaskWallet } from './wallets/metamask';
 import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
