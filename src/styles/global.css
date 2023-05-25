@@ -164,6 +164,21 @@
   right:12px;
 }
 
+.mx-5{
+  margin-left:5px;
+  margin-right:5px;
+}
+
+.my-5{
+  margin-top:5px;
+  margin-bottom:5px;
+}
+
+.my-8{
+  margin-top:8px;
+  margin-bottom:8px;
+}
+
 .mb-40{
   margin-bottom:40px;
 }

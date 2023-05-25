@@ -15,6 +15,7 @@ import { useRequest } from 'ahooks';
 import { SwapContext } from '@/context/swapContext';
 import SelectedToken from '../SelectedToken';
 import { substringAmount } from '@/utils';
+import FallBackImage from '../Fallback';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -118,6 +119,7 @@ const SelectTokens: FC<Iprops> = (props) => {
             fit='cover'
             width={36}
             height={36}
+            fallback={item?.symbol ? <FallBackImage width={36} height={36} symbol={item?.symbol} /> : ''}
           />
         }
         description={<div className='truncate' style={{maxWidth: 200}}>{item?.symbol}</div> }

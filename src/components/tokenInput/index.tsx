@@ -1,5 +1,5 @@
 import { Input, InputProps } from 'antd-mobile'
-import { Ref, forwardRef, useContext, useMemo, useState } from 'react'
+import { Ref, forwardRef, useContext, useEffect, useMemo, useState } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
@@ -33,6 +33,7 @@ interface Iprops extends InputProps {
 const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const { address } = useAccount()
   const swapContext = useContext(SwapContext)
+  const [isSetedMax, setIsSetedMax] = useState(false)
 
   const { chain } = useNetwork()
   // const getBalanceFn = useCallback(async () => {
@@ -57,11 +58,19 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   // )
   const tokenBalance = useMemo(()=> {
     if (props.tokenAddress && address && chain?.id && props.tokens?.length) {
+      // setIsSetedMax(false)
       const findToken = props.tokens.find(val=>val.address === props.tokenAddress)
       return findToken && findToken.balance ? substringAmount(findToken.balance) : '0'
     }
     return '0'
   }, [props.tokenAddress, props.tokens, address, chain])
+
+  useEffect(() => {
+    if(address) {
+      setIsSetedMax(false)
+    }
+  }, [address])
+  
   
   // const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
   //   manual: false,
@@ -85,7 +94,6 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   //   })
   // )
   
-  const [isSetedMax, setIsSetedMax] = useState(false)
   const toMax = async () => {
     if(chain?.id){
       setIsSetedMax(true)
@@ -131,6 +139,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   //   }
   //   // eslint-disable-next-line
   // }, [inputProps.value])
+  
   return <div className='token-container'>
     <div className='flex items-center'>
       <Input
@@ -146,7 +155,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         selectTokenAddress={props.tokenAddress} />
 
     </div>
-    {props.status !== 'ready' &&<div className='flex justify-between h-14 mb-5'>
+    {props.status !== 'ready' &&<div className='flex justify-between h-14 my-8'>
       <div>
         {/* {priceValue && <span>$ {priceValue}</span>}
         {props.status !== 'ready' && props.tokenAddress  && USDloading && <div className='flex justify-end'><Skeleton animated className="custom-fiat-skeleton" /></div>} */}

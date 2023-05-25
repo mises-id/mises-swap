@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useAsyncEffect, useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { useAsyncEffect, useBoolean, useLatest, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -19,7 +19,7 @@ import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
 import { SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
-import { getBalancesInSingleCall } from "@/api/ether";
+import { fetchUSD, getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
@@ -50,6 +50,7 @@ const Home = () => {
   const { address } = useAccount()
   const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
+  const lastTokenRef = useLatest(tokens)
   // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
@@ -113,6 +114,7 @@ const Home = () => {
         }
       }
       settokens([...tokenList])
+      getTokenToUSDPrice(nativeTokenAddress)
 
       if (swapContext) {
         const token = findToken(tokenList, nativeTokenAddress) || {}
@@ -490,7 +492,7 @@ const Home = () => {
     } catch (error: any) {
       setapproveLoading(false)
       if (!swapContext) return
-
+      console.log(error.details, '12132131')
       if (error.description) {
         swapContext.setGlobalDialogMessage({
           type: 'error',
@@ -544,7 +546,7 @@ const Home = () => {
 
   useUpdateEffect(() => {
     cancel()
-    run()
+    // run()
     accountChangeCancel()
     accountChangeRun()
     console.log("watchAccount")
@@ -599,6 +601,21 @@ const Home = () => {
       run(fromTokenAddress, toTokenAddress, value, 'from')
     }
   }
+  const getTokenToUSDPrice = async (tokenAddress: string) => {
+    console.log(lastTokenRef.current)
+    if(tokens?.length) {
+      const tokenIndex = tokens?.findIndex(val=>val.address === tokenAddress) || -1
+      if(tokenIndex > -1 && !tokens[tokenIndex].price) {
+        try {
+          const price = await fetchUSD(tokens[tokenIndex].symbol)
+          tokens[tokenIndex].price = price
+          settokens([...tokens])
+        } catch (error) {
+          console.log(error, 'getTokenToUSDPrice-error')
+        }
+      }
+    }
+  }
 
   const getFromTokenChange = async (val: string) => {
     if (swapContext) {
@@ -619,6 +636,7 @@ const Home = () => {
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
+    getTokenToUSDPrice(val)
   }
 
   const getToTokenChange = (val: string) => {
@@ -640,6 +658,7 @@ const Home = () => {
       setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
+    getTokenToUSDPrice(val)
   }
 
   const switchToken = () => {

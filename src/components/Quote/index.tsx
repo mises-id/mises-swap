@@ -9,6 +9,7 @@ import { CenterPopup, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 import { chainList } from '@/App';
+import FallBackImage from '../Fallback';
 interface Iprops {
   loading: boolean;
   data: swapData | undefined
@@ -233,6 +234,7 @@ const Quote: FC<Iprops> = (props) => {
                         width={20}
                         height={20}
                         style={{borderRadius: 100}}
+                        fallback={props.data.aggregator.name ? <FallBackImage width={20} height={20} symbol={props.data.aggregator.name} /> : ''}
                         src={props.data.aggregator.logo}
                     /> 
                     <span className='swap-detail-value'>{props.data.aggregator.name || '123'}</span>

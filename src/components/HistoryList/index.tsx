@@ -16,6 +16,7 @@ import { useInfiniteScroll } from 'ahooks'
 import CustomAvatar from '../CustomAvatar'
 import './index.less'
 import dayjs from 'dayjs'
+import FallBackImage from '../Fallback'
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
 export type VirtualizedListType = typeof VirtualizedList;
@@ -251,6 +252,7 @@ const HistoryList: FC<IProps> = (props) => {
                   <Image
                     width={24}
                     height={24}
+                    fallback={detail.from_token?.symbol ? <FallBackImage width={24} height={24} symbol={detail.from_token?.symbol} /> : ''}
                     src={detail.from_token.logo_uri}
                   />
                   <span className='swap-token-item-name'>{detail.from_token.symbol}</span>
@@ -269,6 +271,7 @@ const HistoryList: FC<IProps> = (props) => {
                     width={24}
                     height={24}
                     src={detail.to_token.logo_uri}
+                    fallback={detail.to_token?.symbol ? <FallBackImage width={24} height={24} symbol={detail.to_token?.symbol} /> : ''}
                   />
                   <span className='swap-token-item-name'>{detail.to_token.symbol}</span>
                 </div>

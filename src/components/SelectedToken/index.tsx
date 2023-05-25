@@ -2,6 +2,7 @@ import { findToken } from "@/utils";
 import { Image } from "antd-mobile";
 import { DownOutline } from "antd-mobile-icons";
 import { memo, useMemo } from "react";
+import FallBackImage from "../Fallback";
 interface Iprops {tokenAddress: string, tokens: token[] | undefined, status: 'ready' | undefined}
 const SelectedToken = memo((props: Iprops) => {
   const currentToken = useMemo(
@@ -18,6 +19,8 @@ const SelectedToken = memo((props: Iprops) => {
         width={24}
         height={24}
         src={currentToken?.logo_uri}
+        placeholder={currentToken?.symbol ? <FallBackImage symbol={currentToken?.symbol} /> : ''}
+        fallback={currentToken?.symbol ? <FallBackImage symbol={currentToken?.symbol} /> : ''}
       />
       <span className='symbol truncate' style={{maxWidth: 100}}>{currentToken?.symbol}</span>
     </div>

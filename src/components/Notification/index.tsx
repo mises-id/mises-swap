@@ -5,6 +5,7 @@ import './index.less'
 import { Image } from 'antd-mobile'
 import { CloseOutline } from 'antd-mobile-icons'
 import { substringAmount } from '@/utils'
+import FallBackImage from '../Fallback'
 interface IProps {
 
 }
@@ -30,11 +31,12 @@ const Notification:FC<IProps> = ()=> {
     to_token?: token
   }) => {
     if(!props.to_token) {
-      return props.from_token.logo_uri ? <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon' /> : <div className='from-from-icon'>{props.from_token.symbol?.split('')[0]}</div>
+      return <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon' 
+      fallback={props.from_token?.symbol ? <FallBackImage width={28} height={28} symbol={props.from_token?.symbol} /> : ''}/>
     }
     return <div className='relative notification-from-to-token-icon'>
-      {props.from_token.logo_uri ? <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon' /> : <div className='from-from-icon'>{props.from_token.symbol?.split('')[0]}</div>}
-      {props.to_token.logo_uri ? <Image width={28} height={28} src={props.to_token.logo_uri} className='from-to-icon' /> : <div className='from-to-icon'>{props.to_token.symbol?.split('')[0]}</div>}
+      <Image width={28} height={28} src={props.from_token.logo_uri} className='from-token-icon' fallback={props.from_token?.symbol ? <FallBackImage width={28} height={28} symbol={props.from_token?.symbol} /> : ''} />
+      <Image width={28} height={28} src={props.to_token.logo_uri} className='from-to-icon' fallback={props.to_token?.symbol ? <FallBackImage width={28} height={28} symbol={props.to_token?.symbol} /> : ''} />
     </div>
   }
   return (

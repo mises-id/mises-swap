@@ -5,7 +5,8 @@ interface token {
   "address": address,
   "decimals": number,
   "logo_uri": string,
-  'balance'?: string
+  'balance'?: string,
+  'price'?: string
 }
 
 interface quoteParams {
