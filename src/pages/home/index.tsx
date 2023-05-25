@@ -96,6 +96,7 @@ const Home = () => {
     }
     return tokenList
   }
+  
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem(`${chainId}`)
@@ -164,16 +165,6 @@ const Home = () => {
     debounceWait: 550,
     manual: true,
   });
-
-  // useEffect(() => {
-  //   if(swapContext?.chainId) {
-  //     networkChangeCancel()
-  //     networkChangeRun()
-  //   }
-  //   console.log('swapContext?.chainId')
-  //   // eslint-disable-next-line
-  // }, [swapContext?.chainId])
-
 
   const [approveLoading, setapproveLoading] = useState(false)
 
@@ -445,8 +436,10 @@ const Home = () => {
 
       const { gas_price, ...params } = firstTrade.trade
 
-
-      if (tradeParams.from_token_address !== params.from || tradeParams.to_token_address !== params.to || tradeParams.amount !== params.value.toString()) {
+      console.log(
+        tradeParams.from_token_address, params.from , tradeParams.to_token_address, params.to, tradeParams.amount, params.value.toString()
+      )
+      if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== params.value.toString()) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: 'Internal error, please try again'
