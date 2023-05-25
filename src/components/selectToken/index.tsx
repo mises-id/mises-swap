@@ -67,9 +67,9 @@ const SelectTokens: FC<Iprops> = (props) => {
           return getTokenList
           .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
           .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase() === searchQuery ? -1 : 1)
-          .sort((a, b) => (a.balance || b.balance) !=='0' ? -1 : 1)
+          .sort((a, b) => Number(a.balance) > Number(b.balance) ? -1 : 1)
         }else{
-          return getTokenList.sort((a, b) => (a.balance || b.balance) !=='0' ? -1 : 1)
+          return getTokenList.sort((a, b) => Number(a.balance) > Number(b.balance) ? -1 : 1)
         }
       }
       return []

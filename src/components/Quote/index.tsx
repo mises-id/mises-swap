@@ -103,18 +103,32 @@ const Quote: FC<Iprops> = (props) => {
   }, [props.data])
 
 
+  const nativeCurrency = useMemo(() => {
+    if(swapContext?.chainId) {
+      const chain = chainList.find(chain => chain.id === swapContext!.chainId)
+      if(chain) return chain.nativeCurrency
+    }
+    // eslint-disable-next-line
+  }, [swapContext?.chainId])
+
   const networkFee = useMemo(() => {
     if (props.data) {
       const data = props.data
       const estimatedGas = data.estimate_gas_fee as unknown as string
       
       if (gasPrice !== '0' && estimatedGas) {
-        return BigNumber(estimatedGas).multipliedBy(gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
+        const findNativeToken = props.tokens?.find(val=>val.symbol === nativeCurrency?.symbol)
+        if(findNativeToken?.price) {
+          const nativeTokenAmount = BigNumber(estimatedGas).multipliedBy(gasPrice).dividedBy(BigNumber(10).pow(18)).toNumber()
+          return BigNumber(nativeTokenAmount).multipliedBy(findNativeToken?.price).toFixed(2)
+        }
+        // const token = nativeCurrency.
+        return '0'
       }
     }
     return 0
-
-  }, [props.data, gasPrice])
+  // eslint-disable-next-line
+  }, [props.data, gasPrice, nativeCurrency])
 
   const [isOpen, setisOpen] = useState(false)
   const [editAddress, seteditAddress] = useState(false)
@@ -156,14 +170,6 @@ const Quote: FC<Iprops> = (props) => {
 
   // const {chain} = useNetwork()
 
-  const nativeCurrency = useMemo(() => {
-    if(swapContext?.chainId) {
-      const chain = chainList.find(chain => chain.id === swapContext!.chainId)
-      if(chain) return chain.nativeCurrency
-    }
-    // eslint-disable-next-line
-  }, [swapContext?.chainId])
-
   return (
     (props.loading || props.data) ?
       <div className='quote-view'>
@@ -182,12 +188,12 @@ const Quote: FC<Iprops> = (props) => {
               >{tokenStr}</span>
 
               {props.status !== 'ready' ? <div className='flex items-center'>
-                {/* {!isOpen && <>
+                {!isOpen && <>
 
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.0047 9.26921H10.2714C11.0078 9.26921 11.6047 9.86617 11.6047 10.6025V12.1359C11.6047 12.7987 12.142 13.3359 12.8047 13.3359C13.4675 13.3359 14.0047 12.7995 14.0047 12.1367V5.22059C14.0047 4.86697 13.7758 4.56227 13.5258 4.31223L10.6714 1.33594M4.00472 2.00254H8.00472C8.7411 2.00254 9.33805 2.59949 9.33805 3.33587V14.0015H2.67139V3.33587C2.67139 2.59949 3.26834 2.00254 4.00472 2.00254ZM14.0047 5.33587C14.0047 6.07225 13.4078 6.66921 12.6714 6.66921C11.935 6.66921 11.3381 6.07225 11.3381 5.33587C11.3381 4.59949 11.935 4.00254 12.6714 4.00254C13.4078 4.00254 14.0047 4.59949 14.0047 5.33587Z" stroke="rgb(152, 161, 192)"></path><line x1="4" y1="9.99414" x2="8" y2="9.99414" stroke="rgb(152, 161, 192)"></line><line x1="4" y1="11.9941" x2="8" y2="11.9941" stroke="rgb(152, 161, 192)"></line><path d="M4 8.16113H8" stroke="rgb(152, 161, 192)"></path></svg>
-                  <span style={{ color: 'rgb(152, 161, 192)' }} className='ml-5'>$1.12</span>
+                  <span style={{ color: 'rgb(152, 161, 192)' }} className='ml-5'>${networkFee}</span>
 
-                </>} */}
+                </>}
 
                 <DownOutline className={`DownOutline ml-5 ${isOpen ? 'up' : ''}`} />
               </div> : ''}
@@ -205,7 +211,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>}
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
-                  <span className='swap-detail-value'>{substringAmount(`${networkFee}`)} {nativeCurrency?.symbol}</span>
+                  <span className='swap-detail-value'>~${networkFee}</span>
                 </div>
 
                 <div className='flex items-center justify-between'>

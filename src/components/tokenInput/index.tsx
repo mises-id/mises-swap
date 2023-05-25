@@ -69,7 +69,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if(address) {
       setIsSetedMax(false)
     }
-  }, [address])
+  }, [address, props.tokenAddress])
   
   
   // const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
@@ -133,12 +133,13 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   //   refreshDeps: [props.tokenAddress]
   // })
   
-  // const priceValue = useMemo(() => {
-  //   if(inputProps.value) {
-  //     return BigNumber(inputProps.value).multipliedBy(USDprice).toFixed(2)
-  //   }
-  //   // eslint-disable-next-line
-  // }, [inputProps.value])
+  const priceValue = useMemo(() => {
+    const token = props.tokens?.find(val=>val.address === props.tokenAddress)
+    if(inputProps.value && token?.price) {
+      return BigNumber(inputProps.value).multipliedBy(token?.price).toFixed(2)
+    }
+    // eslint-disable-next-line
+  }, [inputProps.value, props.tokenAddress])
   
   return <div className='token-container'>
     <div className='flex items-center'>
@@ -157,8 +158,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     </div>
     {props.status !== 'ready' &&<div className='flex justify-between h-14 my-8'>
       <div>
-        {/* {priceValue && <span>$ {priceValue}</span>}
-        {props.status !== 'ready' && props.tokenAddress  && USDloading && <div className='flex justify-end'><Skeleton animated className="custom-fiat-skeleton" /></div>} */}
+        {priceValue && <span>${priceValue}</span>}
       </div>
       <div>
         {props.tokenAddress && address && !props.isTokenLoading && <>

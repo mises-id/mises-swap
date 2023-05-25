@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useAsyncEffect, useBoolean, useLatest, useRequest, useUpdateEffect } from "ahooks";
+import { useAsyncEffect, useBoolean, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -50,7 +50,6 @@ const Home = () => {
   const { address } = useAccount()
   const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
-  const lastTokenRef = useLatest(tokens)
   // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
@@ -58,20 +57,22 @@ const Home = () => {
   const [isTokenLoading, { setTrue, setFalse }] = useBoolean(true);
 
   const getTokenListBalance = async (tokenList: token[]) => {
-    const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
-    const tokensToDetect = tokenList.map((val: token) => {
-      const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
-      return tokenAddress.toLocaleLowerCase()
+
+    tokenList = tokenList.map(val => {
+      val.balance = '0'
+      return val
     })
+
     if (address && chain) {
       console.log('call balances')
       setTrue()
 
-      tokenList = tokenList.map(val => {
-        val.balance = '0'
-        return val
+      const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
+      const tokensToDetect = tokenList.map((val: token) => {
+        const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
+        return tokenAddress.toLocaleLowerCase()
       })
-
+      
       try {
         const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
         for (const key in data) {
@@ -313,10 +314,11 @@ const Home = () => {
           const transactionResult = await getTransaction(tokenAddress, contract_address)
           // eth_sendTransaction
 
-          const { gas_price, ...params } = transactionResult.data
+          const { gas_price, gas_limit ,...params } = transactionResult.data
           const { hash } = await sendTransaction({
             ...params,
             gasPrice: gas_price,
+            gas: gas_limit as any
           })
 
           // // eth_getTransactionReceipt
@@ -436,7 +438,7 @@ const Home = () => {
         return
       }
 
-      const { gas_price, ...params } = firstTrade.trade
+      const { gas_price, gas_limit, ...params } = firstTrade.trade
 
       console.log(
         tradeParams.from_token_address, params.from , tradeParams.to_token_address, params.to, tradeParams.amount, params.value.toString()
@@ -448,9 +450,17 @@ const Home = () => {
         })
         return
       }
+      console.log({
+        ...params,
+        gasPrice: gas_price,
+        gas: gas_limit as any,
+        chainId,
+      }, 'gas_pricegas_pricegas_pricegas_pricegas_pricegas_price')
+
       const { hash } = await sendTransaction({
         ...params,
         gasPrice: gas_price,
+        gas: gas_limit as any,
         chainId,
       })
 
@@ -537,7 +547,7 @@ const Home = () => {
     debounceWait: 550,
     manual: true,
   });
-
+  
   useUpdateEffect(() => {
     networkChangeCancel()
     networkChangeRun()
