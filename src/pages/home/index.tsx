@@ -114,7 +114,7 @@ const Home = () => {
         }
       }
       settokens([...tokenList])
-      getTokenToUSDPrice(nativeTokenAddress)
+      getTokenToUSDPrice(nativeTokenAddress, tokenList)
 
       if (swapContext) {
         const token = findToken(tokenList, nativeTokenAddress) || {}
@@ -601,15 +601,16 @@ const Home = () => {
       run(fromTokenAddress, toTokenAddress, value, 'from')
     }
   }
-  const getTokenToUSDPrice = async (tokenAddress: string) => {
-    console.log(lastTokenRef.current)
-    if(tokens?.length) {
-      const tokenIndex = tokens?.findIndex(val=>val.address === tokenAddress) || -1
-      if(tokenIndex > -1 && !tokens[tokenIndex].price) {
+  const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
+    console.log(paramsTokenList)
+    if(tokens?.length || paramsTokenList?.length) {
+      const tokenList =  paramsTokenList || tokens || []
+      const tokenIndex = tokenList?.findIndex(val=>val.address === tokenAddress) || -1
+      if(tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
-          const price = await fetchUSD(tokens[tokenIndex].symbol)
-          tokens[tokenIndex].price = price
-          settokens([...tokens])
+          const price = await fetchUSD(tokenList[tokenIndex].symbol)
+          tokenList[tokenIndex].price = price
+          settokens([...tokenList])
         } catch (error) {
           console.log(error, 'getTokenToUSDPrice-error')
         }
