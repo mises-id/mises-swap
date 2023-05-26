@@ -6,6 +6,9 @@ export function formatUSD(params: {
 }){
   return request({
     url: 'https://min-api.cryptocompare.com/data/price',
-    params
+    params,
+    headers: {
+      authorization: `Apikeyf8cbb0e1c33e4a1dd08057ddfb1624185fe548f478eb2554856fe3e506a58858`
+    }
   })
 }
