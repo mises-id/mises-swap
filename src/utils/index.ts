@@ -1,6 +1,5 @@
 import BigNumber from "bignumber.js"
 import { BigNumberish, ethers } from "ethers"
-import { TransactionExecutionError } from "viem"
 
 export function nowSec(): number {
   return Math.floor(Date.now() / 1000)
@@ -88,7 +87,7 @@ export function substringAmount(amount: string | undefined): string | undefined{
   return amount
 }
 
-export function formatErrorMessage(error: TransactionExecutionError) {
+export function formatErrorMessage(error: any) {
   const errorMessage: {
     type: "error",
     description: string
@@ -97,7 +96,7 @@ export function formatErrorMessage(error: TransactionExecutionError) {
     description: 'Unknown error'
   }
 
-  if(error.name === TransactionExecutionError.name) {
+  if(error.name === 'TransactionExecutionError') {
     if(error.details === `[ethjs-query] while formatting outputs from RPC '{"value":{"code":-32603,"data":{"code":-32000,"message":"transaction underpriced"}}}'`) {
       // low gas fee failed
       errorMessage.description = 'Transaction underpriced, Please try again'

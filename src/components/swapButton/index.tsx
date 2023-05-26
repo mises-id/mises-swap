@@ -36,8 +36,11 @@ const SwapButton: FC<Iprops> = (props) => {
       message = fn(token?.symbol)
     }
     
-    if(status && typeof status === 'string' ){
-      return status
+    if(status && typeof status === 'string'){
+      if(status === 'Insufficient liquidity') {
+        return status
+      }
+      return 'No payment channel found'
     }
     return message as string
   // eslint-disable-next-line

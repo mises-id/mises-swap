@@ -113,6 +113,9 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
   const showMax = useMemo(() => {
     if(!chain?.id) return false;
+    if(props.tokenAddress !== nativeTokenAddress) {
+      return true
+    }
     const gasFee = networksFee[chain?.id] || '0.01'
 
     return props.tokenAddress && address && BigNumber(tokenBalance || 0).comparedTo(gasFee) > -1

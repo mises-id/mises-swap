@@ -33,6 +33,7 @@ const StatusDialog: FC<Iprops> = (props) => {
     swapContext?.setGlobalDialogMessage(undefined)
     props.dismissClose?.()
   }
+  
   const walletClient = useWalletClient()
   const addToken = () => {
     const {tokenAddress, decimals, symbol } = swapContext?.globalDialogMessage?.info as any
@@ -54,6 +55,7 @@ const StatusDialog: FC<Iprops> = (props) => {
     if(info?.blockExplorer && info?.txHash) window.open(`${info?.blockExplorer}/tx/${info?.txHash}`, 'target=_blank')
     dismiss()
   }
+
   if(swapContext?.globalDialogMessage?.description) console.log(swapContext?.globalDialogMessage?.description, '=====submiterror====')
   return (
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={dismiss} className='dialog-container'>
