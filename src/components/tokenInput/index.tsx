@@ -69,7 +69,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if(address) {
       setIsSetedMax(false)
     }
-  }, [address, props.tokenAddress])
+  }, [address, props.tokenAddress, chain?.id])
   
   
   // const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
@@ -140,6 +140,8 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     }
     // eslint-disable-next-line
   }, [inputProps.value, props.tokenAddress])
+
+
   
   return <div className='token-container'>
     <div className='flex items-center'>

@@ -31,6 +31,7 @@ import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
 // import { coinbaseWallet } from './wallets/coinbase';
+
 export const klaytnChain: Chain = {
   id: 8217,
   name: 'Klaytn Mainnet Cypress',
@@ -53,6 +54,7 @@ export const klaytnChain: Chain = {
   },
   testnet: false,
 };
+
 export const chainList = [
   {
     ...mainnet,
@@ -101,7 +103,6 @@ export const chainList = [
 ]
 
 function App() {
-
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     chainList,
     [publicProvider()]

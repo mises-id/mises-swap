@@ -69,7 +69,7 @@ const Setting: FC<Iprops> = (props) => {
                   <Input
                     placeholder={Number(defaultSlippageValue).toFixed(2)}
                     value={swapContext?.slippage}
-                    maxLength={3}
+                    // maxLength={3}
                     onChange={slippageChange}
                     className={`slippageValue ${swapContext?.slippage && Number(swapContext?.slippage) > 50 ? 'error' : ''}`} />
                   %

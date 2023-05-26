@@ -5,7 +5,7 @@ import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
-import { findToken, formatAmount, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
+import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
 import { useAsyncEffect, useBoolean, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
@@ -88,9 +88,8 @@ const Home = () => {
         return tokenList
 
       } catch (error: any) {
-        console.log(error)
         logEvent(analytics, `swap_error`, {
-          error_message: error.message || 'Unknown error'
+          error_message: error.reason || error.message || 'Unknown error'
         })
         setFalse()
         return tokenList
@@ -343,7 +342,7 @@ const Home = () => {
       if (error.message) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
-          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : error.message
+          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
         })
         return
       }
@@ -419,7 +418,7 @@ const Home = () => {
         to_token_address: toTokenAddress,
         from_address: address,
         amount: parseAmountStr,
-        slippage: (swapContext?.slippage && Number(swapContext?.slippage) < 50) ? Number(swapContext.slippage) / 100 : Number(defaultSlippageValue) / 100,
+        slippage: (swapContext?.slippage && Number(swapContext?.slippage) <= 50) ? Number(swapContext.slippage) / 100 : Number(defaultSlippageValue) / 100,
         dest_receiver: swapContext?.receivingAddress,
         aggregator_address: aggregatorAddress
       }
@@ -443,14 +442,14 @@ const Home = () => {
       console.log(
         tradeParams.from_token_address, params.from , tradeParams.to_token_address, params.to, tradeParams.amount, params.value.toString()
       )
-      if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== params.value.toString()) {
+      if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== firstTrade.from_token_amount.toString()) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: 'Internal error, please try again'
         })
         return
       }
-
+      
       const { hash } = await sendTransaction({
         ...params,
         gasPrice: gas_price,
@@ -496,7 +495,14 @@ const Home = () => {
     } catch (error: any) {
       setapproveLoading(false)
       if (!swapContext) return
-      console.log(error.details, '12132131')
+      
+      console.log(JSON.stringify(error), 'error message log')
+
+      if(error.name === 'TransactionExecutionError') {
+        swapContext.setGlobalDialogMessage(formatErrorMessage(error))
+        return 
+      }
+
       if (error.description) {
         swapContext.setGlobalDialogMessage({
           type: 'error',
@@ -508,7 +514,7 @@ const Home = () => {
       if (error.message && swapContext) {
         swapContext.setGlobalDialogMessage({
           type: 'error',
-          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : error.message
+          description: (error.reason || error.message || 'Unknown error')
         })
         return
       }

@@ -164,16 +164,6 @@
   right:12px;
 }
 
-.mx-5{
-  margin-left:5px;
-  margin-right:5px;
-}
-
-.my-5{
-  margin-top:5px;
-  margin-bottom:5px;
-}
-
 .my-8{
   margin-top:8px;
   margin-bottom:8px;
@@ -201,14 +191,6 @@
 
 .mt-20{
   margin-top:20px;
-}
-
-.mb-10{
-  margin-bottom:10px;
-}
-
-.mb-5{
-  margin-bottom:5px;
 }
 
 .block{
@@ -249,10 +231,6 @@
 
 .items-center{
   align-items:center;
-}
-
-.justify-end{
-  justify-content:flex-end;
 }
 
 .justify-center{

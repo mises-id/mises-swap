@@ -67,7 +67,7 @@ const Quote: FC<Iprops> = (props) => {
 
       const from_token_amount = toToken.tokenAddress === data.to_token_address ? data.to_token_amount : data.from_token_amount
       const toAmount = formatAmount(from_token_amount, toToken?.decimals)
-      const slippageValue =  Number(slippage) < 50 ? slippage : defaultSlippageValue
+      const slippageValue =  Number(slippage) <= 50 ? slippage : defaultSlippageValue
       const minNumber = BigNumber(toAmount).multipliedBy(1 - Number(slippageValue) / 100)
       return substringAmount(minNumber.toString())
     }
