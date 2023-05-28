@@ -59,7 +59,6 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
 
 // get has balance from token list
 export async function getBalancesInSingleCall(walletAddress: string, tokensToDetect: string[], chain: Chain) {
-
   const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
   if (!(chain.id in SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID) || !tokensToDetect) {
     // Only fetch balance if contract address exists
@@ -105,6 +104,6 @@ export async function fetchUSD(fsym: string) {
     const data = await formatUSD(params)
     return data.data.USD
   } catch (error) {
-    Promise.reject()
+    Promise.reject(error)
   }
 }

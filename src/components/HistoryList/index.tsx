@@ -198,7 +198,7 @@ const HistoryList: FC<IProps> = (props) => {
       <p className='account-history-title'>History</p>
       <List className='account-list-container' style={{
         '--prefix-padding-right': '0',
-        'height': window.innerHeight / 2
+        'height': window.innerHeight / 2 + 2
       }}>
 
         {!loading && !data?.list.length && <ErrorBlock status='empty' description=""/>}

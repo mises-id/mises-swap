@@ -3,11 +3,10 @@ import './index.less'
 import { formatAmount, shortenAddress, substringAmount } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
-import { fetchFeeData } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
 import { CenterPopup, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
+import { useAccount, useWalletClient } from 'wagmi';
 import { chainList } from '@/App';
 import FallBackImage from '../Fallback';
 interface Iprops {
@@ -89,18 +88,6 @@ const Quote: FC<Iprops> = (props) => {
   }, [props.data, props.tokens, swapContext?.swapToData])
 
   const [gasPrice, setgasPrice] = useState('0')
-  useEffect(() => {
-    if(props.data){
-      fetchFeeData({
-        formatUnits: 'wei',
-      }).then(res => {
-        if (res.formatted.gasPrice) {
-          setgasPrice(res.formatted.gasPrice)
-        }
-      })
-    }
-    if(!props.data) setisOpen(false)
-  }, [props.data])
 
 
   const nativeCurrency = useMemo(() => {
@@ -110,6 +97,19 @@ const Quote: FC<Iprops> = (props) => {
     }
     // eslint-disable-next-line
   }, [swapContext?.chainId])
+
+  const walletClient = useWalletClient()
+  
+  useEffect(() => {
+    if(props.data){
+      walletClient.data?.request({method: 'eth_gasPrice'}).then(res=>{
+        const gasPriceNumber = parseInt('0x5a6724ed0')
+        setgasPrice(gasPriceNumber.toString())
+      })
+    }
+    if(!props.data) setisOpen(false)
+    // eslint-disable-next-line 
+  }, [props.data])
 
   const networkFee = useMemo(() => {
     if (props.data) {

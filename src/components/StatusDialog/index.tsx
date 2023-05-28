@@ -5,6 +5,7 @@ import './index.less'
 import { useWalletClient } from 'wagmi';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logEvent } from 'firebase/analytics';
+import { chainList } from '@/App';
 interface Iprops extends CenterPopupProps {
   successClose?: ()=>void;
   dismissClose?: ()=>void;
@@ -55,6 +56,13 @@ const StatusDialog: FC<Iprops> = (props) => {
     if(info?.blockExplorer && info?.txHash) window.open(`${info?.blockExplorer}/tx/${info?.txHash}`, 'target=_blank')
     dismiss()
   }
+  const nativeCurrency = useMemo(() => {
+    if(swapContext?.chainId) {
+      const chain = chainList.find(chain => chain.id === swapContext!.chainId)
+      if(chain) return chain.nativeCurrency
+    }
+    // eslint-disable-next-line
+  }, [swapContext?.chainId])
 
   if(swapContext?.globalDialogMessage?.description) console.log(swapContext?.globalDialogMessage?.description, '=====submiterror====')
   return (
@@ -69,7 +77,7 @@ const StatusDialog: FC<Iprops> = (props) => {
 
         <div className='description'>{swapContext?.globalDialogMessage?.description}</div>
 
-        {swapContext?.globalDialogMessage?.info?.symbol &&
+        {swapContext?.globalDialogMessage?.info?.symbol && nativeCurrency?.symbol !== swapContext?.globalDialogMessage?.info?.symbol &&
           <div className='add-token-to-wallet flex items-center justify-center mt-10 mb-40' 
           onClick={addToken}>
             <span>Add {swapContext?.globalDialogMessage?.info?.symbol}</span>

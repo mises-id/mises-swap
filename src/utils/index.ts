@@ -101,7 +101,7 @@ export function formatErrorMessage(error: any) {
       // low gas fee failed
       errorMessage.description = 'Transaction underpriced, Please try again'
     }
-    if(error.details === `MetaMask Tx Signature: User denied transaction signature.`) {
+    if(error.details.indexOf(`User denied transaction signature.`) > -1) {
       // User denied
       errorMessage.description = error.shortMessage
     }

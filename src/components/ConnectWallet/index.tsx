@@ -67,7 +67,7 @@ const ConnectWallet: FC<IProps> = (props) => {
       const provider = await getWalletClient()
       if(!provider && address){
         disconnect()
-        window.location.reload()
+        // window.location.reload()
       }
     }, 300);
   }, [])

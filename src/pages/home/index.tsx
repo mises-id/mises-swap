@@ -47,7 +47,7 @@ const Home = () => {
   const chainId = chain?.id || swapContext?.chainId || 1
   const [tokens, settokens] = useState<token[] | undefined>(undefined)
   const [toAmount, setToAmount] = useState('')
-  const { address } = useAccount()
+  const { address, isConnected } = useAccount()
   const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
   // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
@@ -132,8 +132,9 @@ const Home = () => {
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
         type: 'error',
-        description: error.message || "Unknown error"
+        description: error.message === 'timeout of 5000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
       })
+      
       return []
     }
   }
@@ -340,6 +341,10 @@ const Home = () => {
     } catch (error: any) {
       setapproveLoading(false)
       if (error.message) {
+        if(error.message.indexOf('Transaction with hash') > -1 && error.message.indexOf('could not be found') > -1) {
+          return 
+        }
+
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
@@ -356,6 +361,10 @@ const Home = () => {
   const confirmSwap = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
     if (!tokenAddress) return
+
+    if(!address) {
+      swapContext?.setStatus(1)
+    }
 
     try {
       /* 
@@ -386,6 +395,7 @@ const Home = () => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
+    
     try {
 
       const fromToken = tokens?.length && fromTokenAddress && findToken(tokens, fromTokenAddress)
@@ -439,9 +449,6 @@ const Home = () => {
 
       const { gas_price, gas_limit, ...params } = firstTrade.trade
 
-      console.log(
-        tradeParams.from_token_address, params.from , tradeParams.to_token_address, params.to, tradeParams.amount, params.value.toString()
-      )
       if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== firstTrade.from_token_amount.toString()) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
@@ -551,7 +558,7 @@ const Home = () => {
   useUpdateEffect(() => {
     networkChangeCancel()
     networkChangeRun()
-    console.log("watchNetwork")
+    console.log("watchNetwork", isConnected, chain?.id, address)
   }, [chainId])
 
   useUpdateEffect(() => {
@@ -559,7 +566,7 @@ const Home = () => {
     // run()
     accountChangeCancel()
     accountChangeRun()
-    console.log("watchAccount")
+    console.log("watchAccount", isConnected, chain?.id, address)
   }, [address])
 
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])

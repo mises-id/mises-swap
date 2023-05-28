@@ -21,12 +21,11 @@ import ConnectWallet from './components/ConnectWallet';
 import {
   injectedWallet,
   walletConnectWallet,
-  ledgerWallet,
-  metaMaskWallet
+  ledgerWallet
 } from '@rainbow-me/rainbowkit/wallets';
 import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
-// import { metaMaskWallet } from './wallets/metamask';
+import { metaMaskWallet } from './wallets/metamask';
 import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
@@ -58,11 +57,27 @@ export const klaytnChain: Chain = {
 export const chainList = [
   {
     ...mainnet,
-    iconUrl: '/images/eth.svg'
+    iconUrl: '/images/eth.svg',
+    rpcUrls: {
+      public: {
+        http: ["https://rpc.ankr.com/eth"],
+      },
+      default: {
+        http: ['https://rpc.ankr.com/eth'],
+      },
+    },
   },
   {
     ...bsc,
-    iconUrl: '/images/bsc.svg'
+    iconUrl: '/images/bsc.svg',
+    rpcUrls: {
+      public: {
+        http: ["https://bsc-dataseed.binance.org"],
+      },
+      default: {
+        http: ['https://bsc-dataseed.binance.org/'],
+      },
+    },
   },
   {
     ...polygon,
@@ -78,11 +93,19 @@ export const chainList = [
   },
   {
     ...avalanche,
-    iconUrl: '/images/ava.svg'
+    iconUrl: '/images/ava.svg',
   },
   {
     ...fantom,
-    iconUrl: '/images/fantom.svg'
+    iconUrl: '/images/fantom.svg',
+    rpcUrls: {
+      public: {
+        http: ["https://rpc.ankr.com/fantom"],
+      },
+      default: {
+        http: ['https://rpc.ftm.tools/'],
+      },
+    },
   },
   {
     ...gnosis,
@@ -94,7 +117,7 @@ export const chainList = [
   },
   {
     ...aurora,
-    iconUrl: '/images/aurora.svg'
+    iconUrl: '/images/aurora.svg',
   },
   {
     ...zkSync,
@@ -105,7 +128,10 @@ export const chainList = [
 function App() {
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     chainList,
-    [publicProvider()]
+    [
+      // alchemyProvider({apiKey: 'Q_LDUmX7vjuW5m8dW_5Nym3Y8z77_C0m'}),
+      publicProvider()
+    ]
   );
   const projectId = '86a06f8526c8d8b550b13c46a013cb91'
   // const { connectors } = getDefaultWallets({
