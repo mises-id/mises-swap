@@ -27,7 +27,7 @@ const StatusDialog: FC<Iprops> = (props) => {
   }, [swapContext?.globalDialogMessage])
 
   const dismiss = () => {
-    if(swapContext?.globalDialogMessage?.description === 'timeout of 5000ms exceeded') {
+    if(swapContext?.globalDialogMessage?.description === 'Timeout getting token list,please try again') {
       window.location.reload()
       return 
     }
