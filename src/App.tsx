@@ -124,48 +124,47 @@ export const chainList = [
     iconUrl: '/images/zksync-era.svg'
   },
 ]
+const { chains, publicClient, webSocketPublicClient } = configureChains(
+  chainList,
+  [
+    // alchemyProvider({apiKey: 'Q_LDUmX7vjuW5m8dW_5Nym3Y8z77_C0m'}),
+    publicProvider()
+  ]
+);
+const projectId = '86a06f8526c8d8b550b13c46a013cb91'
+// const { connectors } = getDefaultWallets({
+//   appName: 'Mises Swap',
+//   projectId: '86a06f8526c8d8b550b13c46a013cb91',
+//   chains,
+// });
+const connectors = connectorsForWallets([
+  {
+    groupName: 'Recommended',
+    wallets: [
+      injectedWallet({ chains }),
+      metaMaskWallet({ projectId, chains }),
+      // coinbaseWallet({ chains, appName: 'Mises Swap' }),
+      bitskiWallet({ chains }),
+      okxWallet({ projectId, chains }),
+      // imTokenWallet({ projectId, chains }),
+      phantomWallet({ chains }),
+      // argentWallet({ chains }),
+      bitkeepWallet({ chains }),
+      trustWallet({ projectId, chains }),
+      walletConnectWallet({ projectId, chains }),
+      ledgerWallet({ projectId, chains }),
+    ],
+  }
+]);
+
+const wagmiClient = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+  webSocketPublicClient,
+});
 
 function App() {
-  const { chains, publicClient, webSocketPublicClient } = configureChains(
-    chainList,
-    [
-      // alchemyProvider({apiKey: 'Q_LDUmX7vjuW5m8dW_5Nym3Y8z77_C0m'}),
-      publicProvider()
-    ]
-  );
-  const projectId = '86a06f8526c8d8b550b13c46a013cb91'
-  // const { connectors } = getDefaultWallets({
-  //   appName: 'Mises Swap',
-  //   projectId: '86a06f8526c8d8b550b13c46a013cb91',
-  //   chains,
-  // });
-  const connectors = connectorsForWallets([
-    {
-      groupName: 'Recommended',
-      wallets: [
-        injectedWallet({ chains }),
-        metaMaskWallet({ projectId, chains }),
-        // coinbaseWallet({ chains, appName: 'Mises Swap' }),
-        bitskiWallet({ chains }),
-        okxWallet({ projectId, chains }),
-        // imTokenWallet({ projectId, chains }),
-        phantomWallet({ chains }),
-        // argentWallet({ chains }),
-        bitkeepWallet({ chains }),
-        trustWallet({ projectId, chains }),
-        walletConnectWallet({ projectId, chains }),
-        ledgerWallet({ projectId, chains }),
-      ],
-    }
-  ]);
-
-  const wagmiClient = createConfig({
-    autoConnect: true,
-    connectors,
-    publicClient,
-    webSocketPublicClient,
-  });
-
   return (
     <div className="App">
       <WagmiConfig config={wagmiClient}>
@@ -183,6 +182,7 @@ function App() {
                       return <ConnectWallet chains={chains}  {...props} />
                     }}
                   </ConnectButton.Custom>
+                  {/* <ConnectButton /> */}
                 </div>
 
                 <div className='flex-1 flex flex-col'>
