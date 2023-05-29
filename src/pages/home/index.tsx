@@ -30,6 +30,12 @@ const Home = () => {
   useAsyncEffect(async () => {
     logEvent(analytics, 'open_swap_page')
 
+    console.log(window.ethereum, 'window.ethereum')
+    window.addEventListener('message',(res: any)=>{
+      console.log('ethereum#initialized>>>' , res.data.target)
+    })
+    
+
     const getTokens = await getTokenList()
 
     if (getTokens?.length) {
@@ -37,10 +43,6 @@ const Home = () => {
 
       settokens([...tokenList])
     }
-    console.log(window.ethereum, 'window.ethereum')
-    window.addEventListener('message',(res: any)=>{
-      console.log('ethereum#initialized>>>' , res.data.target)
-    })
     const aaa = await window.ethereum.request({method: 'eth_chainId'})
     console.log(aaa, 'eth_chainId')
   }, []);
@@ -138,7 +140,7 @@ const Home = () => {
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
         type: 'error',
-        description: error.message === 'timeout of 5000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
+        description: error.message === 'timeout of 10000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
       })
       
       return []

@@ -29,6 +29,9 @@ import { metaMaskWallet } from './wallets/metamask';
 import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
+import { useShowLayout } from './hooks/useShowLayout';
+import Loading from './components/pageLoading';
+import RetryMaxStatus from './components/RetryMaxStatus';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -164,7 +167,18 @@ const wagmiClient = createConfig({
   webSocketPublicClient,
 });
 
+
 function App() {
+  const { isShowLayout, isMaxRetrStatus } = useShowLayout()
+
+  if(isMaxRetrStatus) {
+    return <RetryMaxStatus />
+  }
+
+  if(!isShowLayout) {
+    return <Loading />
+  }
+
   return (
     <div className="App">
       <WagmiConfig config={wagmiClient}>

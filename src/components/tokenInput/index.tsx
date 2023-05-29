@@ -19,7 +19,6 @@ const networksFee: {
   10:  '0.006', // eth optimism
   56: '0.01', //bnb bsc
 }
-// import { getUSDTPrice } from '@/hooks/usePrice'
 interface Iprops extends InputProps {
   tokens?: token[],
   type: 'from' | 'to',

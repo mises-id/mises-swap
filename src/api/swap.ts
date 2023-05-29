@@ -25,6 +25,7 @@ export function getTokens<T=any>(chainId: number): AxiosPromise<T>{
     params: {
       chain_id: chainId
     },
+    timeout: 10000,
     headers: header()
   })
 }
