@@ -160,7 +160,7 @@ function App() {
   ]);
 
   const wagmiClient = createConfig({
-    autoConnect: false,
+    autoConnect: true,
     connectors,
     publicClient,
     webSocketPublicClient,

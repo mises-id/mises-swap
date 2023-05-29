@@ -37,6 +37,8 @@ const Home = () => {
 
       settokens([...tokenList])
     }
+    const aaa = await window.ethereum.request({method: 'eth_chainId'})
+    console.log(aaa, 'eth_chainId')
   }, []);
 
 
@@ -619,7 +621,7 @@ const Home = () => {
     }
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
-    console.log(paramsTokenList)
+    console.log(paramsTokenList, 'paramsTokenList')
     if(tokens?.length || paramsTokenList?.length) {
       const tokenList =  paramsTokenList || tokens || []
       const tokenIndex = tokenList?.findIndex(val=>val.address === tokenAddress) || -1

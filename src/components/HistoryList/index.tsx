@@ -102,8 +102,12 @@ const HistoryList: FC<IProps> = (props) => {
   const { disconnect } = useDisconnect()
 
   const disconnectAccount = () => {
-    disconnect()
-    props.onClose?.()
+    try {
+      disconnect()
+      props.onClose?.()
+    } catch (error) {
+      
+    }
   }
 
   const [detail, setdetail] = useState<historyItem | undefined>(undefined)
