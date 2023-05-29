@@ -8,7 +8,6 @@
 import React from 'react'
 import { Navigate, useRoutes } from 'react-router-dom'
 import { Home } from '@/pages'
-import Loading from '@/components/pageLoading'
 type CutomFallBackT =
   | boolean
   | React.ReactChild
@@ -22,7 +21,7 @@ export interface routeProps {
 // 加载异步组件的loading
 const SuspenseWrapper = (Child: ChildT, cutomFallBack?: CutomFallBackT): any => {
   return (
-    <React.Suspense fallback={cutomFallBack || <Loading />}>
+    <React.Suspense fallback={cutomFallBack || null}>
       <Child />
     </React.Suspense>
   )

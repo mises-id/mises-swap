@@ -18,11 +18,6 @@ import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, po
 import { publicProvider } from 'wagmi/providers/public';
 import SwapProvider from './context/swapContext';
 import ConnectWallet from './components/ConnectWallet';
-import {
-  injectedWallet,
-  walletConnectWallet,
-  ledgerWallet
-} from '@rainbow-me/rainbowkit/wallets';
 import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
 import { metaMaskWallet } from './wallets/metamask';
@@ -32,6 +27,7 @@ import { trustWallet } from './wallets/trustWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
+import { injectedWallet } from './wallets/injectedWallet';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -154,8 +150,8 @@ const connectors = connectorsForWallets([
       // argentWallet({ chains }),
       bitkeepWallet({ chains }),
       trustWallet({ projectId, chains }),
-      walletConnectWallet({ projectId, chains }),
-      ledgerWallet({ projectId, chains }),
+      // walletConnectWallet({ projectId, chains }),
+      // ledgerWallet({ projectId, chains }),
     ],
   }
 ]);

@@ -1,4 +1,4 @@
-import { isAndroid, isMisesBrowser } from '@/utils';
+import { isAndroid } from '@/utils';
 import { Chain, Wallet, getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 import { InstructionStepName } from '@rainbow-me/rainbowkit/dist/wallets/Wallet';
 import type { InjectedConnectorOptions } from '@wagmi/core/connectors/injected';
@@ -101,7 +101,7 @@ export const trustWallet = ({
       const getUriMobile = async () => {
         const provider = await connector.getProvider() as any
         const { uri } = provider.connector;
-        if(isAndroid() && isMisesBrowser()){
+        if(isAndroid()){
           return 'https://chrome.google.com/webstore/detail/trust-wallet/egjidjbpglichdcondbcbdnbeeppgdph'
         }
         return `https://link.trustwallet.com/wc?uri=${encodeURIComponent(uri)}`;
@@ -111,7 +111,7 @@ export const trustWallet = ({
         const provider = await connector.getProvider() as any
         const { uri } = provider.connector;
         
-        if(isAndroid() && isMisesBrowser()){
+        if(isAndroid()){
           return 'https://chrome.google.com/webstore/detail/trust-wallet/egjidjbpglichdcondbcbdnbeeppgdph'
         }
 

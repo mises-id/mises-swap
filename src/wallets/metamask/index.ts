@@ -1,4 +1,4 @@
-import { isAndroid, isMisesBrowser } from '@/utils';
+import { isAndroid } from '@/utils';
 import { Chain, Wallet, getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 import type { InjectedConnectorOptions } from '@wagmi/core/dist/connectors/injected';
 import { WindowProvider } from 'wagmi';
@@ -109,7 +109,7 @@ export const metaMaskWallet = ({
 
       const getUri = async () => {
         const provider: any = await connector.getProvider()
-        if(isAndroid() && isMisesBrowser()){
+        if(isAndroid()){
           return 'https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn'
         }
         return `https://metamask.app.link/wc?uri=${encodeURIComponent(provider.connector.uri)}`;

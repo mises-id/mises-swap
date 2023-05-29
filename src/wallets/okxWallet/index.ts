@@ -1,4 +1,4 @@
-import { isAndroid, isMisesBrowser } from '@/utils';
+import { isAndroid } from '@/utils';
 import { Chain, Wallet, getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 import type { InjectedConnectorOptions } from '@wagmi/core/connectors/injected';
 import { InjectedConnector } from 'wagmi/connectors/injected';
@@ -58,7 +58,7 @@ export const okxWallet = ({
             ? async () => {
               // @ts-expect-error
                 const { uri } = (await connector.getProvider()).connector;
-                if(isAndroid() && isMisesBrowser()) {
+                if(isAndroid()) {
                   return 'https://chrome.google.com/webstore/detail/okx-wallet/mcohilncbfahbmgdjkbpemcciiolgcge'
                 }
                 return isAndroid()
