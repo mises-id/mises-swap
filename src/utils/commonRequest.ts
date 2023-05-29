@@ -40,7 +40,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
   Toast.show(data.msg);
   return Promise.reject(data);
 },err=>{
-  const { data } = err?.response;
+  const { data } = err?.response || {};
   return Promise.reject(data);
 });
 

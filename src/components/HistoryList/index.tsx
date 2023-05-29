@@ -75,8 +75,7 @@ const HistoryList: FC<IProps> = (props) => {
     style: CSSProperties
   }) => {
     const item: historyItem = data?.list[index]
-    // const swapData = swapContext?.swapFromData
-    // console.log(swapData)
+    
     return (
       <List.Item
         key={key}

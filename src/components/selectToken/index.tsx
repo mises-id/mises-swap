@@ -103,8 +103,6 @@ const SelectTokens: FC<Iprops> = (props) => {
     style: CSSProperties
   }) => {
     const item = tokenList[index]
-    // const swapData = swapContext?.swapFromData
-    // console.log(swapData)
     return (
       <List.Item
         key={key}

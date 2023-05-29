@@ -39,7 +39,6 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
       const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
       const balance = await tokenContract.balanceOf(address);
       const decimals = await tokenContract.decimals()
-      // console.log(balance.toString(), decimals);
       
       return {
         value: balance,
@@ -68,7 +67,6 @@ export async function getBalancesInSingleCall(walletAddress: string, tokensToDet
   const data = await getAddressBalances(provider, walletAddress, tokensToDetect, {
     contractAddress
   })
-  // console.log(data)
 
   // const contract = new ethers.Contract(contractAddress, abiSingleCallBalancesContract, provider);
   // const result = await contract.balances([walletAddress], tokensToDetect);
@@ -80,17 +78,6 @@ export async function getBalancesInSingleCall(walletAddress: string, tokensToDet
     }
   }
   return nonZeroBalances
-  // /* istanbul ignore else */
-  // if (result.length > 0) {
-  //   tokensToDetect.forEach((tokenAddress, index) => {
-  //     const balance = result[index];
-  //     /* istanbul ignore else */
-  //     if (balance.toString() !== '0') {
-  //       nonZeroBalances[tokenAddress] = balance;
-  //     }
-  //   });
-  // }
-  // console.log(nonZeroBalances, '11111')
 } 
 
 // get fiat from token
