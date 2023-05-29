@@ -60,6 +60,7 @@ const ConnectWallet: FC<IProps> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
   const { address} = useAccount()
+  console.log(address)
   const { disconnect } = useDisconnect()
 
   useAsyncEffect(async () => {
@@ -76,7 +77,7 @@ const ConnectWallet: FC<IProps> = (props) => {
     <div className='flex items-center'>
       <ChainList chains={props.chains} chain={props.chain} openChainModal={props.openChainModal} />
       <div className='ml-10'>
-        {props.account && props.chain?.iconUrl && <div className='flex items-center gap-2'>
+        {address && props.chain?.iconUrl && <div className='flex items-center gap-2'>
           <div className='flex items-center account-info' onClick={() => {
             setisOpen(true)
           }}>
@@ -85,7 +86,7 @@ const ConnectWallet: FC<IProps> = (props) => {
           </div>
           <HistoryList visible={isOpen} onClose={()=>setisOpen(false)}/>
         </div>}
-        {!props.account && <Button size='small' onClick={props.openConnectModal} shape='rounded' color='primary' className='connect-btn'>Connect</Button>}
+        {!address && <Button size='small' onClick={props.openConnectModal} shape='rounded' color='primary' className='connect-btn'>Connect</Button>}
       </div>
     </div>
   )
