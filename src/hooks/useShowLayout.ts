@@ -4,7 +4,7 @@ export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
   const [isMaxRetrStatus, { setTrue: setMaxTrue }] = useBoolean(false)
 
-  const [currentCount, { inc }] = useCounter(1, { min: 1, max: 10 });
+  const [currentCount, { inc }] = useCounter(1, { min: 1, max: 50 });
 
   const getEthereum = async () => {
     console.log('getEthereum>>>>')
@@ -24,14 +24,14 @@ export function useShowLayout() {
       return
     }
 
-    if(currentCount === 10){
+    if(currentCount === 50){
       cancel()
       setMaxTrue()
     }
   }
 
   const { cancel } = useRequest(getEthereum, {
-    pollingInterval: 100,
+    pollingInterval: 10,
     manual: false,
     pollingWhenHidden: false
   });
