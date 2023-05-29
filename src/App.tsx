@@ -167,48 +167,56 @@ const wagmiClient = createConfig({
 function App() {
   const { isShowLayout, isMaxRetrStatus } = useShowLayout()
 
-  if(isMaxRetrStatus) {
+  if (isMaxRetrStatus) {
     return <RetryMaxStatus />
   }
 
-  if(!isShowLayout) {
+  if (!isShowLayout) {
     return <Loading />
+  }
+
+
+  const Logo = () =>{
+    // const swapContext = useContext(SwapContext)
+    const resetData = () => {
+      // swapContext?.setFromAmount('')
+    }
+    return <p className='swap-title' onClick={resetData}><span className='mises-title'>Mises</span> <span>Swap</span></p>
   }
 
   return (
     <div className="App">
-      <WagmiConfig config={wagmiClient}>
-        <RainbowKitProvider chains={chains}>
-          {/* <RecoilRoot> */}
+      <SwapProvider>
+        <WagmiConfig config={wagmiClient}>
+          <RainbowKitProvider chains={chains}>
+            {/* <RecoilRoot> */}
             <ConfigProvider locale={enUS}>
-              <SwapProvider>
-                <div className='flex justify-between items-center px-10 py-10'>
-                  {/* <Image width={80} src='/logo192.png' /> */}
-                  <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
-                  <ConnectButton.Custom>
-                    {(props) => {
-                      console.log('props>>>>>>', props)
-                      console.log('mounted>>>>>>', props.mounted)
-                      const ready = props.mounted;
-                      if (!ready) return
-                      return <ConnectWallet chains={chains}  {...props} />
-                    }}
-                  </ConnectButton.Custom>
-                  {/* <ConnectButton /> */}
-                </div>
 
-                <div className='flex-1 flex flex-col'>
-                  <BrowserRouter>
-                    <Routes />
-                  </BrowserRouter>
-                </div>
-              </SwapProvider>
+              <div className='flex justify-between items-center px-10 py-10'>
+                {/* <Image width={80} src='/logo192.png' /> */}
+                <Logo />
+                <ConnectButton.Custom>
+                  {(props) => {
+                    const ready = props.mounted;
+                    if (!ready) return
+                    return <ConnectWallet chains={chains}  {...props} />
+                  }}
+                </ConnectButton.Custom>
+                {/* <ConnectButton /> */}
+              </div>
+
+              <div className='flex-1 flex flex-col'>
+                <BrowserRouter>
+                  <Routes />
+                </BrowserRouter>
+              </div>
 
             </ConfigProvider>
-          {/* </RecoilRoot> */}
-        </RainbowKitProvider>
-      </WagmiConfig>
-    </div>
+            {/* </RecoilRoot> */}
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </SwapProvider>
+    </div >
   );
 }
 

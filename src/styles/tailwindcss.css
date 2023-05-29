@@ -72,6 +72,8 @@ body,html,#root,.App{
   color: var(--adm-color-primary);
   font-size: 24px;
   font-weight: bold;
+  user-select: none;
+  cursor: pointer;
 }
 
 @media screen and (max-width:400px){

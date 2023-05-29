@@ -1,5 +1,5 @@
 {
-  "name": "mises-fiat",
+  "name": "mises-swap",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

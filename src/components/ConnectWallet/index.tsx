@@ -60,7 +60,6 @@ const ConnectWallet: FC<IProps> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
   const { address} = useAccount()
-  console.log(address, 'getaccount>>>>')
   // const { disconnect } = useDisconnect()
 
   // useAsyncEffect(async () => {

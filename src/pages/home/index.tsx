@@ -145,35 +145,7 @@ const Home = () => {
     }
   }
 
-  const resetData = async () => {
-    setToAmount('')
-    cancel()
-    settokens(undefined)
-
-    if (swapContext) {
-      swapContext.swapToData = {
-        tokenAddress: '',
-      }
-      swapContext.setswapToData({
-        ...swapContext.swapToData
-      })
-
-      swapContext.swapFromData = {
-        tokenAddress: '',
-      }
-      swapContext.setswapFromData({
-        ...swapContext.swapFromData
-      })
-    }
-
-    const getTokens = await getTokenList()
-    accountChangeRun(getTokens)
-  }
-
-  const { run: networkChangeRun, cancel: networkChangeCancel } = useRequest(resetData, {
-    debounceWait: 550,
-    manual: true,
-  });
+  
 
   const [approveLoading, setapproveLoading] = useState(false)
 
@@ -330,6 +302,7 @@ const Home = () => {
           // // eth_getTransactionReceipt
           const data = await waitForTransaction({
             hash: hash,
+            confirmations: 3,
           })
           swapContext?.pushNotificationData({
             type: 'success',
@@ -491,6 +464,7 @@ const Home = () => {
       console.log(hash)
       const data = await waitForTransaction({
         hash: hash,
+        confirmations: 3,
       })
 
       if (data.status === 'success') {
@@ -545,6 +519,37 @@ const Home = () => {
       })
     }
   }
+
+  const resetData = async () => {
+    setToAmount('')
+    cancel()
+    settokens(undefined)
+
+    if (swapContext) {
+      swapContext.swapToData = {
+        tokenAddress: '',
+      }
+      swapContext.setswapToData({
+        ...swapContext.swapToData
+      })
+
+      swapContext.swapFromData = {
+        tokenAddress: '',
+      }
+      swapContext.setswapFromData({
+        ...swapContext.swapFromData
+      })
+    }
+
+    const getTokens = await getTokenList()
+    accountChangeRun(getTokens)
+  }
+
+  const { run: networkChangeRun, cancel: networkChangeCancel } = useRequest(resetData, {
+    debounceWait: 550,
+    manual: true,
+  });
+
   const { run, cancel, loading } = useRequest(quote, {
     debounceWait: 550,
     manual: true,
@@ -564,30 +569,47 @@ const Home = () => {
   }
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
-    debounceWait: 550,
+    debounceWait: 1000,
     manual: true,
   });
+  
+
 
   useUpdateEffect(() => {
     networkChangeCancel()
     networkChangeRun()
+
     console.log("watchNetwork", isConnected, chain?.id, address)
   }, [chainId])
 
   useUpdateEffect(() => {
-    cancel()
-    // run()
-    accountChangeCancel()
-    accountChangeRun()
-    console.log("watchAccount", isConnected, chain?.id, address)
+    const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
+    if(isNotFirstConnected) {
+      cancel()
+      // run()
+      accountChangeCancel()
+      accountChangeRun()
+      console.log("watchAccount", isConnected, chain?.id, address)
+    }else{ 
+      sessionStorage.setItem('isFirstConnected', '1')
+    }
+    if(!address) {
+      sessionStorage.removeItem('isFirstConnected')
+    }
+   
   }, [address])
 
+  const replaceValue = (val: string) =>{
+    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+    return value
+  }
+ 
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
 
   const getFromInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+      const value = replaceValue(val)
       setFromInputChange(value)
     } else {
       swapContext?.setFromAmount('')
@@ -599,7 +621,7 @@ const Home = () => {
   const getToInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+      const value = replaceValue(val)
       setToAmount(value)
       setToInputChange(value)
     } else {

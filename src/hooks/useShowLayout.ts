@@ -10,7 +10,7 @@ export function useShowLayout() {
     try {
       const provider = window.ethereum.request ? window.ethereum : window.ethereum.providers.find((val: any) =>val.request)
       await provider?.request({method: 'eth_chainId'})
-      console.log(provider, 'testConnnect>>>')
+      // console.log(provider, 'testConnnect>>>')
       reloadPageCancel()
       setTrue()
 
@@ -37,11 +37,9 @@ export function useShowLayout() {
   });
 
   const getEthereum = async () => {
-    console.log('getEthereum>>>>')
     inc()
 
     if(window.ethereum.providers || (window.ethereum && window.ethereum.chainId)){
-      console.log(window.ethereum.providers, 'window.ethereum.providers>>>>>close')
       
       cancel()
 
