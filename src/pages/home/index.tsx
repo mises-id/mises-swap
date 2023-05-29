@@ -38,6 +38,9 @@ const Home = () => {
       settokens([...tokenList])
     }
     console.log(window.ethereum, 'window.ethereum')
+    window.addEventListener('message',(res: any)=>{
+      console.log('ethereum#initialized>>>' , res.data.target)
+    })
     const aaa = await window.ethereum.request({method: 'eth_chainId'})
     console.log(aaa, 'eth_chainId')
   }, []);

@@ -9,7 +9,7 @@ import { ConfigProvider } from 'antd-mobile';
 import { BrowserRouter } from 'react-router-dom';
 import Routes from './routes';
 import enUS from 'antd-mobile/es/locales/en-US'
-import { RecoilRoot } from "recoil"
+// import { RecoilRoot } from "recoil"
 
 import '@rainbow-me/rainbowkit/styles.css';
 import { ConnectButton, RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
@@ -169,7 +169,7 @@ function App() {
     <div className="App">
       <WagmiConfig config={wagmiClient}>
         <RainbowKitProvider chains={chains}>
-          <RecoilRoot>
+          {/* <RecoilRoot> */}
             <ConfigProvider locale={enUS}>
               <SwapProvider>
                 <div className='flex justify-between items-center px-10 py-10'>
@@ -177,6 +177,8 @@ function App() {
                   <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
                   <ConnectButton.Custom>
                     {(props) => {
+                      console.log('props>>>>>>', props)
+                      console.log('mounted>>>>>>', props.mounted)
                       const ready = props.mounted;
                       if (!ready) return
                       return <ConnectWallet chains={chains}  {...props} />
@@ -193,7 +195,7 @@ function App() {
               </SwapProvider>
 
             </ConfigProvider>
-          </RecoilRoot>
+          {/* </RecoilRoot> */}
         </RainbowKitProvider>
       </WagmiConfig>
     </div>
