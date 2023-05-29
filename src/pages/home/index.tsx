@@ -399,7 +399,14 @@ const Home = () => {
   const submitSwap = async () => {
     // eth_signTypedData_v4
     const walletClient = await getWalletClient({ chainId })
-    console.log(walletClient, 'walletClient')
+    console.log(walletClient, 'not found walletClient ')
+    if(!walletClient) {
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: 'Internal error, please try again'
+      })
+      return 
+    }
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
