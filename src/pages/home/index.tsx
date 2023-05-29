@@ -37,6 +37,7 @@ const Home = () => {
 
       settokens([...tokenList])
     }
+    console.log(window.ethereum, 'window.ethereum')
     const aaa = await window.ethereum.request({method: 'eth_chainId'})
     console.log(aaa, 'eth_chainId')
   }, []);
