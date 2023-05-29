@@ -16,9 +16,9 @@ import {
 import HistoryList from '../HistoryList';
 import CustomAvatar from '../CustomAvatar';
 import { useAccount } from 'wagmi';
-import { getWalletClient } from '@wagmi/core' 
-import { useAsyncEffect } from 'ahooks';
-import { useDisconnect } from 'wagmi';
+// import { getWalletClient } from '@wagmi/core' 
+// import { useAsyncEffect } from 'ahooks';
+// import { useDisconnect } from 'wagmi';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -61,17 +61,17 @@ const ConnectWallet: FC<IProps> = (props) => {
   const [isOpen, setisOpen] = useState(false)
   const { address} = useAccount()
   console.log(address, 'getaccount>>>>')
-  const { disconnect } = useDisconnect()
+  // const { disconnect } = useDisconnect()
 
-  useAsyncEffect(async () => {
-    setTimeout(async () => {
-      const provider = await getWalletClient()
-      if(!provider && address){
-        disconnect()
-        // window.location.reload()
-      }
-    }, 300);
-  }, [])
+  // useAsyncEffect(async () => {
+  //   setTimeout(async () => {
+  //     const provider = await getWalletClient()
+  //     if(!provider && address){
+  //       disconnect()
+  //       // window.location.reload()
+  //     }
+  //   }, 300);
+  // }, [])
 
   return (
     <div className='flex items-center'>

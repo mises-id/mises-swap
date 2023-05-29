@@ -31,7 +31,7 @@ export function useShowLayout() {
   }
 
   const { cancel } = useRequest(getEthereum, {
-    pollingInterval: 10,
+    pollingInterval: 100,
     manual: false,
     pollingWhenHidden: false
   });
