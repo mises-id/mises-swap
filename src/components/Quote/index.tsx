@@ -102,7 +102,10 @@ const Quote: FC<Iprops> = (props) => {
   
   useEffect(() => {
     if(props.data){
-      walletClient.data?.request({method: 'eth_gasPrice'}).then(res=>{
+      walletClient.data?.request({
+        method: 'eth_gasPrice', 
+        params: [] as never
+      }).then(res=>{
         const gasPriceNumber = parseInt(res)
         setgasPrice(gasPriceNumber.toString())
       })

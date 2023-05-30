@@ -75,7 +75,7 @@ const HistoryList: FC<IProps> = (props) => {
     style: CSSProperties
   }) => {
     const item: historyItem = data?.list[index]
-    
+
     return (
       <List.Item
         key={key}
@@ -106,7 +106,7 @@ const HistoryList: FC<IProps> = (props) => {
       disconnect()
       props.onClose?.()
     } catch (error) {
-      
+
     }
   }
 
@@ -156,10 +156,10 @@ const HistoryList: FC<IProps> = (props) => {
     manual: true
   });
   useEffect(() => {
-    if(isOpen && address && chain?.id) reload()
+    if (isOpen && address && chain?.id) reload()
     // eslint-disable-next-line
   }, [isOpen, address, chain])
-  
+
   // const [pageNum, setpageNum] = useState(1)
   // const pageSize = 50;
 
@@ -169,7 +169,7 @@ const HistoryList: FC<IProps> = (props) => {
     const url = `${chainInfo?.url}/tx/${detail?.tx.hash}`
     window.open(url, 'target=_blank')
   }
-  
+
   const copy = (text: string) => {
     const input = document.createElement('input');
     input.setAttribute('readonly', 'readonly');
@@ -204,7 +204,7 @@ const HistoryList: FC<IProps> = (props) => {
         'height': window.innerHeight / 2 + 2
       }}>
 
-        {!loading && !data?.list.length && <ErrorBlock status='empty' description=""/>}
+        {!loading && !data?.list.length && <ErrorBlock status='empty' description="" />}
 
         {/* {hisotryList.length === 0 && !isLoading && <div className='text-center pt-20'>No results found.</div>} */}
         {loading && <div className='loading flex items-center py-20 justify-center'>
@@ -215,8 +215,8 @@ const HistoryList: FC<IProps> = (props) => {
           {({ width }: { width: number }) => (
             <VirtualizedList
               ref={listRef}
-              onScroll={(e)=>{
-                if(e.scrollHeight - e.clientHeight === e.scrollTop){
+              onScroll={(e) => {
+                if (e.scrollHeight - e.clientHeight === e.scrollTop) {
                   loadMore()
                 }
               }}
@@ -246,7 +246,7 @@ const HistoryList: FC<IProps> = (props) => {
             setdetail(undefined)
           }} />
         </div>
-        <div className='flex flex-col justify-between' style={{height: 'calc(100% - 40px)'}}>
+        <div className='flex flex-col justify-between' style={{ height: 'calc(100% - 40px)' }}>
           <div className='flex-none relative'>
             <div className='swap-token-item'>
               <p className='token-item-title'>You sold</p>
@@ -290,24 +290,16 @@ const HistoryList: FC<IProps> = (props) => {
               </p>
               <div className='flex justify-between items-center pt-20'>
                 <span className='detail-info-label'>Hash</span>
-                <div className='flex items-center gap-2 cursor-pointer' onClick={()=>copy(detail.tx.hash)}>
+                <div className='flex items-center gap-2 cursor-pointer' onClick={() => copy(detail.tx.hash)}>
                   <span className='detail-info-value'>{shortenAddress(detail.tx.hash)}</span>
-                  <Image
-                    width={12}
-                    height={12}
-                    src='/images/copy.svg'
-                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 </div>
               </div>
               <div className='flex justify-between items-center pt-20'>
                 <span className='detail-info-label'>Receiver</span>
-                <div className='flex items-center gap-2 cursor-pointer'  onClick={()=>copy(detail.dest_receiver)}>
+                <div className='flex items-center gap-2 cursor-pointer' onClick={() => copy(detail.dest_receiver)}>
                   <span className='detail-info-value'>{shortenAddress(detail.dest_receiver)}</span>
-                  <Image
-                    width={12}
-                    height={12}
-                    src='/images/copy.svg'
-                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 </div>
               </div>
               <p className='flex justify-between items-center pt-20'>

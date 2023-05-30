@@ -1,7 +1,7 @@
 import { Timeout } from "ahooks/lib/useRequest/src/types";
 import { Dispatch, FC, ReactNode, SetStateAction, createContext, useState } from "react";
 // type swapType = 'to' | 'from'
-interface swapData {
+interface swapTokenData {
   tokenAddress: string,
   symbol?: string
   decimals?: number
@@ -9,7 +9,7 @@ interface swapData {
 interface globalDialogMessageData {
   type: 'error' | 'pending' | 'success',
   description: string,
-  info?: swapData & {
+  info?: swapTokenData & {
     blockExplorer: string | undefined,
     txHash: string
   }
@@ -24,12 +24,14 @@ export interface notificationData {
   fromTokenAmount?: string
 }
 export type SwapContextType = {
-  swapToData: swapData,
-  setswapToData: Dispatch<SetStateAction<swapData>>
-  swapFromData: swapData,
-  setswapFromData: Dispatch<SetStateAction<swapData>>
+  swapToData: swapTokenData,
+  setswapToData: Dispatch<SetStateAction<swapTokenData>>
+  swapFromData: swapTokenData,
+  setswapFromData: Dispatch<SetStateAction<swapTokenData>>
   fromAmount: string,
   setFromAmount: Dispatch<SetStateAction<string>>
+  toAmount: string,
+  setToAmount: Dispatch<SetStateAction<string>>
   status: number | string,
   setStatus: Dispatch<SetStateAction<number | string>>
   slippage: string,
@@ -43,7 +45,11 @@ export type SwapContextType = {
   pushNotificationData: (params: notificationData)=>void,
   removeNotificationData: (index: number) => void,
   chainId: number, 
-  setChainId: Dispatch<SetStateAction<number>>
+  setChainId: Dispatch<SetStateAction<number>>,
+  quoteData: swapData | undefined, 
+  setquoteData: Dispatch<SetStateAction<swapData | undefined>>,
+  pageStatus: 'default' | 'reset', 
+  setPageStatus: Dispatch<SetStateAction<'default' | 'reset'>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -54,11 +60,13 @@ const swapDataDefaults = {
   tokenAddress: ''
 }
 const SwapProvider: FC<Iprops> = ({ children }) => {
-  const [swapToData, setswapToData] = useState<swapData>(swapDataDefaults)
+  const [swapToData, setswapToData] = useState<swapTokenData>(swapDataDefaults)
 
-  const [swapFromData, setswapFromData] = useState<swapData>(swapDataDefaults)
+  const [swapFromData, setswapFromData] = useState<swapTokenData>(swapDataDefaults)
 
   const [fromAmount, setFromAmount] = useState('')
+
+  const [toAmount, setToAmount] = useState('')
 
   const [status, setStatus] = useState<number | string>(1)
 
@@ -73,6 +81,10 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [chainId, setChainId] = useState<number>(1)
   
   const [notification, setNotification] = useState<notificationData[]>([])
+
+  const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
+
+  const [pageStatus, setPageStatus] = useState<'default' | 'reset'>('default')
 
   // const [notificationTimeOut, setnotificationTimeOut] = useState([])
   const [timeout, settimeout] = useState<Timeout | undefined>()
@@ -121,7 +133,13 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     pushNotificationData,
     removeNotificationData,
     chainId, 
-    setChainId
+    setChainId,
+    toAmount, 
+    setToAmount,
+    quoteData, 
+    setquoteData,
+    pageStatus, 
+    setPageStatus
   }}>{children}</SwapContext.Provider>;
 };
 

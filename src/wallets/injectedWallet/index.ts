@@ -17,7 +17,9 @@ export const injectedWallet = ({
   createConnector: () => ({
     connector: new InjectedConnector({
       chains,
-      options,
+      options: {
+        ...options,
+      },
     }),
   }),
 });

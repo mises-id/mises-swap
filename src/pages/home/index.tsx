@@ -52,9 +52,9 @@ const Home = () => {
 
   const chainId = chain?.id || swapContext?.chainId || 1
   const [tokens, settokens] = useState<token[] | undefined>(undefined)
-  const [toAmount, setToAmount] = useState('')
+  // const [toAmount, setToAmount] = useState('')
   const { address, isConnected } = useAccount()
-  const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
+  // const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
   // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
@@ -169,14 +169,14 @@ const Home = () => {
         const [firstTrade] = res.data.data
         if (firstTrade.error) {
           swapContext?.setStatus(firstTrade.error)
-          setquoteData(undefined)
+          swapContext?.setquoteData(undefined)
           return
         }
-        setquoteData(firstTrade)
+        swapContext?.setquoteData(firstTrade)
 
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
-        if (swapContext?.fromAmount && quoteType === 'from') setToAmount(toTokenAmount)
+        if (swapContext?.fromAmount && quoteType === 'from') swapContext.setToAmount(toTokenAmount)
         if (quoteType === 'to') {
           swapContext?.setFromAmount(toTokenAmount)
         }
@@ -221,7 +221,7 @@ const Home = () => {
         swapContext?.setStatus(11)
       }
 
-      setquoteData(undefined)
+      swapContext?.setquoteData(undefined)
     }
   }
 
@@ -281,7 +281,7 @@ const Home = () => {
     if (!tokenAddress && tokenAddress !== nativeTokenAddress) return
 
     try {
-      const contract_address = quoteData?.aggregator?.contract_address
+      const contract_address = swapContext?.quoteData?.aggregator?.contract_address
       if (contract_address) {
         setapproveLoading(true)
         const result = await getAllowance(tokenAddress, contract_address)
@@ -388,7 +388,7 @@ const Home = () => {
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
-      const aggregatorAddress = quoteData?.aggregator.contract_address
+      const aggregatorAddress = swapContext?.quoteData?.aggregator.contract_address
 
       if (!aggregatorAddress) {
         swapContext?.setGlobalDialogMessage({
@@ -401,7 +401,7 @@ const Home = () => {
       if (swapContext) {
         setapproveLoading(true)
         const fromTokenAmount = `${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol}`
-        const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(toAmount).toString())} ${swapContext?.swapToData.symbol}`
+        const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(swapContext?.toAmount).toString())} ${swapContext?.swapToData.symbol}`
         swapContext.setGlobalDialogMessage({
           type: 'pending',
           description: `Waiting for confirmation Swapping ${fromTokenAmount} for ${toTokenAmount}`
@@ -474,7 +474,7 @@ const Home = () => {
           toToken: swapContext!.swapToData as unknown as token,
           hash: hash,
           fromTokenAmount: swapContext?.fromAmount,
-          toTokenAmount: substringAmount(toAmount),
+          toTokenAmount: substringAmount(swapContext?.toAmount),
           text: 'Swapped',
         })
         setapproveLoading(false)
@@ -521,7 +521,7 @@ const Home = () => {
   }
 
   const resetData = async () => {
-    setToAmount('')
+    swapContext?.setToAmount('')
     cancel()
     settokens(undefined)
 
@@ -559,8 +559,8 @@ const Home = () => {
 
   const resetInputData = async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
-    setToAmount('')
-    setquoteData(undefined)
+    swapContext?.setToAmount('')
+    swapContext?.setquoteData(undefined)
     const tokenList = paramTokens || tokens
     if (tokenList?.length) {
       const tokenBalanceList = await getTokenListBalance(tokenList)
@@ -613,8 +613,8 @@ const Home = () => {
       setFromInputChange(value)
     } else {
       swapContext?.setFromAmount('')
-      setToAmount('')
-      setquoteData(undefined)
+      swapContext?.setToAmount('')
+      swapContext?.setquoteData(undefined)
       setapproveLoading(false)
     }
   }
@@ -622,12 +622,12 @@ const Home = () => {
     cancel()
     if (val) {
       const value = replaceValue(val)
-      setToAmount(value)
+      swapContext?.setToAmount(value)
       setToInputChange(value)
     } else {
       swapContext?.setFromAmount('')
-      setToAmount('')
-      setquoteData(undefined)
+      swapContext?.setToAmount('')
+      swapContext?.setquoteData(undefined)
       setapproveLoading(false)
     }
   }
@@ -645,7 +645,7 @@ const Home = () => {
 
   const setFromInputChange = (value: string) => {
     swapContext?.setFromAmount(value)
-    setToAmount('')
+    swapContext?.setToAmount('')
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (toTokenAddress && fromTokenAddress) {
@@ -708,7 +708,7 @@ const Home = () => {
 
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     if (swapContext?.fromAmount && fromTokenAddress) {
-      setToAmount('')
+      swapContext.setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
     getTokenToUSDPrice(val)
@@ -724,6 +724,7 @@ const Home = () => {
       const swapFromData = swapContext.swapFromData
       const fromToken = tokens?.length && findToken(tokens, swapFromData.tokenAddress)
       const toToken = tokens?.length && findToken(tokens, swapToData.tokenAddress)
+      const toAmount = swapContext.toAmount
       cancel()
 
       currentSwitchType === 'from' ?
@@ -738,7 +739,7 @@ const Home = () => {
 
       setcurrentSwitchType(currentSwitchType === 'from' ? 'to' : 'from')
 
-      setToAmount(swapContext.fromAmount)
+      swapContext.setToAmount(swapContext.fromAmount)
       swapContext?.setFromAmount(toAmount)
 
       swapContext.swapToData = {
@@ -776,7 +777,7 @@ const Home = () => {
 
     if (!swapContext?.swapToData.tokenAddress || !swapContext?.swapFromData.tokenAddress) {
       swapContext?.setStatus(2) // un select token
-      setquoteData(undefined)
+      swapContext?.setquoteData(undefined)
       cancel()
       return
     }
@@ -799,6 +800,15 @@ const Home = () => {
   const dismissClose = () => {
     setapproveLoading(false)
   }
+
+  useEffect(() => {
+    if(swapContext?.pageStatus === 'reset') {
+      cancel()
+      swapContext.setPageStatus('default')
+    }
+    // eslint-disable-next-line
+  }, [swapContext?.pageStatus])
+  
 
   return <div className="overflow-hidden relative flex-1">
     <div className="swap-container">
@@ -831,7 +841,7 @@ const Home = () => {
         {tokens ? <TokenInput
           type="to"
           tokens={tokens}
-          value={toAmount}
+          value={swapContext?.toAmount}
           ref={toInputRef}
           onChange={getToInputChange}
           onTokenChange={getToTokenChange}
@@ -841,7 +851,7 @@ const Home = () => {
         /> : <Skeleton animated className="custom-skeleton" />}
       </div>
 
-      <Quote tokens={tokens} data={quoteData} loading={swapLoading} />
+      <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
 
       <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
@@ -865,11 +875,11 @@ const Home = () => {
               type="to"
               status="ready"
               tokens={tokens}
-              value={toAmount}
+              value={swapContext?.toAmount}
               tokenAddress={swapContext?.swapToData.tokenAddress}
             />
           </div>
-          <Quote data={quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+          <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
           <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
         </div>
       </CenterPopup>

@@ -16,7 +16,7 @@ import { ConnectButton, RainbowKitProvider, connectorsForWallets } from '@rainbo
 import { Chain, configureChains, createConfig, WagmiConfig } from 'wagmi';
 import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
-import SwapProvider from './context/swapContext';
+import SwapProvider, { SwapContext } from './context/swapContext';
 import ConnectWallet from './components/ConnectWallet';
 import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
@@ -28,6 +28,7 @@ import { useShowLayout } from './hooks/useShowLayout';
 import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
 import { injectedWallet } from './wallets/injectedWallet';
+import { useContext } from 'react';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -177,9 +178,12 @@ function App() {
   });
 
   const Logo = () =>{
-    // const swapContext = useContext(SwapContext)
+    const swapContext = useContext(SwapContext)
     const resetData = () => {
-      // swapContext?.setFromAmount('')
+      swapContext?.setFromAmount('')
+      swapContext?.setToAmount('')
+      swapContext?.setquoteData(undefined)
+      swapContext?.setPageStatus('reset')
     }
     return <p className='swap-title' onClick={resetData}><span className='mises-title'>Mises</span> <span>Swap</span></p>
   }
