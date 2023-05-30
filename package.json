@@ -8,6 +8,7 @@
     "@babel/preset-env": "^7.18.2",
     "@cfaester/enzyme-adapter-react-18": "^0.7.0",
     "@craco/craco": "^7.0.0-alpha.3",
+    "@metamask/detect-provider": "^2.0.0",
     "@metamask/jazzicon": "^2.0.0",
     "@rainbow-me/rainbowkit": "^1.0.1",
     "@sentry/react": "^7.53.1",

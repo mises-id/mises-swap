@@ -165,9 +165,9 @@ const wagmiClient = createConfig({
 
 
 function App() {
-  const { isShowLayout, isMaxRetrStatus } = useShowLayout()
+  const { isShowLayout, isMaxRetryStatus } = useShowLayout()
 
-  if (isMaxRetrStatus) {
+  if (isMaxRetryStatus) {
     return <RetryMaxStatus />
   }
 

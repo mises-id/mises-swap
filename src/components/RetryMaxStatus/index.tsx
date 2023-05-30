@@ -17,7 +17,7 @@ const RetryMaxStatus = () => {
         <p>Loading timed out</p>
         <p className="loadingMises-refreshTxt">Please try again later</p>
       </div>
-      <UndoOutline className='UndoOutline' onClick={()=>window.location.reload()}/>
+      <UndoOutline className='UndoOutline cursor-pointer' onClick={()=>window.location.reload()}/>
     </div>
   </div>
 }
