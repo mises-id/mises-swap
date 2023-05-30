@@ -1,28 +1,45 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
+import { useAsyncEffect, useBoolean, useCounter, useRequest } from "ahooks";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
   const [isMaxRetryStatus, { setTrue: setMaxTrue }] = useBoolean(false)
-  // const max = 20
-  // const [currentCount, { inc }] = useCounter(0, { min: 0, max });
-
-  useAsyncEffect(async ()=>{
+  const max = 20
+  const [currentCount, { inc }] = useCounter(0, { min: 0, max });
+  const getProvider = async () =>{
     const provider: any = await detectEthereumProvider()
-    if(!provider) {
-      setTrue()
-    }else {
-      console.log('has provider', provider)
-      runReload()
-      await provider?.request({method: 'eth_chainId'})
-      setTrue()
-      reloadPageCancel()
-    }
+      if(!provider) {
+        setTrue()
+      }else {
+        console.log('has provider', provider)
+        try {
+          runReload()
+          await provider?.request({method: 'eth_chainId'})
+          setTrue()
+          reloadPageCancel()
+        } catch (error: any) {
+          if(error.message === 'Request method eth_chainId is not supported') {
+            setTrue()
+            reloadPageCancel()
+          }
+        }
+      }
+  }
+  useAsyncEffect(async ()=>{
+    getProvider()
   }, [])
   
   const reloadPage = async () => {
+    if(currentCount === max) {
+      setMaxTrue()
+      reloadPageCancel()
+      return 
+    }else{
+      inc()
+      getProvider()
+    }
     // window.location.reload()
-    setMaxTrue()
+    
     console.log('reloadPage-getEthereum', window.ethereum)
     console.log('reloadPage')
   }
@@ -30,7 +47,7 @@ export function useShowLayout() {
   const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
     manual: true,
     pollingWhenHidden: false,
-    debounceWait: 2000,
+    debounceWait: 1000,
   });
   // ccc()
   // const testConnnect = async () => {
