@@ -4,42 +4,43 @@ import { useAsyncEffect, useBoolean, useCounter, useRequest } from "ahooks";
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
   const [isMaxRetryStatus, { setTrue: setMaxTrue }] = useBoolean(false)
-  const max = 20
+  const max = 5
   const [currentCount, { inc }] = useCounter(0, { min: 0, max });
-  const getProvider = async () =>{
+  const getProvider = async () => {
     const provider: any = await detectEthereumProvider()
-      if(!provider) {
+    if (!provider) {
+      setTrue()
+    } else {
+      console.log('has provider', provider)
+      try {
+        runReload()
+        await provider?.request({ method: 'eth_chainId' })
+        console.log('test connnect')
         setTrue()
-      }else {
-        console.log('has provider', provider)
-        try {
-          runReload()
-          await provider?.request({method: 'eth_chainId'})
+        reloadPageCancel()
+      } catch (error: any) {
+        if (error.message === 'Request method eth_chainId is not supported') {
           setTrue()
           reloadPageCancel()
-        } catch (error: any) {
-          if(error.message === 'Request method eth_chainId is not supported') {
-            setTrue()
-            reloadPageCancel()
-          }
         }
       }
+    }
   }
-  useAsyncEffect(async ()=>{
+  useAsyncEffect(async () => {
     getProvider()
   }, [])
-  
+
   const reloadPage = async () => {
-    if(currentCount === max) {
+    if (currentCount === max) {
       setMaxTrue()
       reloadPageCancel()
-      return 
-    }else{
+      return
+    } else {
       inc()
       getProvider()
     }
     // window.location.reload()
-    
+
     console.log('reloadPage-getEthereum', window.ethereum)
     console.log('reloadPage')
   }
@@ -75,7 +76,7 @@ export function useShowLayout() {
   //   inc()
 
   //   if(window.ethereum?.providers || (window.ethereum && window.ethereum.chainId)){
-      
+
   //     cancel()
 
   //     runReload()
