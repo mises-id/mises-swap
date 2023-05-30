@@ -14,8 +14,9 @@ export function useShowLayout() {
       console.log('has provider', provider)
       try {
         runReload()
-        await provider?.request({ method: 'eth_chainId' })
-        console.log('test connnect')
+        console.log('start connnect >>>>>>',)
+        const chainId = await provider?.request({ method: 'eth_chainId' })
+        console.log('test connnect success>>>>>>', chainId)
         setTrue()
         reloadPageCancel()
       } catch (error: any) {
