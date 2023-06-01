@@ -27,6 +27,8 @@ import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
+import { useBoolean } from 'ahooks';
+import { useEffect } from 'react';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -125,15 +127,21 @@ export const chainList = [
 
 
 function App() {
-  const { isShowLayout, isMaxRetryStatus } = useShowLayout()
+  // const { isShowLayout, isMaxRetryStatus } = useShowLayout()
 
-  if (isMaxRetryStatus) {
-    return <RetryMaxStatus />
-  }
+  // if (isMaxRetryStatus) {
+  //   return <RetryMaxStatus />
+  // }
 
-  if (!isShowLayout) {
-    return <Loading />
-  }
+  // if (!isShowLayout) {
+  //   return <Loading />
+  // }
+  const [isShow, {setTrue}] = useBoolean(false)
+  useEffect(() => {
+    setTrue()
+    // eslint-disable-next-line
+  }, [])
+  
   
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     chainList,
@@ -178,7 +186,7 @@ function App() {
   return (
     <div className="App">
       <SwapProvider>
-        <WagmiConfig config={wagmiClient}>
+        {isShow ? <WagmiConfig config={wagmiClient}>
           <RainbowKitProvider chains={chains}>
             {/* <RecoilRoot> */}
             <ConfigProvider locale={enUS}>
@@ -188,7 +196,7 @@ function App() {
             </ConfigProvider>
             {/* </RecoilRoot> */}
           </RainbowKitProvider>
-        </WagmiConfig>
+        </WagmiConfig> : null }
       </SwapProvider>
     </div >
   );

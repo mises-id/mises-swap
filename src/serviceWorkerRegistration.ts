@@ -29,12 +29,15 @@ function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
+      console.log('registration')
       registration.onupdatefound = () => {
+        console.log('onupdatefound')
         const installingWorker = registration.installing
         if (installingWorker == null) {
           return
         }
         installingWorker.onstatechange = () => {
+          console.log('onstatechange')
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
               // At this point, the updated precached content has been fetched,
@@ -123,6 +126,7 @@ export function register(config?: Config) {
           )
         })
       } else {
+        console.log('registerValidSW')
         // Is not localhost. Just register service worker
         registerValidSW(swUrl, config)
       }
