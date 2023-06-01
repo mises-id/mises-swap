@@ -27,7 +27,7 @@ const StatusDialog: FC<Iprops> = (props) => {
   }, [swapContext?.globalDialogMessage])
 
   const dismiss = () => {
-    if(swapContext?.globalDialogMessage?.description === 'Timeout getting token list,please try again') {
+    if(swapContext?.globalDialogMessage?.description && ['Timeout getting token list,please try again', 'Failed to connect to the wallet, please refresh the page'].includes(swapContext?.globalDialogMessage?.description)) {
       window.location.reload()
       return 
     }

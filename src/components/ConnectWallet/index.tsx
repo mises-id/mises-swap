@@ -1,6 +1,6 @@
 import { AuthenticationStatus, Chain } from '@rainbow-me/rainbowkit';
 import { Button } from 'antd-mobile'
-import { FC, useState } from 'react'
+import { FC, useContext, useEffect, useState } from 'react'
 import ChainList from '../ChainList';
 import { shortenAddress } from '@/utils';
 import './index.less'
@@ -15,7 +15,10 @@ import {
 } from 'react-virtualized';
 import HistoryList from '../HistoryList';
 import CustomAvatar from '../CustomAvatar';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect, useWalletClient } from 'wagmi';
+import detectEthereumProvider from '@metamask/detect-provider';
+import { useRequest } from 'ahooks';
+import { SwapContext } from '@/context/swapContext';
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
 export type VirtualizedListType = typeof VirtualizedList;
@@ -55,8 +58,59 @@ interface IProps {
 const ConnectWallet: FC<IProps> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
-  const { address} = useAccount()
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+  const walletClient = useWalletClient()
 
+  const swapContext = useContext(SwapContext)
+
+  console.log(walletClient, isConnected ,'isConnected')
+  useEffect(() => {
+    if(isConnected && walletClient.isIdle){
+      disconnect()
+      console.log('disconnect')
+    }
+    // eslint-disable-next-line
+  }, [])
+  const reloadPage = async () => {
+    // setMaxTrue()
+    reloadPageCancel()
+    swapContext?.setGlobalDialogMessage({
+      type: 'error',
+      description: 'Failed to connect to the wallet, please refresh the page'
+    })
+    
+    console.log('reloadPage-getEthereum', window.ethereum)
+    console.log('reloadPage')
+  }
+  const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
+    manual: true,
+    pollingWhenHidden: false,
+    debounceWait: 500,
+  });
+
+  const connect = async () => {
+    try {
+      const provider: any = await detectEthereumProvider()
+      reloadPageCancel()
+      runReload()
+      const chainId = await provider?.request({ method: 'eth_chainId', params: [] })
+      console.log('test connnect success>>>>>>', chainId)
+      reloadPageCancel()
+      props.openConnectModal()
+    } catch (error: any) {
+      reloadPageCancel()
+      if(error && error.code === 4001) {
+        swapContext?.setGlobalDialogMessage({
+          type: 'error',
+          description: 'Please unlock the wallet first'
+        })
+      }else {
+        props.openConnectModal()
+      }
+      
+    }
+  }
   return (
     <div className='flex items-center'>
       <ChainList chains={props.chains} chain={props.chain} openChainModal={props.openChainModal} />
@@ -70,7 +124,7 @@ const ConnectWallet: FC<IProps> = (props) => {
           </div>
           <HistoryList visible={isOpen} onClose={()=>setisOpen(false)}/>
         </div>}
-        {!address && <Button size='small' onClick={props.openConnectModal} shape='rounded' color='primary' className='connect-btn'>Connect</Button>}
+        {!address && <Button size='small' onClick={connect} shape='rounded' color='primary' className='connect-btn'>Connect</Button>}
       </div>
     </div>
   )

@@ -1,45 +1,68 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import { useAsyncEffect, useBoolean, useCounter, useRequest } from "ahooks";
+import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
+
   const [isMaxRetryStatus, { setTrue: setMaxTrue }] = useBoolean(false)
-  const max = 5
-  const [currentCount, { inc }] = useCounter(0, { min: 0, max });
+
   const getProvider = async () => {
     const provider: any = await detectEthereumProvider()
     if (!provider) {
       setTrue()
-    } else {
-      console.log('has provider', provider)
-      try {
-        runReload()
-        console.log('start connnect >>>>>>',)
-        const chainId = await provider?.request({ method: 'eth_chainId' })
-        console.log('test connnect success>>>>>>', chainId)
+      return 
+    }
+
+    console.log('has provider', provider)
+    
+    try {
+      runReload()
+      console.log('start connnect >>>>>>',)
+      const chainId = await provider?.request({ method: 'eth_chainId', params: [] })
+      console.log('test connnect success>>>>>>', chainId)
+
+      setTrue()
+      reloadPageCancel()
+    } catch (error: any) {
+      if (error.message === 'Request method eth_chainId is not supported') {
         setTrue()
         reloadPageCancel()
-      } catch (error: any) {
-        if (error.message === 'Request method eth_chainId is not supported') {
-          setTrue()
-          reloadPageCancel()
-        }
       }
     }
   }
   useAsyncEffect(async () => {
-    getProvider()
+    // setTimeout(() => {
+      // console.log('loading....')
+      // getProvider()
+    // }, 1000);
+    // getProvider()
+    const load = () =>{
+      console.log('loading')
+      getProvider()
+    }
+
+    window.onload = load
   }, [])
 
   const reloadPage = async () => {
-    if (currentCount === max) {
+    const isPageReLoad = sessionStorage.getItem('isPageReLoad')
+
+    if(isPageReLoad) {
       setMaxTrue()
-      reloadPageCancel()
-      return
-    } else {
-      inc()
-      getProvider()
+      sessionStorage.removeItem('isPageReLoad')
+    }else {
+      sessionStorage.setItem('isPageReLoad', '1')
+      window.location.reload()
     }
+
+    // if (currentCount === max) {
+    //   setMaxTrue()
+    //   window.location.reload()
+    //   reloadPageCancel()
+    //   return
+    // } else {
+    //   getProvider()
+    // }
     // window.location.reload()
 
     console.log('reloadPage-getEthereum', window.ethereum)
@@ -49,56 +72,12 @@ export function useShowLayout() {
   const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
     manual: true,
     pollingWhenHidden: false,
-    debounceWait: 1000,
+    debounceWait: 500,
   });
-  // ccc()
-  // const testConnnect = async () => {
-  //   try {
-  //     const provider = window.ethereum?.request ? window.ethereum : window.ethereum?.providers.find((val: any) =>val.request)
-  //     await provider?.request({method: 'eth_chainId'})
-  //     // console.log(provider, 'testConnnect>>>')
-  //     reloadPageCancel()
-  //     setTrue()
-
-  //     return 
-  //   } catch (error: any) {
-  //     console.log(error)
-  //     reloadPageCancel()
-  //     if(error.message === 'Request method eth_chainId is not supported'){
-  //       setTrue()
-  //     }else {
-  //       setMaxTrue()
-  //     }
-  //   }
-  // }
-
-  // const getEthereum = async () => {
-  //   console.log('getEthereum', window.ethereum)
-  //   inc()
-
-  //   if(window.ethereum?.providers || (window.ethereum && window.ethereum.chainId)){
-
-  //     cancel()
-
-  //     runReload()
-  //     testConnnect()
-  //     return 
-  //   }
-
-  //   if(currentCount === max){
-  //     cancel()
-  //     setMaxTrue()
-  //   }
-  // }
-
-  // const { cancel } = useRequest(getEthereum, {
-  //   pollingInterval: 500,
-  //   manual: false,
-  //   pollingWhenHidden: false
-  // });
 
   return {
     isShowLayout,
-    isMaxRetryStatus
+    isMaxRetryStatus,
+    getProvider
   }
 }

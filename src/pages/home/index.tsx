@@ -1,6 +1,6 @@
 
 import "./index.less";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
@@ -12,8 +12,8 @@ import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
 import SwapButton from "@/components/swapButton";
-import { Button, CenterPopup, Skeleton } from "antd-mobile";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { Button, CenterPopup, Image, Skeleton } from "antd-mobile";
+import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 import BigNumber from "bignumber.js";
 import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
@@ -21,6 +21,8 @@ import { SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
 import { fetchUSD, getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
+import ConnectWallet from "@/components/ConnectWallet";
+import { chainList } from "@/App";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
 const Home = () => {
@@ -31,10 +33,10 @@ const Home = () => {
     logEvent(analytics, 'open_swap_page')
 
     console.log(window.ethereum, 'window.ethereum')
-    window.addEventListener('message',(res: any)=>{
-      console.log('ethereum#initialized>>>' , res.data.target)
+    window.addEventListener('message', (res: any) => {
+      console.log('ethereum#initialized>>>>>>>>>>>=========', res, res.data.result, res.data.type)
     })
-    
+
 
     const getTokens = await getTokenList()
 
@@ -78,7 +80,7 @@ const Home = () => {
         const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
         return tokenAddress.toLocaleLowerCase()
       })
-      
+
       try {
         const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
         for (const key in data) {
@@ -103,7 +105,7 @@ const Home = () => {
     }
     return tokenList
   }
-  
+
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem(`${chainId}`)
@@ -140,12 +142,12 @@ const Home = () => {
         type: 'error',
         description: error.message === 'timeout of 10000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
       })
-      
+
       return []
     }
   }
 
-  
+
 
   const [approveLoading, setapproveLoading] = useState(false)
 
@@ -292,7 +294,7 @@ const Home = () => {
           const transactionResult = await getTransaction(tokenAddress, contract_address)
           // eth_sendTransaction
 
-          const { gas_price, gas_limit ,...params } = transactionResult.data
+          const { gas_price, gas_limit, ...params } = transactionResult.data
           const { hash } = await sendTransaction({
             ...params,
             gasPrice: gas_price,
@@ -320,8 +322,8 @@ const Home = () => {
     } catch (error: any) {
       setapproveLoading(false)
       if (error.message) {
-        if(error.message.indexOf('Transaction with hash') > -1 && error.message.indexOf('could not be found') > -1) {
-          return 
+        if (error.message.indexOf('Transaction with hash') > -1 && error.message.indexOf('could not be found') > -1) {
+          return
         }
 
         swapContext?.setGlobalDialogMessage({
@@ -341,7 +343,7 @@ const Home = () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
     if (!tokenAddress) return
 
-    if(!address) {
+    if (!address) {
       swapContext?.setStatus(1)
     }
 
@@ -371,17 +373,17 @@ const Home = () => {
     // eth_signTypedData_v4
     const walletClient = await getWalletClient({ chainId })
     console.log(walletClient, 'not found walletClient ')
-    if(!walletClient) {
+    if (!walletClient) {
       swapContext?.setGlobalDialogMessage({
         type: 'error',
         description: 'Internal error, please try again'
       })
-      return 
+      return
     }
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
-    
+
     try {
 
       const fromToken = tokens?.length && fromTokenAddress && findToken(tokens, fromTokenAddress)
@@ -442,7 +444,7 @@ const Home = () => {
         })
         return
       }
-      
+
       const { hash } = await sendTransaction({
         ...params,
         gasPrice: gas_price,
@@ -489,12 +491,12 @@ const Home = () => {
     } catch (error: any) {
       setapproveLoading(false)
       if (!swapContext) return
-      
+
       console.log(JSON.stringify(error), 'error message log')
 
-      if(error.name === 'TransactionExecutionError') {
-        swapContext.setGlobalDialogMessage(formatErrorMessage(error))
-        return 
+      if (error.name === 'TransactionExecutionError') {
+        swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+        return
       }
 
       if (error.description) {
@@ -572,7 +574,7 @@ const Home = () => {
     debounceWait: 1000,
     manual: true,
   });
-  
+
 
 
   useUpdateEffect(() => {
@@ -584,26 +586,26 @@ const Home = () => {
 
   useUpdateEffect(() => {
     const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
-    if(isNotFirstConnected) {
+    if (isNotFirstConnected) {
       cancel()
       // run()
       accountChangeCancel()
       accountChangeRun()
       console.log("watchAccount", isConnected, chain?.id, address)
-    }else{ 
+    } else {
       sessionStorage.setItem('isFirstConnected', '1')
     }
-    if(!address) {
-      sessionStorage.removeItem('isFirstConnected')
-    }
-   
+    // if(!address) {
+    //   sessionStorage.removeItem('isFirstConnected')
+    // }
+
   }, [address])
 
-  const replaceValue = (val: string) =>{
+  const replaceValue = (val: string) => {
     const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
     return value
   }
- 
+
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
 
   const getFromInputChange = (val: string) => {
@@ -655,10 +657,10 @@ const Home = () => {
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
     console.log(paramsTokenList, 'paramsTokenList')
-    if(tokens?.length || paramsTokenList?.length) {
-      const tokenList =  paramsTokenList || tokens || []
-      const tokenIndex = tokenList?.findIndex(val=>val.address === tokenAddress) || -1
-      if(tokenIndex > -1 && !tokenList[tokenIndex].price) {
+    if (tokens?.length || paramsTokenList?.length) {
+      const tokenList = paramsTokenList || tokens || []
+      const tokenIndex = tokenList?.findIndex(val => val.address === tokenAddress) || -1
+      if (tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
           tokenList[tokenIndex].price = price
@@ -802,101 +804,129 @@ const Home = () => {
   }
 
   useEffect(() => {
-    if(swapContext?.pageStatus === 'reset') {
+    if (swapContext?.pageStatus === 'reset') {
       cancel()
       swapContext.setPageStatus('default')
     }
     // eslint-disable-next-line
   }, [swapContext?.pageStatus])
-  
+  const Logo = memo(() =>{
+    const swapContext = useContext(SwapContext)
+    const resetData = () => {
+      swapContext?.setFromAmount('')
+      swapContext?.setToAmount('')
+      swapContext?.setquoteData(undefined)
+      swapContext?.setPageStatus('reset')
+    }
+    return <div className="relative flex" onClick={resetData}>
+       <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
+      {/* <Image width={47} height={30} placeholder="" onClick={resetData} src='/Mises_symbol.png' />*/}
+      <div><span className="beta-tag">BETA</span></div> 
+      
+    </div>
+  }, ()=>false)
 
-  return <div className="overflow-hidden relative flex-1">
-    <div className="swap-container">
-      <div className="flex justify-between items-center swap-header">
-        <p className="title">Swap</p>
-        <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
-          {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
-          <SetOutline className="setting-icon" onClick={() => setopenSetting(true)} />
-        </div>
-      </div>
-      <div>
-        {tokens ? <TokenInput
-          type="from"
-          onChange={getFromInputChange}
-          onTokenChange={getFromTokenChange}
-          setInputChange={setFromInputChange}
-          tokens={tokens}
-          tokenAddress={swapContext?.swapFromData.tokenAddress}
-          placeholder='0'
-          isTokenLoading={isTokenLoading}
-          ref={fromInputRef}
-          pattern='^[0-9]*[.,]?[0-9]*$'
-          inputMode='decimal'
-          value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
-
-        <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-        </div>
-
-        {tokens ? <TokenInput
-          type="to"
-          tokens={tokens}
-          value={swapContext?.toAmount}
-          ref={toInputRef}
-          onChange={getToInputChange}
-          onTokenChange={getToTokenChange}
-          placeholder='0'
-          tokenAddress={swapContext?.swapToData.tokenAddress}
-        // readOnly
-        /> : <Skeleton animated className="custom-skeleton" />}
-      </div>
-
-      <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
-
-      <SwapButton onClick={onClickSwap} loading={swapLoading} />
-
-      <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
-        <div className="dialog-content p-20">
-          <p className="confirm-title">Confirm Swap</p>
-          <div>
-            <TokenInput
-              type="from"
-              tokens={tokens}
-              status="ready"
-              tokenAddress={swapContext?.swapFromData.tokenAddress}
-              placeholder='0'
-              value={swapContext?.fromAmount} />
-
-            <div className="switch-token flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-            </div>
-
-            <TokenInput
-              type="to"
-              status="ready"
-              tokens={tokens}
-              value={swapContext?.toAmount}
-              tokenAddress={swapContext?.swapToData.tokenAddress}
-            />
+  return <div className="flex flex-col flex-1">
+    <div className='flex justify-between items-center px-10 py-10'>
+      {/* <Image width={80} src='/logo192.png' /> */}
+      <Logo />
+      <ConnectButton.Custom>
+        {(props) => {
+          const ready = props.mounted;
+          if (!ready) return
+          return <ConnectWallet chains={chainList}  {...props} />
+        }}
+      </ConnectButton.Custom>
+      {/* <ConnectButton /> */}
+    </div>
+    <div className='flex-1 flex flex-col overflow-hidden relative'>
+      <div className="swap-container">
+        <div className="flex justify-between items-center swap-header">
+          <p className="title">Swap</p>
+          <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
+            {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
+            <SetOutline className="setting-icon" onClick={() => setopenSetting(true)} />
           </div>
-          <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
-          <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
         </div>
-      </CenterPopup>
+        <div>
+          {tokens ? <TokenInput
+            type="from"
+            onChange={getFromInputChange}
+            onTokenChange={getFromTokenChange}
+            setInputChange={setFromInputChange}
+            tokens={tokens}
+            tokenAddress={swapContext?.swapFromData.tokenAddress}
+            placeholder='0'
+            isTokenLoading={isTokenLoading}
+            ref={fromInputRef}
+            pattern='^[0-9]*[.,]?[0-9]*$'
+            inputMode='decimal'
+            value={swapContext?.fromAmount} /> : <Skeleton animated className="custom-skeleton" />}
 
-      <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />
+          <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          </div>
 
-      <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
-      {/* <Button onClick={()=>{
-        console.log(fromInputRef, toInputRef)
-        fromInputRef.current?.getBalanceFn()
-        toInputRef.current?.getBalanceFn()
-        setapproveLoading(false)
-        setquoteData(undefined)
-        console.log(swapLoading, loading, approveLoading)
-      }}>reset</Button> */}
-    </div >
-    <Notification />
+          {tokens ? <TokenInput
+            type="to"
+            tokens={tokens}
+            value={swapContext?.toAmount}
+            ref={toInputRef}
+            onChange={getToInputChange}
+            onTokenChange={getToTokenChange}
+            placeholder='0'
+            tokenAddress={swapContext?.swapToData.tokenAddress}
+          // readOnly
+          /> : <Skeleton animated className="custom-skeleton" />}
+        </div>
+
+        <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
+
+        <SwapButton onClick={onClickSwap} loading={swapLoading} />
+
+        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
+          <div className="dialog-content p-20">
+            <p className="confirm-title">Confirm Swap</p>
+            <div>
+              <TokenInput
+                type="from"
+                tokens={tokens}
+                status="ready"
+                tokenAddress={swapContext?.swapFromData.tokenAddress}
+                placeholder='0'
+                value={swapContext?.fromAmount} />
+
+              <div className="switch-token flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+              </div>
+
+              <TokenInput
+                type="to"
+                status="ready"
+                tokens={tokens}
+                value={swapContext?.toAmount}
+                tokenAddress={swapContext?.swapToData.tokenAddress}
+              />
+            </div>
+            <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+            <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
+          </div>
+        </CenterPopup>
+
+        <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />
+
+        <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
+        {/* <Button onClick={()=>{
+                console.log(fromInputRef, toInputRef)
+                fromInputRef.current?.getBalanceFn()
+                toInputRef.current?.getBalanceFn()
+                setapproveLoading(false)
+                setquoteData(undefined)
+                console.log(swapLoading, loading, approveLoading)
+              }}>reset</Button> */}
+      </div >
+      <Notification />
+    </div>
   </div>
 };
 export default Home;

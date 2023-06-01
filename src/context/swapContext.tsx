@@ -18,10 +18,13 @@ export interface notificationData {
   type: 'reverted' | 'success',
   text: string,
   toToken?: token,
-  fromToken: token,
+  fromToken?: token,
   hash: string,
   toTokenAmount?: string,
-  fromTokenAmount?: string
+  fromTokenAmount?: string,
+  noticeType?: 'token' | 'normal',
+  description?: string | undefined,
+  icon?: () => JSX.Element,
 }
 export type SwapContextType = {
   swapToData: swapTokenData,
@@ -86,7 +89,6 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [pageStatus, setPageStatus] = useState<'default' | 'reset'>('default')
 
-  // const [notificationTimeOut, setnotificationTimeOut] = useState([])
   const [timeout, settimeout] = useState<Timeout | undefined>()
   const createRemoveTask = (hash: string) =>{
     const timeoutFn = setTimeout(() => {
@@ -95,7 +97,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
       if(findItemIndex > -1){
         removeNotificationData(findItemIndex)
       }
-    }, 3000);
+    }, 4000);
     settimeout(timeoutFn)
   }
 

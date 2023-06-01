@@ -105,6 +105,7 @@ const HistoryList: FC<IProps> = (props) => {
     try {
       disconnect()
       props.onClose?.()
+      sessionStorage.removeItem('isFirstConnected')
     } catch (error) {
 
     }

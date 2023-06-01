@@ -12,23 +12,21 @@ import enUS from 'antd-mobile/es/locales/en-US'
 // import { RecoilRoot } from "recoil"
 
 import '@rainbow-me/rainbowkit/styles.css';
-import { ConnectButton, RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { Chain, configureChains, createConfig, WagmiConfig } from 'wagmi';
 import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
-import SwapProvider, { SwapContext } from './context/swapContext';
-import ConnectWallet from './components/ConnectWallet';
-import { bitskiWallet } from './wallets/bitskiWallet';
+import SwapProvider from './context/swapContext';
+// import { bitskiWallet } from './wallets/bitskiWallet';
 import { bitkeepWallet } from './wallets/bitkeepWallet';
 import { metaMaskWallet } from './wallets/metamask';
 import { okxWallet } from './wallets/okxWallet';
 import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
+import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
-import { injectedWallet } from './wallets/injectedWallet';
-import { useContext } from 'react';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -157,7 +155,7 @@ function App() {
         injectedWallet({ chains }),
         metaMaskWallet({ projectId, chains }),
         // coinbaseWallet({ chains, appName: 'Mises Swap' }),
-        bitskiWallet({ chains }),
+        // bitskiWallet({ chains }),
         okxWallet({ projectId, chains }),
         // imTokenWallet({ projectId, chains }),
         phantomWallet({ chains }),
@@ -177,17 +175,6 @@ function App() {
     webSocketPublicClient,
   });
 
-  const Logo = () =>{
-    const swapContext = useContext(SwapContext)
-    const resetData = () => {
-      swapContext?.setFromAmount('')
-      swapContext?.setToAmount('')
-      swapContext?.setquoteData(undefined)
-      swapContext?.setPageStatus('reset')
-    }
-    return <p className='swap-title' onClick={resetData}><span className='mises-title'>Mises</span> <span>Swap</span></p>
-  }
-
   return (
     <div className="App">
       <SwapProvider>
@@ -195,26 +182,9 @@ function App() {
           <RainbowKitProvider chains={chains}>
             {/* <RecoilRoot> */}
             <ConfigProvider locale={enUS}>
-
-              <div className='flex justify-between items-center px-10 py-10'>
-                {/* <Image width={80} src='/logo192.png' /> */}
-                <Logo />
-                <ConnectButton.Custom>
-                  {(props) => {
-                    const ready = props.mounted;
-                    if (!ready) return
-                    return <ConnectWallet chains={chains}  {...props} />
-                  }}
-                </ConnectButton.Custom>
-                {/* <ConnectButton /> */}
-              </div>
-
-              <div className='flex-1 flex flex-col'>
-                <BrowserRouter>
-                  <Routes />
-                </BrowserRouter>
-              </div>
-
+              <BrowserRouter>
+                <Routes />
+              </BrowserRouter>
             </ConfigProvider>
             {/* </RecoilRoot> */}
           </RainbowKitProvider>

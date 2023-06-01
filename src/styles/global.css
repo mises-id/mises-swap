@@ -307,6 +307,10 @@
   text-align:right;
 }
 
+.text-24{
+  font-size:24px;
+}
+
 .text-2xl{
   font-size:20px;
   line-height:22px;

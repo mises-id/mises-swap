@@ -7,7 +7,6 @@ import { CloseOutline } from 'antd-mobile-icons'
 import { substringAmount } from '@/utils'
 import FallBackImage from '../Fallback'
 interface IProps {
-
 }
 const Notification:FC<IProps> = ()=> {
   const swapContext = useContext(SwapContext)
@@ -16,14 +15,10 @@ const Notification:FC<IProps> = ()=> {
     return swapContext?.notification || []
   }, [swapContext?.notification])
 
-  // const time = list.length > 0 ? 4000 : undefined
-  // const clear = useInterval(()=>{
-
-  // }, time)
   const swapText = (val: notificationData) =>{
     const {toToken,fromToken,toTokenAmount,fromTokenAmount} = val
-    if(!toTokenAmount || !fromTokenAmount || !toToken) return fromToken.symbol
-    return `${fromTokenAmount} ${fromToken.symbol} for ${substringAmount(toTokenAmount)} ${toToken.symbol}`
+    if(!toTokenAmount || !fromTokenAmount || !toToken) return fromToken?.symbol
+    return `${fromTokenAmount} ${fromToken?.symbol} for ${substringAmount(toTokenAmount)} ${toToken.symbol}`
   }
 
   const FromToTokenIcon = (props: {
@@ -44,15 +39,25 @@ const Notification:FC<IProps> = ()=> {
     {list?.map((val: notificationData, index: number) => {
       return <div className='absolute right-3 notification flex justify-between shadow-lg' style={{top: index * 100}} key={index}>
         <div className='flex gap-4 items-center'>
+          {val.noticeType !== 'normal' && val.fromToken ? <>
           <FromToTokenIcon to_token={val.toToken} from_token={val.fromToken}/>
           <div>
             <p className='notification-title'>{val.text}</p>
             {val.fromTokenAmount &&<p className='notification-desc'>
               {swapText(val)}
             </p>}
+          </div></> : <>
+          <div style={{width: 50}}>{val?.icon?.()}</div>
+          <div>
+            <p className='notification-title'>{val.text}</p>
+            <p className='notification-desc'>
+              {val.description}
+            </p>
           </div>
+          </>}
+          
         </div>
-        <CloseOutline className="cursor-pointer icon-color" onClick={()=>{
+        <CloseOutline className="cursor-pointer icon-color text-24" onClick={()=>{
           swapContext?.removeNotificationData(index)
         }}/>
       </div>

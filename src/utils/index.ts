@@ -87,13 +87,13 @@ export function substringAmount(amount: string | undefined): string | undefined{
   return amount
 }
 
-export function formatErrorMessage(error: any) {
+export function formatErrorMessage(error: any, message: string) {
   const errorMessage: {
     type: "error",
     description: string
   } = {
     type: 'error',
-    description: 'Unknown error'
+    description: message || 'Unknown error'
   }
 
   if(error.name === 'TransactionExecutionError') {
@@ -101,10 +101,21 @@ export function formatErrorMessage(error: any) {
       // low gas fee failed
       errorMessage.description = 'Transaction underpriced, Please try again'
     }
-    if(error.details.indexOf(`User denied transaction signature.`) > -1) {
+    if(error.details?.indexOf(`User denied transaction signature.`) > -1 || error.details?.indexOf(`The user rejected the request.`) > -1) {
       // User denied
       errorMessage.description = error.shortMessage
     }
+    if(error.shortMessage?.indexOf(`User rejected the request.`) > -1) {
+      // User denied
+      errorMessage.description = error.shortMessage
+    }
+    if(error.details?.indexOf(`User rejected the provision of an Identity`) > -1) {
+      // User denied
+      errorMessage.description = 'User rejected the request.'
+    }
+    // if(error.details?.indexOf('Fetching fee data failed') > -1) {
+    //   errorMessage.description = 'Fetching fee data failed.'
+    // }
   }
   return errorMessage
 }
