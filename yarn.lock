@@ -14111,10 +14111,10 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-viem@^0.3.37:
-  version "0.3.37"
-  resolved "https://registry.npmjs.org/viem/-/viem-0.3.37.tgz#0426863c52f4b77547bd3216b8ac66e32a38dda5"
-  integrity sha512-17jycP/1Hy9DsDpHlaaI7bbAHBDYGfVYHN6j0ltE7A/S30RXhPVFe4LAPRfmG+xR2QBq8xSUpjO78cRgDLBjZQ==
+viem@^0.3.29:
+  version "0.3.43"
+  resolved "https://registry.npmjs.org/viem/-/viem-0.3.43.tgz#ccadd97637e8a4647cab596ef02737342590159c"
+  integrity sha512-hzzBn553/+y5jH8V1OzMShAJmPtRm/+lC7DLrjXKZSW+yoyL09OGBd0FggXLzB8deFf7JGgs4tz4rHnn0YYrdA==
   dependencies:
     "@adraffy/ens-normalize" "1.9.0"
     "@noble/curves" "1.0.0"
@@ -14150,10 +14150,10 @@ w3c-xmlserializer@^2.0.0:
   dependencies:
     xml-name-validator "^3.0.0"
 
-wagmi@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.npmjs.org/wagmi/-/wagmi-1.0.8.tgz#c51b001c9f0949a10d26bac1defe7e2e1b7d1b89"
-  integrity sha512-xcDTt9vyy6R9kP7Yk4G+qGDDcqVmULXisAIFf2G6tekk1u9YWcUuqOYQAG8H7AS0Kz1hPYJech3ge1UGuoF3fg==
+wagmi@^1.0.5:
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/wagmi/-/wagmi-1.0.9.tgz#2483e448720d9ccd013ad0f2943ba7c4dfd775e6"
+  integrity sha512-LIExrD43Kyy8YIG02AQ4+heQc324h4lgTsQcpIDkLcOnwCV24uNSe/Ib1/F2k0N51uUsFoBdB5hjAaT6Ww7AtQ==
   dependencies:
     "@tanstack/query-sync-storage-persister" "^4.27.1"
     "@tanstack/react-query" "^4.28.0"
@@ -14753,6 +14753,11 @@ workbox-core@6.5.4:
   resolved "https://registry.npmjs.org/workbox-core/-/workbox-core-6.5.4.tgz#df48bf44cd58bb1d1726c49b883fb1dffa24c9ba"
   integrity sha512-OXYb+m9wZm8GrORlV2vBbE5EC1FKu71GGp0H4rjmxmF4/HLbMCoTFws87M3dFwgpmg0v00K++PImpNQ6J5NQ6Q==
 
+workbox-core@7.0.0, workbox-core@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/workbox-core/-/workbox-core-7.0.0.tgz#dec114ec923cc2adc967dd9be1b8a0bed50a3545"
+  integrity sha512-81JkAAZtfVP8darBpfRTovHg8DGAVrKFgHpOArZbdFd78VqHr5Iw65f2guwjE2NlCFbPFDoez3D3/6ZvhI/rwQ==
+
 workbox-expiration@6.5.4:
   version "6.5.4"
   resolved "https://registry.npmjs.org/workbox-expiration/-/workbox-expiration-6.5.4.tgz#501056f81e87e1d296c76570bb483ce5e29b4539"
@@ -14787,6 +14792,15 @@ workbox-precaching@6.5.4:
     workbox-routing "6.5.4"
     workbox-strategies "6.5.4"
 
+workbox-precaching@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/workbox-precaching/-/workbox-precaching-7.0.0.tgz#3979ba8033aadf3144b70e9fe631d870d5fbaa03"
+  integrity sha512-EC0vol623LJqTJo1mkhD9DZmMP604vHqni3EohhQVwhJlTgyKyOkMrZNy5/QHfOby+39xqC01gv4LjOm4HSfnA==
+  dependencies:
+    workbox-core "7.0.0"
+    workbox-routing "7.0.0"
+    workbox-strategies "7.0.0"
+
 workbox-range-requests@6.5.4:
   version "6.5.4"
   resolved "https://registry.npmjs.org/workbox-range-requests/-/workbox-range-requests-6.5.4.tgz#86b3d482e090433dab38d36ae031b2bb0bd74399"
@@ -14813,12 +14827,26 @@ workbox-routing@6.5.4:
   dependencies:
     workbox-core "6.5.4"
 
+workbox-routing@7.0.0, workbox-routing@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/workbox-routing/-/workbox-routing-7.0.0.tgz#6668438a06554f60645aedc77244a4fe3a91e302"
+  integrity sha512-8YxLr3xvqidnbVeGyRGkaV4YdlKkn5qZ1LfEePW3dq+ydE73hUUJJuLmGEykW3fMX8x8mNdL0XrWgotcuZjIvA==
+  dependencies:
+    workbox-core "7.0.0"
+
 workbox-strategies@6.5.4:
   version "6.5.4"
   resolved "https://registry.npmjs.org/workbox-strategies/-/workbox-strategies-6.5.4.tgz#4edda035b3c010fc7f6152918370699334cd204d"
   integrity sha512-DEtsxhx0LIYWkJBTQolRxG4EI0setTJkqR4m7r4YpBdxtWJH1Mbg01Cj8ZjNOO8etqfA3IZaOPHUxCs8cBsKLw==
   dependencies:
     workbox-core "6.5.4"
+
+workbox-strategies@7.0.0:
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/workbox-strategies/-/workbox-strategies-7.0.0.tgz#dcba32b3f3074476019049cc490fe1a60ea73382"
+  integrity sha512-dg3qJU7tR/Gcd/XXOOo7x9QoCI9nk74JopaJaYAQ+ugLi57gPsXycVdBnYbayVj34m6Y8ppPwIuecrzkpBVwbA==
+  dependencies:
+    workbox-core "7.0.0"
 
 workbox-streams@6.5.4:
   version "6.5.4"

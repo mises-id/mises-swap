@@ -1,0 +1,30 @@
+{
+  "background_color": "#fff",
+  "display": "standalone",
+  "homepage_url": "https://www.mises.site",
+  "providedBy": {
+    "name": "Mises Swap",
+    "url": "https://www.mises.site"
+  },
+  "icons": [
+    {
+      "src": "./logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo192.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "orientation": "portrait",
+  "name": "Mises Swap",
+  "description": "Swap or provide liquidity on the Uniswap Protocol",
+  "iconPath": "./logo192.png",
+  "short_name": "Mises Swap",
+  "start_url": ".",
+  "theme_color": "#FC72FF"
+}

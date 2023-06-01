@@ -14,6 +14,8 @@ import './locales'
 
 import * as Sentry from "@sentry/react";
 
+import * as serviceWorkerRegistration from './serviceWorkerRegistration'
+
 Sentry.init({
   enabled: process.env.NODE_ENV==='production',
   dsn:
@@ -31,6 +33,8 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(<App />);
+
+serviceWorkerRegistration.register()
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
