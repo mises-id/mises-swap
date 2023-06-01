@@ -15,7 +15,7 @@ const headers:{[key: string]: string} = {
 // }
 const request = axios.create({
   headers,
-  baseURL: ' https://www.oklink.com/',
+  baseURL: 'https://www.oklink.com/',
   timeout: 10000,
 });
 
@@ -25,7 +25,7 @@ request.interceptors.request.use(
     if(!config.headers){
       config.headers = {}
     }
-    config.headers['Ok-Access-Key'] = "b514fd88-5896-42a4-83ad-3635e69d09f5"
+    // config.headers['Ok-Access-Key'] = "b514fd88-5896-42a4-83ad-3635e69d09f5"
     return config;
   },
   function (error:any) {
@@ -40,7 +40,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
   Toast.show(data.msg);
   return Promise.reject(data);
 },err=>{
-  const { data } = err?.response;
+  const { data } = err?.response || {};
   return Promise.reject(data);
 });
 

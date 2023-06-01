@@ -1,25 +1,8 @@
 interface Window {
-  ethereum: {
-    request: (item: { method: string; params?: any[] }) => Promise<
-      | {
-          auth: string
-          misesId: string
-          accounts: [string]
-        }
-      | any
-    >
-    on: (event, cb: Function) => Promise<string[]>
-    _metamask: {
-      isUnlocked: () => Promise<boolean>
-    }
-    _handleConnect: () => Promise<any>
-    chainId: number | string
-    _state:{
-      isUnlocked: boolean
-    }
-    sendAsync: () => Promise<any>
-  },
-  mises: any
+  bitkeep: any,
+  misesWallet: any,
+  ethereum: any
+  BinanceChain: any
 }
 interface globalThis {
   IS_REACT_ACT_ENVIRONMENT: boolean
@@ -94,3 +77,5 @@ declare module "*.module.scss" {
   export default classes
   declare module "*.scss"
 }
+
+declare module 'single-call-balance-checker-abi';

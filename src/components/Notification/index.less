@@ -1,0 +1,49 @@
+.notification{
+  background: var(--background-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding:13px 16px;
+  z-index: 999;
+  width: 280px;
+  user-select: none;
+}
+.notification-title{
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--theme-text-color)
+}
+.notification-desc{
+  font-size: 12px;
+  color: #7780a0;
+  margin-top: 10px;
+}
+.notification-from-to-token-icon{
+  width: 40px;
+  height: 40px;
+  .from-token-icon{
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: var(--widget-bg-color);;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+  .from-to-icon{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background: var(--widget-bg-color);
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.icon-color{
+  color: var(--icon-color);
+  font-size: 26px;
+}

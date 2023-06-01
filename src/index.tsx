@@ -11,6 +11,22 @@ import App from './App';
 import '@/styles/global.css'
 import reportWebVitals from './reportWebVitals';
 import './locales'
+
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  enabled: process.env.NODE_ENV==='production',
+  dsn:
+    "https://ec50b87155004205a00c17ca905229ee@o1162849.ingest.sentry.io/4505243739619329",
+  integrations: [new Sentry.BrowserTracing()],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+  ignoreErrors:['UnhandledRejection'],
+});
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );

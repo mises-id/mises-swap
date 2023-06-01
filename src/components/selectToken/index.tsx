@@ -14,6 +14,8 @@ import {
 import { useRequest } from 'ahooks';
 import { SwapContext } from '@/context/swapContext';
 import SelectedToken from '../SelectedToken';
+import { substringAmount } from '@/utils';
+import FallBackImage from '../Fallback';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -23,7 +25,7 @@ export const AutoSizer = _AutoSizer as unknown as FC<AutoSizerProps> & _AutoSize
 export const InfiniteLoader = _InfiniteLoader as unknown as FC<InfiniteLoaderProps> & _InfiniteLoader;
 
 interface Iprops {
-  tokens?: token,
+  tokens?: token[],
   selectTokenAddress?: string,
   onChange?: (value: string) => void,
   type: 'from' | 'to',
@@ -55,15 +57,23 @@ const SelectTokens: FC<Iprops> = (props) => {
     () => {
       if (props.tokens) {
         const searchQuery = searchName.toLocaleLowerCase()
-        const getTokenList = Object.keys(props.tokens)
-          .map(key => props.tokens && props.tokens[key]).filter(val => {
+        const getTokenList = props.tokens.filter(val => {
             if (searchName && val) {
               return val.symbol?.toLocaleLowerCase().indexOf(searchQuery) > -1 || val.name?.toLocaleLowerCase().indexOf(searchQuery) > -1
             }
             return val
           })
-        const findAllNameList = getTokenList.filter(val => val?.symbol?.toLocaleLowerCase() === `searchQuery`)
-        return findAllNameList.length > 0 ? findAllNameList : getTokenList
+        if(searchQuery){
+          return getTokenList
+          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
+          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase() === searchQuery ? -1 : 1)
+          .sort((a, b) => a.name > b.name ? 1 : -1)
+          .sort((a, b) => Number(a.balance) > Number(b.balance) ? -1 : 1)
+        }else{
+          return getTokenList
+          .sort((a, b) => a.name > b.name ? 1 : -1)
+          .sort((a, b) => Number(a.balance) > Number(b.balance) ? -1 : 1)
+        }
       }
       return []
     },
@@ -71,15 +81,15 @@ const SelectTokens: FC<Iprops> = (props) => {
   )
 
   const UnSelectedToken = () => {
-    return <div className='un-select-token-item flex'>
+    return <div className={`un-select-token-item flex ${props.tokens?.length ? '' : 'disabled'}`}>
       <div>Select token</div>
-      <DownOutline className='downOutline' />
+      <DownOutline className='unselect-downOutline'/>
     </div>
   }
 
   const [open, setopen] = useState(false)
   const showTokenList = () => {
-    if(props.status === 'ready'){
+    if(props.status === 'ready' || props.tokens?.length === 0){
       return 
     }
     setopen(true)
@@ -96,8 +106,6 @@ const SelectTokens: FC<Iprops> = (props) => {
     style: CSSProperties
   }) => {
     const item = tokenList[index]
-    // const swapData = swapContext?.swapFromData
-    // console.log(swapData)
     return (
       <List.Item
         key={key}
@@ -107,22 +115,23 @@ const SelectTokens: FC<Iprops> = (props) => {
         onClick={() => selectToken(item)}
         prefix={
           <Image
-            src={item?.logoURI}
+            src={item?.logo_uri}
             style={{ borderRadius: 20 }}
             fit='cover'
             width={36}
             height={36}
+            fallback={item?.symbol ? <FallBackImage width={36} height={36} symbol={item?.symbol} /> : ''}
           />
         }
-        description={item?.symbol}
+        description={<div className='truncate' style={{maxWidth: 200}}>{item?.symbol}</div> }
         extra={
           <div className='token-balance'>
-            <span>0</span>
+            <span>{substringAmount(item.balance) || 0}</span>
             {tokenAddress === item?.address && <CheckOutline className='selected-icon' />}
           </div>
         }
       >
-        <span className='token-name'>{item?.name}</span>
+        <span className='token-name truncate' style={{maxWidth: 200}}>{item?.name}</span>
       </List.Item>
     )
   }
@@ -132,11 +141,11 @@ const SelectTokens: FC<Iprops> = (props) => {
   }
 
   const { run } = useRequest(search, {
-    debounceWait: 350,
+    debounceWait: 550,
     manual: true,
   });
 
-  const selectToken = (token?: token[number]) => {
+  const selectToken = (token?: token) => {
     if (swapContext && token && token.address !== toTokenAddress && token.address !== fromTokenAddress) {
       props.onChange?.(token.address)
       setopen(false)
@@ -144,7 +153,7 @@ const SelectTokens: FC<Iprops> = (props) => {
     }
   }
   return <div onClick={showTokenList}>
-    {tokenAddress ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
+    {tokenAddress && props.tokens?.length ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
     <CenterPopup
       visible={open}
       closeOnMaskClick

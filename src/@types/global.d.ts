@@ -1,40 +1,49 @@
 type address = `0x${string}`
 interface token {
-  [key: string]: {
-    "symbol": string,
-    "name": string,
-    "address": address,
-    "decimals": number,
-    "logoURI": string
-  }
+  "symbol": string,
+  "name": string,
+  "address": address,
+  "decimals": number,
+  "logo_uri": string,
+  'balance'?: string,
+  'price'?: string
 }
 
 interface quoteParams {
-  fromTokenAddress: string,
-  toTokenAddress: string,
+  chain_id: number, 
   amount: string,
-  protocols?: string,
-  fee?: number,
-  gasLimit?: string,
-  connectorTokens?: string,
-  complexityLevel?: string,
-  mainRouteParts?: string,
-  parts?: string,
-  gasPrice?: string
-  destReceiver?: string
+  from_token_address: string,
+  to_token_address: string,
+  slippage?: number,
+  from_address?: string,
+  dest_receiver?: string,
+  aggregator_address?: string
 }
-interface quoteData {
-  "fromToken": token[number],
-  "toToken": token[number],
-  "toTokenAmount": string,
-  "fromTokenAmount": string,
-  "protocols": [
-    {
-      "name": string,
-      "part": number,
-      "fromTokenAddress": string,
-      "toTokenAddress": string
-    }
-  ],
-  "estimatedGas": number
+
+interface aggregator{
+  logo: string,
+  type: string,
+  name: string,
+  contract_address: string
+}
+interface trade {
+  from: string
+  gas_limit: string,
+  data: `0x${string}`,
+  to: string
+  gas_price: bigint,
+  value: bigint
+}
+
+interface swapData {
+  estimate_gas_fee?: string
+  aggregator: aggregator,
+  from_token_address: string,
+  to_token_address: string,
+  from_token_amount: string,
+  to_token_amount: string
+  error: string
+  fetch_time: string
+  trade?: trade | null
+  fee: number
 }

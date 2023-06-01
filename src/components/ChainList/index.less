@@ -12,3 +12,64 @@
 .downoutline{
   color: var(--icon-color);
 }
+.switch-network-container{
+  position: fixed;
+  left: 50%;
+  z-index: 1001;
+  background-color: var(--background-color);
+  transform: translate(-50%, -50%);
+  border-radius: 24px;
+  padding: 16px;
+  box-sizing: border-box;
+  top: 50%;
+  width: 360px;
+  box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.32);
+}
+.chain-item{
+  padding: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 8px;
+  line-height: 20px;
+  color: var(--theme-text-color);
+}
+.switch-networks-title{
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 24px;
+  margin-bottom: 24px;
+  color: var(--theme-text-color);
+  background-color: transparent;
+  transition: all 0.3s;
+}
+.chain-active{
+  border-radius: 12px;
+  background-color: var(--rk-colors-accentColor);
+  .network-name{
+    color: white;
+  }
+  .isconnect-loading{
+    color: white;
+    padding-right: 10px;
+    font-size: 12px;
+  }
+}
+.chain-close-item{
+  font-size: 24px;
+  color: rgba(60, 66, 66, 0.8);
+}
+@media screen and (max-width: 767px) {
+  .switch-network-container{
+    bottom: 0;
+    top: auto;
+    width: 100vw;
+    left: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    transform: unset;
+  }
+  .chain-list-scroller{
+    height: 300px;
+    overflow-y: auto;
+  }
+}

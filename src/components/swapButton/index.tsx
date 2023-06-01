@@ -15,7 +15,8 @@ const swapStatus = {
   8: 'Not enough allowance',
   9: (token: string)=>`Approve use of ${token}`,
   10: 'Approval pending',
-  11: 'No payment channel found'
+  11: 'No payment channel found',
+  12: 'Network error, retrying'
 }
 
 export type status = keyof typeof swapStatus
@@ -29,26 +30,35 @@ const SwapButton: FC<Iprops> = (props) => {
   const text = useMemo((): string=>{
     let message = swapStatus[status as status]
 
-    if(status && [4, 9].includes(status)){
-      console.log(swapContext?.swapFromData, 'swapContext?.swapFromDataswapContext?.swapFromData===')
+    if(status && typeof status === 'number' && [4, 9].includes(status)){
       const token = swapContext?.swapFromData
       const fn = swapStatus[status as status] as any
       message = fn(token?.symbol)
+    }
+    
+    if(status && typeof status === 'string'){
+      if(status === 'Insufficient liquidity') {
+        return status
+      }
+      return 'No payment channel found'
     }
     return message as string
   // eslint-disable-next-line
   }, [status, swapContext?.swapFromData.tokenAddress])
 
   const isDisabled = useMemo(()=>{
-    return (status && ![99999, 1, 9].includes(status)) || false
+    const isNumberStatus = typeof status === 'number' && ![99999, 1, 9].includes(status)
+    
+    return (status && (typeof status === 'string' || isNumberStatus)) || false
   }, [status])
-
+  
   return <Button
     onClick={props?.onClick}
     block
     {...props}
-    color="primary"
+    color={status===12 ? 'danger' : "primary"}
     disabled={isDisabled}
+    loadingText='Finding best routing'
     className='swap-button'>{text}</Button>
 }
 export default SwapButton

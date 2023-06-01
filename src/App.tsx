@@ -5,150 +5,192 @@
  * @LastEditors: lmk
  * @Description: 
  */
-import { ConfigProvider, ErrorBlock } from 'antd-mobile';
+import { ConfigProvider } from 'antd-mobile';
 import { BrowserRouter } from 'react-router-dom';
 import Routes from './routes';
 import enUS from 'antd-mobile/es/locales/en-US'
-import { RecoilRoot } from "recoil"
+// import { RecoilRoot } from "recoil"
 
 import '@rainbow-me/rainbowkit/styles.css';
-import { ConnectButton, getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import { Chain, configureChains, createClient, useNetwork, WagmiConfig } from 'wagmi';
+import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { Chain, configureChains, createConfig, WagmiConfig } from 'wagmi';
 import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
-import { useState } from 'react';
-import { healthcheck } from './api/swap';
 import SwapProvider from './context/swapContext';
-import ConnectWallet from './components/ConnectWallet';
-function App() {
-  const klaytnChain: Chain = {
-    id: 8217,
-    name: 'Klaytn Mainnet Cypress',
-    network: 'Klaytn Mainnet Cypress',
-    nativeCurrency: {
-      decimals: 18,
-      name: 'KLAY',
-      symbol: 'KLAY',
+// import { bitskiWallet } from './wallets/bitskiWallet';
+import { bitkeepWallet } from './wallets/bitkeepWallet';
+import { metaMaskWallet } from './wallets/metamask';
+import { okxWallet } from './wallets/okxWallet';
+import { phantomWallet } from './wallets/phantomWallet';
+import { trustWallet } from './wallets/trustWallet';
+import { injectedWallet } from './wallets/injectedWallet';
+import { useShowLayout } from './hooks/useShowLayout';
+import Loading from './components/pageLoading';
+import RetryMaxStatus from './components/RetryMaxStatus';
+// import { coinbaseWallet } from './wallets/coinbase';
+
+export const klaytnChain: Chain = {
+  id: 8217,
+  name: 'Klaytn Mainnet Cypress',
+  network: 'Klaytn Mainnet Cypress',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'KLAY',
+    symbol: 'KLAY',
+  },
+  rpcUrls: {
+    public: {
+      http: ['https://klaytn.blockpi.network/v1/rpc/public', 'https://public-node-api.klaytnapi.com/v1/cypress'],
     },
+    default: {
+      http: ['https://klaytn.blockpi.network/v1/rpc/public'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Klaytn', url: 'https://scope.klaytn.com' }
+  },
+  testnet: false,
+};
+
+export const chainList = [
+  {
+    ...mainnet,
+    iconUrl: '/images/eth.svg',
     rpcUrls: {
       public: {
-        http: ['https://klaytn.blockpi.network/v1/rpc/public', 'https://public-node-api.klaytnapi.com/v1/cypress'],
+        http: ["https://rpc.ankr.com/eth"],
       },
       default: {
-        http: ['https://klaytn.blockpi.network/v1/rpc/public'],
+        http: ['https://rpc.ankr.com/eth'],
       },
     },
-    blockExplorers: {
-      default: { name: 'Klaytn', url: 'https://scope.klaytn.com' }
+  },
+  {
+    ...bsc,
+    iconUrl: '/images/bsc.svg',
+    rpcUrls: {
+      public: {
+        http: ["https://bsc-dataseed.binance.org"],
+      },
+      default: {
+        http: ['https://bsc-dataseed.binance.org/'],
+      },
     },
-    testnet: false,
-  };
-  const chainList = [
-    mainnet,
-    bsc,
-    polygon,
-    optimism,
-    arbitrum,
-    {
-      ...gnosis,
-      iconUrl: '/images/gnosis.svg'
+  },
+  {
+    ...polygon,
+    iconUrl: '/images/polygon.svg'
+  },
+  {
+    ...optimism,
+    iconUrl: '/images/op.svg'
+  },
+  {
+    ...arbitrum,
+    iconUrl: '/images/arb.svg'
+  },
+  {
+    ...avalanche,
+    iconUrl: '/images/ava.svg',
+  },
+  {
+    ...fantom,
+    iconUrl: '/images/fantom.svg',
+    rpcUrls: {
+      public: {
+        http: ["https://rpc.ankr.com/fantom"],
+      },
+      default: {
+        http: ['https://rpc.ftm.tools/'],
+      },
     },
-    avalanche,
-    {
-      ...fantom,
-      iconUrl: '/images/fantom.svg'
-    },
-    {
-      ...klaytnChain,
-      iconUrl: '/images/klaytn.svg'
-    },
-    {
-      ...aurora,
-      iconUrl: '/images/aurora.svg'
-    },
-    {
-      ...zkSync,
-      iconUrl: '/images/zksync-era.svg'
-    },
-  ]
-  const { chains, provider, webSocketProvider } = configureChains(
+  },
+  {
+    ...gnosis,
+    iconUrl: '/images/gnosis.svg'
+  },
+  {
+    ...klaytnChain,
+    iconUrl: '/images/klaytn.svg'
+  },
+  {
+    ...aurora,
+    iconUrl: '/images/aurora.svg',
+  },
+  {
+    ...zkSync,
+    iconUrl: '/images/zksync-era.svg'
+  },
+]
+
+
+function App() {
+  const { isShowLayout, isMaxRetryStatus } = useShowLayout()
+
+  if (isMaxRetryStatus) {
+    return <RetryMaxStatus />
+  }
+
+  if (!isShowLayout) {
+    return <Loading />
+  }
+  
+  const { chains, publicClient, webSocketPublicClient } = configureChains(
     chainList,
-    [publicProvider()]
+    [
+      // alchemyProvider({apiKey: 'Q_LDUmX7vjuW5m8dW_5Nym3Y8z77_C0m'}),
+      publicProvider()
+    ]
   );
-
-  const { connectors } = getDefaultWallets({
-    appName: 'Mises Swap',
-    projectId: '86a06f8526c8d8b550b13c46a013cb91',
-    chains,
-  });
-
-  const wagmiClient = createClient({
+  const projectId = '86a06f8526c8d8b550b13c46a013cb91'
+  // const { connectors } = getDefaultWallets({
+  //   appName: 'Mises Swap',
+  //   projectId: '86a06f8526c8d8b550b13c46a013cb91',
+  //   chains,
+  // });
+  const connectors = connectorsForWallets([
+    {
+      groupName: 'Recommended',
+      wallets: [
+        injectedWallet({ chains }),
+        metaMaskWallet({ projectId, chains }),
+        // coinbaseWallet({ chains, appName: 'Mises Swap' }),
+        // bitskiWallet({ chains }),
+        okxWallet({ projectId, chains }),
+        // imTokenWallet({ projectId, chains }),
+        phantomWallet({ chains }),
+        // argentWallet({ chains }),
+        bitkeepWallet({ chains }),
+        trustWallet({ projectId, chains }),
+        // walletConnectWallet({ projectId, chains }),
+        // ledgerWallet({ projectId, chains }),
+      ],
+    }
+  ]);
+  
+  const wagmiClient = createConfig({
     autoConnect: true,
     connectors,
-    provider,
-    webSocketProvider,
+    publicClient,
+    webSocketPublicClient,
   });
-
-  const { chain } = useNetwork()
-  const [error, seterror] = useState('')
-
-  const getHealthcheck = () => {
-    const chainId = chain?.id || 1;
-    const isChain = chains.some(val => `${val.id}` === `${chainId}`)
-
-    if (!isChain) {
-      seterror('Wrong network, please switch network')
-      return Promise.reject('Wrong network, please switch network')
-    }
-
-    return healthcheck<{
-      status: 'OK'
-    }>(chainId).then(res => {
-      if (res.data.status === 'OK') seterror('')
-    }).catch(err => {
-      if (err.statusCode === 404) {
-        seterror('Wrong network, please switch network')
-        return
-      }
-      seterror(err.message)
-    })
-  }
 
   return (
     <div className="App">
-      <WagmiConfig client={wagmiClient}>
-        <RainbowKitProvider chains={chains}>
-          <RecoilRoot>
+      <SwapProvider>
+        <WagmiConfig config={wagmiClient}>
+          <RainbowKitProvider chains={chains}>
+            {/* <RecoilRoot> */}
             <ConfigProvider locale={enUS}>
-              <div className='flex justify-between items-center px-10 py-10'>
-                {/* <Image width={80} src='/logo192.png' /> */}
-                <p className='swap-title'>Mises <span>Swap</span></p>
-                <ConnectButton.Custom>
-                  {(props) => {
-                    const ready = props.mounted;
-                    if(!ready) return 
-                    return <ConnectWallet chains={chains} {...props} />
-                  }}
-                </ConnectButton.Custom>
-              </div>
-              <SwapProvider>
-                {!error ?
-                  <div className='flex-1'>
-                    <BrowserRouter>
-                      <Routes getHealthcheck={getHealthcheck} />
-                    </BrowserRouter>
-                  </div> :
-                  <div className='flex-1 flex items-center justify-center'>
-                    <ErrorBlock status='empty' title={error} description="" />
-                  </div>
-                }
-              </SwapProvider>
-
+              <BrowserRouter>
+                <Routes />
+              </BrowserRouter>
             </ConfigProvider>
-          </RecoilRoot>
-        </RainbowKitProvider>
-      </WagmiConfig>
-    </div>
+            {/* </RecoilRoot> */}
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </SwapProvider>
+    </div >
   );
 }
 
