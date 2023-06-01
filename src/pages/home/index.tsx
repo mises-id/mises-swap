@@ -12,7 +12,7 @@ import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
 import SwapButton from "@/components/swapButton";
-import { Button, CenterPopup, Image, Skeleton } from "antd-mobile";
+import { Button, CenterPopup, Skeleton } from "antd-mobile";
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 import BigNumber from "bignumber.js";
 import Quote from "@/components/Quote";

@@ -8,7 +8,6 @@
 import React from 'react'
 import { Navigate, useRoutes } from 'react-router-dom'
 import { Home } from '@/pages'
-import Loading from '@/components/pageLoading'
 type CutomFallBackT =
   | boolean
   | React.ReactChild
