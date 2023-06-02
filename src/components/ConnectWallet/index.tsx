@@ -106,7 +106,7 @@ const ConnectWallet: FC<IProps> = (props) => {
       reloadPageCancel()
       runReload()
       console.log('test connnect')
-      if(!window.nabox) {
+      if(!window.nabox && provider.name !== "ezdefi") {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')

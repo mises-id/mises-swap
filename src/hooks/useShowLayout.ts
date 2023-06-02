@@ -1,5 +1,6 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
+import { useEffect } from "react";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
@@ -18,7 +19,7 @@ export function useShowLayout() {
     try {
       runReload()
       console.log('start connnect >>>>>>',)
-      if(!window.nabox) {
+      if(!window.nabox && provider.name !== "ezdefi") {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')
@@ -32,18 +33,14 @@ export function useShowLayout() {
       }
     }
   }
-  useAsyncEffect(async () => {
+  useEffect(() => {
     // setTimeout(() => {
       // console.log('loading....')
       // getProvider()
     // }, 1000);
     // getProvider()
-    const load = () =>{
-      console.log('loading')
-      getProvider()
-    }
-
-    window.onload = load
+    getProvider()
+    // eslint-disable-next-line
   }, [])
 
   const reloadPage = async () => {
