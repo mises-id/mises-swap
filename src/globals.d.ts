@@ -3,7 +3,8 @@ interface Window {
   misesWallet: any,
   ethereum: any
   BinanceChain: any,
-  nabox: any
+  nabox: any,
+  befi: any
 }
 interface globalThis {
   IS_REACT_ACT_ENVIRONMENT: boolean

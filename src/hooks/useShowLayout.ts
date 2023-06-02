@@ -18,7 +18,7 @@ export function useShowLayout() {
     try {
       runReload()
       console.log('start connnect >>>>>>',)
-      if(!window.nabox && provider.name !== "ezdefi") {
+      if(!window.befi && !window.nabox && provider.name !== "ezdefi") {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')
