@@ -25,7 +25,6 @@ import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
 import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
-import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
 import { useEffect } from 'react';
 import { isIOS } from './utils';
