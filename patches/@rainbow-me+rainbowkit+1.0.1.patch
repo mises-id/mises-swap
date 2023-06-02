@@ -55,7 +55,7 @@ new mode 100755
 diff --git a/node_modules/@rainbow-me/rainbowkit/dist/chunk-JLDC6KS4.js b/node_modules/@rainbow-me/rainbowkit/dist/chunk-JLDC6KS4.js
 old mode 100644
 new mode 100755
-index c4391b0..c31992e
+index c4391b0..ce95c4f
 --- a/node_modules/@rainbow-me/rainbowkit/dist/chunk-JLDC6KS4.js
 +++ b/node_modules/@rainbow-me/rainbowkit/dist/chunk-JLDC6KS4.js
 @@ -1037,7 +1037,8 @@ function useWalletConnectors() {
@@ -64,7 +64,7 @@ index c4391b0..c31992e
      var _a, _b, _c;
 -    const walletChainId = await connector.getChainId();
 +    // const walletChainId = await connector.getChainId();
-+    const walletChainId = connector.options.getProvider().chainId
++    const walletChainId = connector.options.getProvider()?.chainId
      const result = await connectAsync({
        chainId: (_c = intialChainId != null ? intialChainId : (_a = rainbowKitChains.find(({ id }) => id === walletChainId)) == null ? void 0 : _a.id) != null ? _c : (_b = rainbowKitChains[0]) == null ? void 0 : _b.id,
        connector
