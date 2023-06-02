@@ -1,6 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useBoolean, useRequest } from "ahooks";
-import { useEffect } from "react";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
@@ -33,15 +32,22 @@ export function useShowLayout() {
       }
     }
   }
-  useEffect(() => {
-    // setTimeout(() => {
-      // console.log('loading....')
-      // getProvider()
-    // }, 1000);
-    // getProvider()
-    getProvider()
-    // eslint-disable-next-line
-  }, [])
+  // useEffect(() => {
+  //   // setTimeout(() => {
+  //     // console.log('loading....')
+  //     // getProvider()
+  //   // }, 1000);
+  //   // getProvider()
+  //   const load = () =>{
+  //     console.log('loading')
+  //     getProvider()
+  //   }
+  //   window.onload = load
+  //   window.addEventListener('load', () =>{
+  //     console.log(window)
+  //   })
+  //   // eslint-disable-next-line
+  // }, [])
 
   const reloadPage = async () => {
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')

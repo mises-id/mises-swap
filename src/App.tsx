@@ -27,6 +27,8 @@ import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
+import { useEffect } from 'react';
+import { isIOS } from './utils';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -125,8 +127,25 @@ export const chainList = [
 
 
 function App() {
-  const { isShowLayout, isMaxRetryStatus } = useShowLayout()
-
+  const { isShowLayout, isMaxRetryStatus, getProvider } = useShowLayout()
+  useEffect(() => {
+    // setTimeout(() => {
+      // console.log('loading....')
+      // getProvider()
+    // }, 1000);
+    // getProvider()
+    const load = () =>{
+      console.log('loading')
+      getProvider()
+    }
+    if(isIOS()){
+      getProvider()
+    }else {
+      window.onload = load
+    }
+    
+    // eslint-disable-next-line
+  }, [])
   if (isMaxRetryStatus) {
     return <RetryMaxStatus />
   }
