@@ -157,7 +157,7 @@ function App() {
   }
 
   if (!isShowLayout) {
-    return <Loading />
+    return <div></div>
   }
   
   const { chains, publicClient, webSocketPublicClient } = configureChains(

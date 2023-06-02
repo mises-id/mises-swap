@@ -77,7 +77,7 @@ const ChainList: FC<IProps> = (props) => {
   return (
     <>
       {currentChain?.iconUrl && <div className='flex items-center current-chain' onClick={setTrue}>
-        <Image width={20} height={20} src={currentChain?.iconUrl as string} />
+        <Image width={20} height={20} src={currentChain?.iconUrl as string} placeholder=""/>
         <DownOutline className='ml-10 downoutline' />
       </div>}
 

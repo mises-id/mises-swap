@@ -7,7 +7,11 @@ export function useShowLayout() {
   const [isMaxRetryStatus] = useBoolean(false)
 
   const getProvider = async () => {
-    const provider: any = await detectEthereumProvider()
+    const provider: any = await detectEthereumProvider({
+      mustBeMetaMask: false,
+      silent: false,
+      timeout: 1000
+    })
     if (!provider) {
       setTrue()
       return 
