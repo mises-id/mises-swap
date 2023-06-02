@@ -1,5 +1,7 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useBoolean, useRequest } from "ahooks";
+import { useAnalytics } from "./useAnalytics";
+import { logEvent } from "firebase/analytics";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
@@ -52,7 +54,7 @@ export function useShowLayout() {
   //   })
   //   // eslint-disable-next-line
   // }, [])
-
+  const analytics = useAnalytics()
   const reloadPage = async () => {
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
 
@@ -61,6 +63,7 @@ export function useShowLayout() {
       sessionStorage.removeItem('isPageReLoad')
     }else {
       sessionStorage.setItem('isPageReLoad', '1')
+      logEvent(analytics, 'swap_page_reload')
       window.location.reload()
     }
 
