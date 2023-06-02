@@ -1,5 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
+import { useBoolean, useRequest } from "ahooks";
 import { useEffect } from "react";
 
 export function useShowLayout() {
