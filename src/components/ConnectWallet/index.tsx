@@ -75,6 +75,13 @@ const ConnectWallet: FC<IProps> = (props) => {
   const reloadPage = async () => {
     // setMaxTrue()
     reloadPageCancel()
+    if(window.nabox) {
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: 'Please unlock the wallet first'
+      })
+      return 
+    }
     swapContext?.setGlobalDialogMessage({
       type: 'error',
       description: 'Failed to connect to the wallet, please refresh the page'
@@ -86,19 +93,27 @@ const ConnectWallet: FC<IProps> = (props) => {
   const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
     manual: true,
     pollingWhenHidden: false,
-    debounceWait: 500,
+    debounceWait: 300,
   });
 
   const connect = async () => {
     try {
-      const provider: any = await detectEthereumProvider()
+      const provider: any = await detectEthereumProvider({
+        mustBeMetaMask: false,
+        silent: false,
+        timeout: 100
+      })
       reloadPageCancel()
       runReload()
-      const chainId = await provider?.request({ method: 'eth_chainId', params: [] })
-      console.log('test connnect success>>>>>>', chainId)
+      console.log('test connnect')
+      if(!window.nabox) {
+        await provider?.request({ method: 'eth_chainId', params: [] })
+      }
+      console.log('test connnect success>>>>>>')
       reloadPageCancel()
       props.openConnectModal()
     } catch (error: any) {
+      console.log(error)
       reloadPageCancel()
       if(error && error.code === 4001) {
         swapContext?.setGlobalDialogMessage({
@@ -110,6 +125,7 @@ const ConnectWallet: FC<IProps> = (props) => {
       }
       
     }
+    // props.openConnectModal()
   }
   return (
     <div className='flex items-center'>

@@ -4,7 +4,7 @@ import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
 
-  const [isMaxRetryStatus, { setTrue: setMaxTrue }] = useBoolean(false)
+  const [isMaxRetryStatus] = useBoolean(false)
 
   const getProvider = async () => {
     const provider: any = await detectEthereumProvider()
@@ -18,8 +18,10 @@ export function useShowLayout() {
     try {
       runReload()
       console.log('start connnect >>>>>>',)
-      const chainId = await provider?.request({ method: 'eth_chainId', params: [] })
-      console.log('test connnect success>>>>>>', chainId)
+      if(!window.nabox) {
+        await provider?.request({ method: 'eth_chainId', params: [] })
+      }
+      console.log('test connnect success>>>>>>')
 
       setTrue()
       reloadPageCancel()
@@ -48,7 +50,7 @@ export function useShowLayout() {
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
 
     if(isPageReLoad) {
-      setMaxTrue()
+      setTrue()
       sessionStorage.removeItem('isPageReLoad')
     }else {
       sessionStorage.setItem('isPageReLoad', '1')
@@ -72,7 +74,7 @@ export function useShowLayout() {
   const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
     manual: true,
     pollingWhenHidden: false,
-    debounceWait: 500,
+    debounceWait: 300,
   });
 
   return {

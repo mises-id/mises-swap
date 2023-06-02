@@ -24,7 +24,7 @@ export const okxWallet = ({
   return {
     id: 'okx',
     name: 'OKX Wallet',
-    iconUrl: async () => (await import('./okxWallet.svg')).default,
+    iconUrl: async () => (await import('./okxWallet.png')).default,
     iconAccent: '#000',
     iconBackground: '#000',
     downloadUrls: {
