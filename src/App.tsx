@@ -143,6 +143,12 @@ function App() {
     }else {
       window.onload = load
     }
+    if (document.readyState === "complete") {
+      load();
+    } else {
+      window.addEventListener('load', load);
+      return () => window.removeEventListener('load', load);
+    }
     
     // eslint-disable-next-line
   }, [])
