@@ -134,7 +134,9 @@ function App() {
     // getProvider()
     const load = () =>{
       console.log('loading')
-      getProvider()
+      setTimeout(() => {
+        getProvider()
+      }, 200);
     }
     if (document.readyState === "complete") {
       load();
