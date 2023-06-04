@@ -137,11 +137,6 @@ function App() {
       console.log('loading')
       getProvider()
     }
-    if(isIOS()){
-      getProvider()
-    }else {
-      window.onload = load
-    }
     if (document.readyState === "complete") {
       load();
     } else {

@@ -14,7 +14,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "./logo192.png",
+      "src": "./logo512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -22,9 +22,9 @@
   ],
   "orientation": "portrait",
   "name": "Mises Swap",
-  "description": "Swap or provide liquidity on the Uniswap Protocol",
+  "description": "",
   "iconPath": "./logo192.png",
   "short_name": "Mises Swap",
   "start_url": ".",
-  "theme_color": "#FC72FF"
+  "theme_color": "#000000"
 }
