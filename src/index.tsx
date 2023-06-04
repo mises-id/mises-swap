@@ -14,7 +14,7 @@ import './locales'
 
 import * as Sentry from "@sentry/react";
 
-import * as serviceWorkerRegistration from './serviceWorkerRegistration'
+// import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 
 Sentry.init({
   enabled: process.env.NODE_ENV==='production',
