@@ -22,7 +22,7 @@ const { onDemandEntries, precacheEntries } = groupEntries(self.__WB_MANIFEST)
 const onDemandURLs = onDemandEntries.map((entry) => (typeof entry === 'string' ? entry : entry.url))
 
 const onDemandCacheName = `${cacheNames.prefix}-on-demand-${cacheNames.suffix}`
-console.log(onDemandCacheName, onDemandEntries, precacheEntries, onDemandURLs)
+console.log(onDemandCacheName, onDemandEntries, precacheEntries, onDemandURLs, self.__WB_MANIFEST)
 registerRoute(
   new Route(
     ({ url }) => {
