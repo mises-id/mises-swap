@@ -827,7 +827,7 @@ const Home = () => {
   }, ()=>false)
 
   return <div className="flex flex-col flex-1">
-    <div className='flex justify-between items-center px-10 py-10'>
+    <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       {/* <Image width={80} src='/logo192.png' /> */}
       <Logo />
       <ConnectButton.Custom>

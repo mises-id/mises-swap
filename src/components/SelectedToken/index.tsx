@@ -19,6 +19,7 @@ const SelectedToken = memo((props: Iprops) => {
         width={24}
         height={24}
         src={currentToken?.logo_uri}
+        placeholder=""
         fallback={currentToken?.symbol ? <FallBackImage symbol={currentToken?.symbol} /> : ''}
       />
       <span className='symbol truncate' style={{maxWidth: 100}}>{currentToken?.symbol}</span>

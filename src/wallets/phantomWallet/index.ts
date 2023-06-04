@@ -22,6 +22,7 @@ export const phantomWallet = ({
     name: 'Phantom',
     iconUrl: async () => (await import('./phantomWallet.svg')).default,
     iconBackground: '#551BF9',
+    iconAccent: '#551BF9',
     installed:
       (typeof window !== 'undefined' &&
         !!((window as any).phantom as any)?.ethereum) ||
