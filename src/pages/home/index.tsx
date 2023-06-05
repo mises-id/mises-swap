@@ -301,7 +301,7 @@ const Home = () => {
           // // eth_getTransactionReceipt
           const data = await waitForTransaction({
             hash: hash,
-            confirmations: 3,
+            confirmations: 2,
           })
           swapContext?.pushNotificationData({
             type: 'success',
@@ -463,7 +463,7 @@ const Home = () => {
       console.log(hash)
       const data = await waitForTransaction({
         hash: hash,
-        confirmations: 3,
+        confirmations: 2,
       })
 
       if (data.status === 'success') {
@@ -559,6 +559,7 @@ const Home = () => {
   const resetInputData = async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
     swapContext?.setToAmount('')
+    cancel()
     swapContext?.setquoteData(undefined)
     const tokenList = paramTokens || tokens
     if (tokenList?.length) {
@@ -914,12 +915,7 @@ const Home = () => {
 
         <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
         {/* <Button onClick={()=>{
-                console.log(fromInputRef, toInputRef)
-                fromInputRef.current?.getBalanceFn()
-                toInputRef.current?.getBalanceFn()
-                setapproveLoading(false)
-                setquoteData(undefined)
-                console.log(swapLoading, loading, approveLoading)
+          resetInputData()
               }}>reset</Button> */}
       </div >
       <Notification />
