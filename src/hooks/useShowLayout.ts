@@ -1,13 +1,19 @@
 import detectEthereumProvider from "@metamask/detect-provider";
-import { useAsyncEffect, useBoolean, useRequest } from "ahooks";
+import { useBoolean, useRequest } from "ahooks";
+import { useAnalytics } from "./useAnalytics";
+import { logEvent } from "firebase/analytics";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
 
-  const [isMaxRetryStatus, { setTrue: setMaxTrue }] = useBoolean(false)
+  const [isMaxRetryStatus] = useBoolean(false)
 
   const getProvider = async () => {
-    const provider: any = await detectEthereumProvider()
+    const provider: any = await detectEthereumProvider({
+      mustBeMetaMask: false,
+      silent: false,
+      timeout: 1000
+    })
     if (!provider) {
       setTrue()
       return 
@@ -18,8 +24,10 @@ export function useShowLayout() {
     try {
       runReload()
       console.log('start connnect >>>>>>',)
-      const chainId = await provider?.request({ method: 'eth_chainId', params: [] })
-      console.log('test connnect success>>>>>>', chainId)
+      if(!window.befi && !window.nabox && provider.name !== "ezdefi") {
+        await provider?.request({ method: 'eth_chainId', params: [] })
+      }
+      console.log('test connnect success>>>>>>')
 
       setTrue()
       reloadPageCancel()
@@ -30,28 +38,32 @@ export function useShowLayout() {
       }
     }
   }
-  useAsyncEffect(async () => {
-    // setTimeout(() => {
-      // console.log('loading....')
-      // getProvider()
-    // }, 1000);
-    // getProvider()
-    const load = () =>{
-      console.log('loading')
-      getProvider()
-    }
-
-    window.onload = load
-  }, [])
-
+  // useEffect(() => {
+  //   // setTimeout(() => {
+  //     // console.log('loading....')
+  //     // getProvider()
+  //   // }, 1000);
+  //   // getProvider()
+  //   const load = () =>{
+  //     console.log('loading')
+  //     getProvider()
+  //   }
+  //   window.onload = load
+  //   window.addEventListener('load', () =>{
+  //     console.log(window)
+  //   })
+  //   // eslint-disable-next-line
+  // }, [])
+  const analytics = useAnalytics()
   const reloadPage = async () => {
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
 
     if(isPageReLoad) {
-      setMaxTrue()
+      setTrue()
       sessionStorage.removeItem('isPageReLoad')
     }else {
       sessionStorage.setItem('isPageReLoad', '1')
+      logEvent(analytics, 'swap_page_reload')
       window.location.reload()
     }
 
@@ -72,7 +84,7 @@ export function useShowLayout() {
   const { cancel: reloadPageCancel, run: runReload } = useRequest(reloadPage, {
     manual: true,
     pollingWhenHidden: false,
-    debounceWait: 500,
+    debounceWait: 300,
   });
 
   return {

@@ -25,8 +25,9 @@ import { phantomWallet } from './wallets/phantomWallet';
 import { trustWallet } from './wallets/trustWallet';
 import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
-import Loading from './components/pageLoading';
 import RetryMaxStatus from './components/RetryMaxStatus';
+import { useEffect } from 'react';
+import { isIOS } from './utils';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -125,14 +126,37 @@ export const chainList = [
 
 
 function App() {
-  const { isShowLayout, isMaxRetryStatus } = useShowLayout()
-
+  const { isShowLayout, isMaxRetryStatus, getProvider } = useShowLayout()
+  useEffect(() => {
+    // setTimeout(() => {
+      // console.log('loading....')
+      // getProvider()
+    // }, 1000);
+    // getProvider()
+    const load = () =>{
+      console.log('getProvider loading')
+      getProvider()
+    }
+    if(isIOS()){
+      getProvider()
+    }else {
+      window.onload = load
+    }
+    if (document.readyState === "complete") {
+      load();
+    } else {
+      window.addEventListener('load', load);
+      return () => window.removeEventListener('load', load);
+    }
+    
+    // eslint-disable-next-line
+  }, [])
   if (isMaxRetryStatus) {
     return <RetryMaxStatus />
   }
 
   if (!isShowLayout) {
-    return <Loading />
+    return <div></div>
   }
   
   const { chains, publicClient, webSocketPublicClient } = configureChains(

@@ -15,7 +15,7 @@ const headers:{[key: string]: string} = {
 // }
 const request = axios.create({
   headers,
-  baseURL: 'https://api.test.mises.site/api/v1/swap',
+  baseURL: 'https://api.swap.mises.site/api/v1/swap',
   timeout: 5000,
 });
 
