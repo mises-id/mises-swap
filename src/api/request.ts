@@ -12,3 +12,16 @@ export function formatUSD(params: {
     }
   })
 }
+
+export function formatUSDList(params: {
+  chainName: string,
+  contract_addresses: string
+}){
+  return request({
+    url: `https://api.coingecko.com/api/v3/simple/token_price/${params.chainName}`,
+    params: {
+      contract_addresses: params.contract_addresses,
+      vs_currencies: 'usd'
+    },
+  })
+}

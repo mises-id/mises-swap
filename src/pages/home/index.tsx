@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useAsyncEffect, useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { useBoolean, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -19,7 +19,7 @@ import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
 import { SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
-import { fetchUSD, getBalancesInSingleCall } from "@/api/ether";
+import { fetchUSD, fetchUSDList, getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
 import ConnectWallet from "@/components/ConnectWallet";
 import { chainList } from "@/App";
@@ -29,19 +29,21 @@ const Home = () => {
   // firebase
   const analytics = useAnalytics()
 
-  useAsyncEffect(async () => {
+  useEffect(() => {
+    init()
+    // eslint-disable-next-line
+  }, []);
+
+  const init = async () =>{
     logEvent(analytics, 'open_swap_page')
 
-    console.log(window.ethereum, 'window.ethereum')
-
     const getTokens = await getTokenList()
-
     if (getTokens?.length) {
       const tokenList = await getTokenListBalance(getTokens)
 
       settokens([...tokenList])
     }
-  }, []);
+  }
 
 
   const swapContext = useContext(SwapContext)
@@ -82,12 +84,13 @@ const Home = () => {
         for (const key in data) {
           const balance = data[key];
           const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress ? nativeTokenAddress : `${key}`;
-          const tokenIndex = tokenList?.findIndex(val => val.address === tokenAddress) || -1
+          const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
           if (tokenIndex > -1) {
             tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
             // console.log(tokenList[tokenIndex], tokenAddress, key)
           }
         }
+        console.log(tokenList, 'getBalancesInSingleCall')
         setFalse()
         return tokenList
 
@@ -101,6 +104,42 @@ const Home = () => {
     }
     return tokenList
   }
+
+  const chunk = (arr: string[], counts: number) => {
+    const cloneArr = [...arr];
+    const result = [];
+    while(cloneArr.length) {
+      result.push(cloneArr.splice(0, counts));
+    }
+    return result;
+  }
+
+  const getTokenListToUSDPrice = async (tokenList: token[]) =>{
+    const ids = tokenList.map(val=>val.address)
+    const idsList = chunk(ids, 180);
+    const promiseAllIds = idsList.map((ids: string[]) => fetchUSDList(chainId, ids.join(',')))
+    const idsUSD = await Promise.all(promiseAllIds)
+
+    idsUSD.forEach(item =>{
+      for (const key in item) {
+        const element = item[key];
+        const findIndex = tokenList.findIndex(val=>val.address === key);
+        if(findIndex > -1 && element.usd) {
+          tokenList[findIndex].price = element.usd
+        }
+      }
+    })
+    return tokenList
+  }
+
+  const staleTime = 1000 * 60 * 6
+  const { run: getTokenListToUSDPriceRun } = useRequest(getTokenListToUSDPrice, {
+    cacheKey: `${chainId}`,
+    staleTime,
+    manual: true,
+    setCache: (data) => sessionStorage.setItem(`${chainId}`, JSON.stringify(data)),
+    getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
+  });
 
   const getTokenList = async () => {
     try {
@@ -117,12 +156,25 @@ const Home = () => {
           tokenList = []
         }
       }
+
       const chainTokenList = tokenList.filter(val=>val.chain_id === chainId)
-      settokens([...chainTokenList])
-      getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
+      const now = new Date().getTime()
+      const cacheList = JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]')
+      let getTokenList = chainTokenList
+      
+      if(now - cacheList.time < staleTime) {
+        getTokenList = cacheList.data
+        console.log('getCache',  cacheList.data)
+      }else{
+        await getTokenListToUSDPriceRun(chainTokenList)
+        console.log('getTokenListToUSDPriceRun')
+      }
+      
+      settokens([...getTokenList])
+      getTokenToUSDPrice(nativeTokenAddress, getTokenList)
 
       if (swapContext) {
-        const token = findToken(chainTokenList, nativeTokenAddress) || {}
+        const token = findToken(getTokenList, nativeTokenAddress) || {}
 
         swapContext.swapFromData = {
           tokenAddress: nativeTokenAddress,
@@ -132,7 +184,7 @@ const Home = () => {
           ...swapContext.swapFromData
         })
       }
-      return chainTokenList
+      return getTokenList
 
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
@@ -312,12 +364,15 @@ const Home = () => {
           console.log(data)
 
           setapproveLoading(false)
-
+          swapContext?.setStatus(99999)
           await submitSwap()
+        }else {
+          swapContext?.setStatus(99999)
         }
       }
     } catch (error: any) {
       setapproveLoading(false)
+      cancel()
       if (error.message) {
         if (error.message.indexOf('Transaction with hash') > -1 && error.message.indexOf('could not be found') > -1) {
           return
@@ -423,6 +478,15 @@ const Home = () => {
       const firstTrade = result.data.data
 
       if (!firstTrade || !firstTrade?.trade) {
+        if(firstTrade.error === 'Cannot estimate') {
+          swapContext?.setGlobalDialogMessage({
+            type: 'cannotEstimate',
+            description: ''
+          })
+          setapproveLoading(false)
+          return
+        }
+
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: firstTrade.error || 'Unknown error'
@@ -541,6 +605,7 @@ const Home = () => {
     }
 
     const getTokens = await getTokenList()
+    console.log('getTokenList')
     accountChangeRun(getTokens)
   }
 
@@ -654,10 +719,9 @@ const Home = () => {
     }
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
-    console.log(paramsTokenList, 'paramsTokenList')
     if (tokens?.length || paramsTokenList?.length) {
       const tokenList = paramsTokenList || tokens || []
-      const tokenIndex = tokenList?.findIndex(val => val.address === tokenAddress) || -1
+      const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
       if (tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
@@ -689,7 +753,7 @@ const Home = () => {
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
-    getTokenToUSDPrice(val)
+    // getTokenToUSDPrice(val)
   }
 
   const getToTokenChange = (val: string) => {
@@ -711,7 +775,7 @@ const Home = () => {
       swapContext.setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
-    getTokenToUSDPrice(val)
+    // getTokenToUSDPrice(val)
   }
 
   const switchToken = () => {

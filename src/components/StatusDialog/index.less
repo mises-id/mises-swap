@@ -45,3 +45,29 @@
     background-color:rgba(93 97 255 / 0.12) ;
   }
 }
+.cannotEstimate{
+  font-size: 14px;
+  color: var(--theme-text-color);
+  margin-bottom: 10px;
+}
+.tips-title{
+  margin-bottom: 20px;
+}
+.tips-end{
+  margin-top: 20px;
+}
+.tips-desc{
+  padding-left: 10px;
+  margin-left: 10px;
+  position: relative;
+  &::after{
+    content: '';
+    width: 4px;
+    height: 4px;
+    background-color: var(--theme-text-color);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    border-radius: 50%;
+  }
+}

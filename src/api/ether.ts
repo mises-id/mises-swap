@@ -1,7 +1,7 @@
 import { formatAmount, nativeTokenAddress } from '@/utils'
 import { fetchBalance, erc20ABI, Chain } from '@wagmi/core'
 import { ethers } from 'ethers';
-import { formatUSD } from './request';
+import { formatUSD, formatUSDList } from './request';
 import { arbitrum, avalanche, bsc, fantom, mainnet, optimism, polygon } from 'viem/chains';
 import { getAddressBalances } from 'eth-balance-checker/lib/ethers';
 
@@ -91,6 +91,78 @@ export async function fetchUSD(fsym: string) {
     const data = await formatUSD(params)
     return data.data.USD
   } catch (error) {
-    Promise.reject(error)
+    return Promise.reject(error)
   }
+}
+const chainList = [{
+  "id": "ethereum",
+  "chain_identifier": 1,
+  "name": "Ethereum",
+  "shortname": ""
+}, {
+  "id": "binance-smart-chain",
+  "chain_identifier": 56,
+  "name": "BNB Smart Chain",
+  "shortname": "BSC"
+},{
+  "id": "polygon-pos",
+  "chain_identifier": 137,
+  "name": "Polygon POS",
+  "shortname": "MATIC"
+},{
+  "id": "optimistic-ethereum",
+  "chain_identifier": 10,
+  "name": "Optimism",
+  "shortname": "Optimism"
+},{
+  "id": "arbitrum-one",
+  "chain_identifier": 42161,
+  "name": "Arbitrum One",
+  "shortname": "Arbitrum"
+},{
+  "id": "avalanche",
+  "chain_identifier": 43114,
+  "name": "Avalanche",
+  "shortname": "AVAX"
+},{
+  "id": "fantom",
+  "chain_identifier": 250,
+  "name": "Fantom",
+  "shortname": ""
+},{
+  "id": "xdai",
+  "chain_identifier": 100,
+  "name": "Gnosis Chain",
+  "shortname": ""
+},{
+  "id": "klay-token",
+  "chain_identifier": 8217,
+  "name": "Klaytn",
+  "shortname": ""
+},{
+  "id": "aurora",
+  "chain_identifier": 1313161554,
+  "name": "Aurora",
+  "shortname": "aurora"
+},{
+  "id": "zksync",
+  "chain_identifier": 324,
+  "name": "zkSync",
+  "shortname": ""
+}]
+
+export async function fetchUSDList(chainId: number, contract_addresses: string) {
+  const findChain = chainList.find(val=>val.chain_identifier === chainId);
+  if(findChain) {
+    try {
+      const data = await formatUSDList({
+        chainName: findChain.id,
+        contract_addresses
+      })
+      return data.data
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+  return Promise.resolve({})
 }

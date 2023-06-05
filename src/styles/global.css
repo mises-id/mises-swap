@@ -193,6 +193,14 @@
   margin-top:20px;
 }
 
+.mb-10{
+  margin-bottom:10px;
+}
+
+.mb-20{
+  margin-bottom:20px;
+}
+
 .block{
   display:block;
 }
@@ -207,6 +215,10 @@
 
 .h-screen{
   height:100vh;
+}
+
+.w-auto{
+  width:auto;
 }
 
 .flex-1{
@@ -297,6 +309,10 @@
 
 .pt-20{
   padding-top:20px;
+}
+
+.text-left{
+  text-align:left;
 }
 
 .text-center{

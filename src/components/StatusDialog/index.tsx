@@ -68,6 +68,8 @@ const StatusDialog: FC<Iprops> = (props) => {
   return (
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={dismiss} className='dialog-container'>
       {swapContext?.globalDialogMessage?.type === 'error' && <p className='status-dialog-title'>Error</p>}
+      {swapContext?.globalDialogMessage?.type === 'cannotEstimate' && <p className='status-dialog-title'>Rate expired</p>}
+
       <div className='status-dialog-container flex flex-col items-center text-center'>
         {swapContext?.globalDialogMessage?.type === 'error' && <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="#FA2B39" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>}
 
@@ -75,7 +77,7 @@ const StatusDialog: FC<Iprops> = (props) => {
 
         {swapContext?.globalDialogMessage?.type === 'success' && <svg xmlns="http://www.w3.org/2000/svg" width="75px" height="75px" viewBox="0 0 24 24" fill="none" stroke="#4C82FB" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></svg>}
 
-        <div className='description'>{swapContext?.globalDialogMessage?.description}</div>
+        {swapContext?.globalDialogMessage?.description && <div className='description'>{swapContext?.globalDialogMessage?.description}</div>}
 
         {swapContext?.globalDialogMessage?.info?.symbol && nativeCurrency?.symbol !== swapContext?.globalDialogMessage?.info?.symbol &&
           <div className='add-token-to-wallet flex items-center justify-center mt-10 mb-40' 
@@ -84,7 +86,7 @@ const StatusDialog: FC<Iprops> = (props) => {
           </div>}
 
         {swapContext?.globalDialogMessage?.type === 'error' ? <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Dismiss</Button> : ''}
-
+        
         {swapContext?.globalDialogMessage?.type === 'success' ? <>
           <Button block color="primary" className="dismiss-btn" onClick={()=>{
             dismiss()
@@ -94,6 +96,16 @@ const StatusDialog: FC<Iprops> = (props) => {
             View on Block Explorer
           </p>
         </> : ''}
+
+        {swapContext?.globalDialogMessage?.type==='cannotEstimate' && <>
+          <div className='text-left w-auto mb-20'>
+            <p className='tips-title cannotEstimate'>Try one of the following options:</p>
+            <p className='tips-desc cannotEstimate'>Try to swap at an updated rate</p>
+            <p className='tips-desc cannotEstimate'>Increase slippage tolerance in the settings and swap again</p>
+            <p className='tips-end cannotEstimate'>If none of the above works, contact us via <a href="https://discord.gg/pDD3u86S5E" target='_blank' rel="noreferrer">Live chat</a></p>
+          </div>
+          {swapContext?.globalDialogMessage?.type === 'cannotEstimate' ? <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Dismiss</Button> : ''}
+        </>}
       </div>
     </CenterPopup>
   )
