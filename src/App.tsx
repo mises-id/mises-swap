@@ -134,7 +134,7 @@ function App() {
     // }, 1000);
     // getProvider()
     const load = () =>{
-      console.log('loading')
+      console.log('getProvider loading')
       getProvider()
     }
     if(isIOS()){
