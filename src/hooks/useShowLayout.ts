@@ -62,8 +62,8 @@ export function useShowLayout() {
       setTrue()
       sessionStorage.removeItem('isPageReLoad')
     }else {
-      sessionStorage.setItem('isPageReLoad', '1')
       logEvent(analytics, 'swap_page_reload')
+      sessionStorage.setItem('isPageReLoad', '1')
       window.location.reload()
     }
 
