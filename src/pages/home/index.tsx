@@ -33,10 +33,6 @@ const Home = () => {
     logEvent(analytics, 'open_swap_page')
 
     console.log(window.ethereum, 'window.ethereum')
-    window.addEventListener('message', (res: any) => {
-      console.log('ethereum#initialized>>>>>>>>>>>=========', res, res.data.result, res.data.type)
-    })
-
 
     const getTokens = await getTokenList()
 
@@ -108,24 +104,25 @@ const Home = () => {
 
   const getTokenList = async () => {
     try {
-      const cacheTokens = sessionStorage.getItem(`${chainId}`)
+      const cacheTokens = sessionStorage.getItem('tokenList')
       let tokenList: token[] = []
       if (cacheTokens) {
         tokenList = JSON.parse(cacheTokens)
       } else {
-        const res = await getTokens<{ "data": token[] }>(chainId)
+        const res = await getTokens<{ "data": token[] }>()
         if (res) {
           tokenList = res.data.data
-          sessionStorage.setItem(`${chainId}`, JSON.stringify(tokenList))
+          sessionStorage.setItem('tokenList', JSON.stringify(tokenList))
         } else {
           tokenList = []
         }
       }
-      settokens([...tokenList])
-      getTokenToUSDPrice(nativeTokenAddress, tokenList)
+      const chainTokenList = tokenList.filter(val=>val.chain_id === chainId)
+      settokens([...chainTokenList])
+      getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
 
       if (swapContext) {
-        const token = findToken(tokenList, nativeTokenAddress) || {}
+        const token = findToken(chainTokenList, nativeTokenAddress) || {}
 
         swapContext.swapFromData = {
           tokenAddress: nativeTokenAddress,
@@ -135,7 +132,7 @@ const Home = () => {
           ...swapContext.swapFromData
         })
       }
-      return tokenList
+      return chainTokenList
 
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
