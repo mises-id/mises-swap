@@ -15,11 +15,11 @@ const Notification:FC<IProps> = ()=> {
     return swapContext?.notification || []
   }, [swapContext?.notification])
 
-  const swapText = (val: notificationData) =>{
-    const {toToken,fromToken,toTokenAmount,fromTokenAmount} = val
-    if(!toTokenAmount || !fromTokenAmount || !toToken) return fromToken?.symbol
-    return `${fromTokenAmount} ${fromToken?.symbol} for ${substringAmount(toTokenAmount)} ${toToken.symbol}`
-  }
+  // const swapText = (val: notificationData) =>{
+  //   const {toToken,fromToken,toTokenAmount,fromTokenAmount} = val
+  //   if(!toTokenAmount || !fromTokenAmount || !toToken) return fromToken?.symbol
+  //   return `${fromTokenAmount} ${fromToken?.symbol} for ${substringAmount(toTokenAmount)} ${toToken.symbol}`
+  // }
 
   const FromToTokenIcon = (props: {
     from_token: token,
@@ -43,9 +43,9 @@ const Notification:FC<IProps> = ()=> {
           <FromToTokenIcon to_token={val.toToken} from_token={val.fromToken}/>
           <div>
             <p className='notification-title'>{val.text}</p>
-            {val.fromTokenAmount &&<p className='notification-desc'>
+            {/* {val.fromTokenAmount &&<p className='notification-desc'>
               {swapText(val)}
-            </p>}
+            </p>} */}
           </div></> : <>
           <div style={{width: 50}}>{val?.icon?.()}</div>
           <div>
