@@ -307,6 +307,10 @@
   border-top-width:1px;
 }
 
+.border-r{
+  border-right-width:1px;
+}
+
 .border-solid{
   border-style:solid;
 }

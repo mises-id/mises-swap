@@ -1028,7 +1028,13 @@ const Home = () => {
         '--edge-distance': '24px',
       }}
       axis="lock"
-      onClick={()=>navigate('/helpcenter')}
+      onClick={()=>{
+        navigate('/helpcenter')
+        resetInputData()
+        swapContext?.setswapToData({
+          tokenAddress: ''
+        })
+      }}
     >
       <MessageFill fontSize={32} />
     </FloatingBubble>
