@@ -12,17 +12,18 @@ import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
 import SwapButton from "@/components/swapButton";
-import { Button, CenterPopup, Skeleton } from "antd-mobile";
+import { Button, CenterPopup, FloatingBubble, Skeleton } from "antd-mobile";
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 import BigNumber from "bignumber.js";
 import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
-import { SetOutline } from "antd-mobile-icons";
+import { MessageFill, SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
 import { fetchUSD, fetchUSDList, getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
 import ConnectWallet from "@/components/ConnectWallet";
 import { chainList } from "@/App";
+import { useNavigate } from "react-router-dom";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
 const Home = () => {
@@ -105,41 +106,41 @@ const Home = () => {
     return tokenList
   }
 
-  const chunk = (arr: string[], counts: number) => {
-    const cloneArr = [...arr];
-    const result = [];
-    while(cloneArr.length) {
-      result.push(cloneArr.splice(0, counts));
-    }
-    return result;
-  }
+  // const chunk = (arr: string[], counts: number) => {
+  //   const cloneArr = [...arr];
+  //   const result = [];
+  //   while(cloneArr.length) {
+  //     result.push(cloneArr.splice(0, counts));
+  //   }
+  //   return result;
+  // }
 
-  const getTokenListToUSDPrice = async (tokenList: token[]) =>{
-    const ids = tokenList.map(val=>val.address)
-    const idsList = chunk(ids, 180);
-    const promiseAllIds = idsList.map((ids: string[]) => fetchUSDList(chainId, ids.join(',')))
-    const idsUSD = await Promise.all(promiseAllIds)
+  // const getTokenListToUSDPrice = async (tokenList: token[]) =>{
+  //   const ids = tokenList.map(val=>val.address)
+  //   const idsList = chunk(ids, 180);
+  //   const promiseAllIds = idsList.map((ids: string[]) => fetchUSDList(chainId, ids.join(',')))
+  //   const idsUSD = await Promise.all(promiseAllIds)
 
-    idsUSD.forEach(item =>{
-      for (const key in item) {
-        const element = item[key];
-        const findIndex = tokenList.findIndex(val=>val.address === key);
-        if(findIndex > -1 && element.usd) {
-          tokenList[findIndex].price = element.usd
-        }
-      }
-    })
-    return tokenList
-  }
+  //   idsUSD.forEach(item =>{
+  //     for (const key in item) {
+  //       const element = item[key];
+  //       const findIndex = tokenList.findIndex(val=>val.address === key);
+  //       if(findIndex > -1 && element.usd) {
+  //         tokenList[findIndex].price = element.usd
+  //       }
+  //     }
+  //   })
+  //   return tokenList
+  // }
 
-  const staleTime = 1000 * 60 * 6
-  const { run: getTokenListToUSDPriceRun } = useRequest(getTokenListToUSDPrice, {
-    cacheKey: `${chainId}`,
-    staleTime,
-    manual: true,
-    setCache: (data) => sessionStorage.setItem(`${chainId}`, JSON.stringify(data)),
-    getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
-  });
+  // const staleTime = 1000 * 60 * 6
+  // const { run: getTokenListToUSDPriceRun } = useRequest(getTokenListToUSDPrice, {
+  //   cacheKey: `${chainId}`,
+  //   staleTime,
+  //   manual: true,
+  //   setCache: (data) => sessionStorage.setItem(`${chainId}`, JSON.stringify(data)),
+  //   getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
+  // });
 
   const getTokenList = async () => {
     try {
@@ -158,23 +159,23 @@ const Home = () => {
       }
 
       const chainTokenList = tokenList.filter(val=>val.chain_id === chainId)
-      const now = new Date().getTime()
-      const cacheList = JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]')
-      let getTokenList = chainTokenList
+      // const now = new Date().getTime()
+      // const cacheList = JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]')
+      // let getTokenList = chainTokenList
       
-      if(now - cacheList.time < staleTime) {
-        getTokenList = cacheList.data
-        console.log('getCache',  cacheList.data)
-      }else{
-        await getTokenListToUSDPriceRun(chainTokenList)
-        console.log('getTokenListToUSDPriceRun')
-      }
+      // if(now - cacheList.time < staleTime) {
+      //   getTokenList = cacheList.data
+      //   console.log('getCache',  cacheList.data)
+      // }else{
+      //   await getTokenListToUSDPriceRun(chainTokenList)
+      //   console.log('getTokenListToUSDPriceRun')
+      // }
       
-      settokens([...getTokenList])
-      getTokenToUSDPrice(nativeTokenAddress, getTokenList)
+      settokens([...chainTokenList])
+      getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
 
       if (swapContext) {
-        const token = findToken(getTokenList, nativeTokenAddress) || {}
+        const token = findToken(chainTokenList, nativeTokenAddress) || {}
 
         swapContext.swapFromData = {
           tokenAddress: nativeTokenAddress,
@@ -184,7 +185,7 @@ const Home = () => {
           ...swapContext.swapFromData
         })
       }
-      return getTokenList
+      return chainTokenList
 
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
@@ -196,9 +197,42 @@ const Home = () => {
     }
   }
 
-
-
   const [approveLoading, setapproveLoading] = useState(false)
+  const cacheTime = 10000
+  const renderTokenPrice = (fromTokenAddr: string, toTokenAddr: string) =>{
+    if(!tokens) return
+    const fromToken = tokens.find(val=>val.address === fromTokenAddr)
+    const toToken = tokens.find(val=>val.address === toTokenAddr)
+    const contract_addresses = []
+    const now = new Date().getTime()
+
+    if(!fromToken?.price || (fromToken?.price && fromToken?.cacheTime && now - fromToken.cacheTime > cacheTime)) contract_addresses.push(fromTokenAddr)
+    if(!toToken?.price || (toToken?.price && toToken?.cacheTime && now - toToken.cacheTime > cacheTime)) contract_addresses.push(toTokenAddr)
+
+    if(contract_addresses.length === 0) return 
+    fetchUSDList(chainId, contract_addresses.join(',')).then(res=>{
+      const formTokenToUsd = res[fromTokenAddr]
+      const toTokenToUsd = res[toTokenAddr]
+
+      if(formTokenToUsd) {
+        const fromTokenIndex = tokens.findIndex(val=>val.address === fromTokenAddr)
+        if(fromTokenIndex > -1) {
+          tokens[fromTokenIndex].price = formTokenToUsd.usd
+          tokens[fromTokenIndex].cacheTime = new Date().getTime()
+        }
+      }
+
+      if(toTokenToUsd) {
+        const toTokenIndex = tokens.findIndex(val=>val.address === toTokenAddr)
+        if(toTokenIndex > -1) {
+          tokens[toTokenIndex].price = toTokenToUsd.usd
+          tokens[toTokenIndex].cacheTime = new Date().getTime()
+        }
+      }
+      
+      settokens([...tokens])
+    })
+  }
 
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
@@ -210,6 +244,7 @@ const Home = () => {
     if (parseAmountStr === '0') return Promise.reject('')
 
     try {
+      renderTokenPrice(fromTokenAddr, toTokenAddr)
       const res = await getQuote<{ data: swapData[] }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddr,
@@ -478,7 +513,7 @@ const Home = () => {
       const firstTrade = result.data.data
 
       if (!firstTrade || !firstTrade?.trade) {
-        if(firstTrade.error === 'Cannot estimate') {
+        if(firstTrade.error === 'cannot estimate') {
           swapContext?.setGlobalDialogMessage({
             type: 'cannotEstimate',
             description: ''
@@ -888,6 +923,8 @@ const Home = () => {
     </div>
   }, ()=>false)
 
+
+  const navigate = useNavigate()
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       {/* <Image width={80} src='/logo192.png' /> */}
@@ -984,6 +1021,17 @@ const Home = () => {
       </div >
       <Notification />
     </div>
+    <FloatingBubble
+      style={{
+        '--initial-position-bottom': '24px',
+        '--initial-position-right': '24px',
+        '--edge-distance': '24px',
+      }}
+      axis="lock"
+      onClick={()=>navigate('/helpcenter')}
+    >
+      <MessageFill fontSize={32} />
+    </FloatingBubble>
   </div>
 };
 export default Home;

@@ -6,6 +6,7 @@ import { useWalletClient } from 'wagmi';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logEvent } from 'firebase/analytics';
 import { chainList } from '@/App';
+import { useNavigate } from 'react-router-dom';
 interface Iprops extends CenterPopupProps {
   successClose?: ()=>void;
   dismissClose?: ()=>void;
@@ -33,6 +34,11 @@ const StatusDialog: FC<Iprops> = (props) => {
     }
     swapContext?.setGlobalDialogMessage(undefined)
     props.dismissClose?.()
+  }
+  const navigate = useNavigate()
+  const helpCenter = () =>{
+    navigate('/helpcenter')
+    dismiss()
   }
   
   const walletClient = useWalletClient()
@@ -104,7 +110,7 @@ const StatusDialog: FC<Iprops> = (props) => {
             <p className='tips-desc cannotEstimate'>Increase slippage tolerance in the settings and swap again</p>
             <p className='tips-end cannotEstimate'>If none of the above works, contact us via <a href="https://discord.gg/pDD3u86S5E" target='_blank' rel="noreferrer">Live chat</a></p>
           </div>
-          {swapContext?.globalDialogMessage?.type === 'cannotEstimate' ? <Button block color="primary" className="dismiss-btn" onClick={dismiss}>Dismiss</Button> : ''}
+          {swapContext?.globalDialogMessage?.type === 'cannotEstimate' ? <Button block color="primary" className="dismiss-btn" onClick={helpCenter}>Help Center</Button> : ''}
         </>}
       </div>
     </CenterPopup>
