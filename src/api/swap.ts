@@ -22,7 +22,7 @@ const header = ()=>{
 export function getTokens<T=any>(): AxiosPromise<T>{
   return swapRequest({
     url: `/token/list`,
-    timeout: 10000,
+    timeout: 30000,
     headers: header()
   })
 }

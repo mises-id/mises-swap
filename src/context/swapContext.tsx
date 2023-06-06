@@ -5,6 +5,7 @@ interface swapTokenData {
   tokenAddress: string,
   symbol?: string
   decimals?: number
+  balance?: string
 };
 interface globalDialogMessageData {
   type: 'error' | 'pending' | 'success' | 'cannotEstimate',
