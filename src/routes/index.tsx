@@ -7,7 +7,7 @@
  */
 import React from 'react'
 import { Navigate, useRoutes } from 'react-router-dom'
-import { Home } from '@/pages'
+import { HelpCenter, Home } from '@/pages'
 type CutomFallBackT =
   | boolean
   | React.ReactChild
@@ -32,6 +32,12 @@ const Routes = () => {
       path: '/',
       element: SuspenseWrapper(
         () => <Home/>
+      ),
+    },
+    {
+      path: '/helpcenter',
+      element: SuspenseWrapper(
+        () => <HelpCenter/>
       ),
     },
     { path: '*', element: <Navigate to="/" replace /> }

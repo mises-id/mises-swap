@@ -19,12 +19,9 @@ const header = ()=>{
     'User-Wallet-Address': address as string
   } : undefined
 }
-export function getTokens<T=any>(chainId: number): AxiosPromise<T>{
+export function getTokens<T=any>(): AxiosPromise<T>{
   return swapRequest({
     url: `/token/list`,
-    params: {
-      chain_id: chainId
-    },
     timeout: 10000,
     headers: header()
   })

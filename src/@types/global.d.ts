@@ -4,9 +4,11 @@ interface token {
   "name": string,
   "address": address,
   "decimals": number,
+  'chain_id': number,
   "logo_uri": string,
   'balance'?: string,
-  'price'?: string
+  'price'?: string,
+  'cacheTime'?: number,
 }
 
 interface quoteParams {

@@ -7,7 +7,7 @@ interface swapTokenData {
   decimals?: number
 };
 interface globalDialogMessageData {
-  type: 'error' | 'pending' | 'success',
+  type: 'error' | 'pending' | 'success' | 'cannotEstimate',
   description: string,
   info?: swapTokenData & {
     blockExplorer: string | undefined,
@@ -58,7 +58,7 @@ interface Iprops {
   children?: ReactNode
 }
 export const SwapContext = createContext<SwapContextType | null>(null);
-export const defaultSlippageValue = '0.1'
+export const defaultSlippageValue = '0.5'
 const swapDataDefaults = {
   tokenAddress: ''
 }

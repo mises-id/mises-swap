@@ -64,7 +64,6 @@ const ConnectWallet: FC<IProps> = (props) => {
 
   const swapContext = useContext(SwapContext)
 
-  console.log(walletClient, isConnected ,'isConnected')
   useEffect(() => {
     if(isConnected && walletClient.isIdle){
       disconnect()
