@@ -216,7 +216,8 @@ const Home = () => {
 
       if(formTokenToUsd) {
         const fromTokenIndex = tokens.findIndex(val=>val.address === fromTokenAddr)
-        if(fromTokenIndex > -1) {
+        const last_updated_at = formTokenToUsd.last_updated_at
+        if(fromTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[fromTokenIndex].price = formTokenToUsd.usd
           tokens[fromTokenIndex].cacheTime = new Date().getTime()
         }
@@ -224,7 +225,8 @@ const Home = () => {
 
       if(toTokenToUsd) {
         const toTokenIndex = tokens.findIndex(val=>val.address === toTokenAddr)
-        if(toTokenIndex > -1) {
+        const last_updated_at = toTokenToUsd.last_updated_at
+        if(toTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[toTokenIndex].price = toTokenToUsd.usd
           tokens[toTokenIndex].cacheTime = new Date().getTime()
         }

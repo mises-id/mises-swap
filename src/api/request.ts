@@ -21,7 +21,8 @@ export function formatUSDList(params: {
     url: `https://api.coingecko.com/api/v3/simple/token_price/${params.chainName}`,
     params: {
       contract_addresses: params.contract_addresses,
-      vs_currencies: 'usd'
+      vs_currencies: 'usd',
+      include_last_updated_at: true
     },
   })
 }
