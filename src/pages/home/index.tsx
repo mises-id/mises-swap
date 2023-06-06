@@ -567,24 +567,19 @@ const Home = () => {
         confirmations: 2,
       })
 
-      if (data.status === 'success') {
-        swapContext?.pushNotificationData({
-          type: data.status,
-          fromToken: swapContext!.swapFromData as unknown as token,
-          toToken: swapContext!.swapToData as unknown as token,
-          hash: hash,
-          fromTokenAmount: swapContext?.fromAmount,
-          toTokenAmount: substringAmount(swapContext?.toAmount),
-          text: 'Swapped',
-        })
-        setapproveLoading(false)
-        cancel()
-      }
+      swapContext?.pushNotificationData({
+        type: data.status,
+        fromToken: swapContext!.swapFromData as unknown as token,
+        toToken: swapContext!.swapToData as unknown as token,
+        hash: hash,
+        fromTokenAmount: swapContext?.fromAmount,
+        toTokenAmount: substringAmount(swapContext?.toAmount),
+        text: data.status === 'success' ? 'Swapped' : 'Error Swap',
+      })
+      setapproveLoading(false)
+      cancel()
+      resetInputData()
       console.log(data)
-
-      // if (swapContext) {
-      //   swapContext?.setGlobalDialogMessage(undefined) // reset
-      // }
 
     } catch (error: any) {
       setapproveLoading(false)
