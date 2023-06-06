@@ -44,6 +44,11 @@ const Home = () => {
 
       settokens([...tokenList])
     }
+    const isPageReLoad = sessionStorage.getItem('isPageReLoad')
+    if(isPageReLoad) {
+      logEvent(analytics, 'swap_page_reload')
+      console.log('isPageReLoad analytics')
+    }
   }
 
 
