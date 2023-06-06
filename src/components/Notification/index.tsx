@@ -4,7 +4,7 @@ import React, { FC, useContext, useMemo } from 'react'
 import './index.less'
 import { Image } from 'antd-mobile'
 import { CloseOutline } from 'antd-mobile-icons'
-import { substringAmount } from '@/utils'
+// import { substringAmount } from '@/utils'
 import FallBackImage from '../Fallback'
 interface IProps {
 }
