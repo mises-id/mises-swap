@@ -10,7 +10,7 @@ const HelpCenter:FC<IProps> = ()=> {
   return (
     <div className='flex-1 flex flex-col'>
       <NavBar onBack={()=>navigate(-1)}><span>Help Center</span></NavBar>
-      <div className='overflow-auto pt-10 border-solid border-t border-gray-100' style={{height: 'calc(100vh - 155px)'}}>
+      <div className='overflow-auto pt-10 border-solid border-t border-gray-100' style={{height: 'calc(100vh - 195px)'}}>
         <Collapse defaultActiveKey={["Guide", "Troubleshooting"]}>
           <Collapse.Panel key='Guide' title='Guide'>
             <div className='help-content'>
