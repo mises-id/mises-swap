@@ -13,9 +13,11 @@ const headers:{[key: string]: string} = {
 // if(istest){
 //   headers['Mises-Env'] = 'development'
 // }
+// 
+
 const request = axios.create({
   headers,
-  baseURL: 'https://api.swap.mises.site/api/v1/swap',
+  baseURL: process.env.REACT_APP_NODE_ENV !== 'production' ? 'https://api.test.mises.site/api/v1/swap' : 'https://api.swap.mises.site/api/v1/swap',
   timeout: 5000,
 });
 
