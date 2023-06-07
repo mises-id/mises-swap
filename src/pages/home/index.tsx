@@ -92,6 +92,7 @@ const Home = () => {
           const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
             const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+            console.log(balance?.value.toString())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
         }
@@ -823,7 +824,7 @@ const Home = () => {
         const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
         if(balance?.value.toString() !== '0'){
           const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
-          tokens[tokenIndex].balance = balance?.value.toString()
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
           settokens([...tokens])
         }
       }
@@ -858,7 +859,7 @@ const Home = () => {
         console.log('get to balance')
         if(balance?.value.toString() !== '0'){
           const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
-          tokens[tokenIndex].balance = balance?.value.toString()
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
           settokens([...tokens])
         }
       }
