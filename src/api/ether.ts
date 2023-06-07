@@ -1,9 +1,11 @@
 import { formatAmount, nativeTokenAddress } from '@/utils'
-import { fetchBalance, erc20ABI, Chain } from '@wagmi/core'
+import { erc20ABI, Chain } from '@wagmi/core'
 import { ethers } from 'ethers';
 import { formatUSD, formatUSDList } from './request';
 import { arbitrum, avalanche, bsc, fantom, mainnet, optimism, polygon } from 'viem/chains';
 import { getAddressBalances } from 'eth-balance-checker/lib/ethers';
+import { getWalletClient } from '@wagmi/core'
+import BigNumber from 'bignumber.js';
 
 export const SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID: Record<number, string> = {
   [mainnet.id]:
@@ -29,7 +31,13 @@ export interface BalanceMap {
 // get token balance
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
   if (tokenAddress === nativeTokenAddress && address) {
-    return fetchBalance({ address: address })
+    const walletClient = await getWalletClient({ chainId: chain.id })
+    const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
+    if(getWalletBalance) {
+      return {
+        value: new BigNumber(parseInt(getWalletBalance))
+      }
+    }
   }
 
   if (address && tokenAddress) {

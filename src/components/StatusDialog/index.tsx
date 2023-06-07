@@ -72,7 +72,10 @@ const StatusDialog: FC<Iprops> = (props) => {
 
   if(swapContext?.globalDialogMessage?.description) console.log(swapContext?.globalDialogMessage?.description, '=====submiterror====')
   return (
-    <CenterPopup {...props} visible={isOpen} showCloseButton onClose={dismiss} className='dialog-container'>
+    <CenterPopup {...props} visible={isOpen} showCloseButton onClose={()=>{
+      dismiss()
+      swapContext?.globalDialogMessage?.type === 'success' && props.successClose?.()
+    }} className='dialog-container'>
       {swapContext?.globalDialogMessage?.type === 'error' && <p className='status-dialog-title'>Error</p>}
       {swapContext?.globalDialogMessage?.type === 'cannotEstimate' && <p className='status-dialog-title'>Rate expired</p>}
 

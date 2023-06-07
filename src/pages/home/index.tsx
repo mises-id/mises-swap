@@ -19,7 +19,7 @@ import Quote from "@/components/Quote";
 import StatusDialog from "@/components/StatusDialog";
 import { MessageFill, SetOutline } from "antd-mobile-icons";
 import Setting from "@/components/Setting";
-import { fetchUSD, fetchUSDList, getBalancesInSingleCall } from "@/api/ether";
+import { fetchUSD, fetchUSDList, getBalance, getBalancesInSingleCall } from "@/api/ether";
 import Notification from "@/components/Notification";
 import ConnectWallet from "@/components/ConnectWallet";
 import { chainList } from "@/App";
@@ -78,6 +78,28 @@ const Home = () => {
     if (address && chain) {
       console.log('call balances')
       setTrue()
+
+      if([100, 8217, 1313161554, 324].includes(chain.id)) {
+        if(swapContext?.swapFromData.tokenAddress) {
+          const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
+          if(balance?.value.toString() !== '0'){
+            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+            tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
+          }
+        }
+
+        if(swapContext?.swapToData.tokenAddress) {
+          const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
+          if(balance?.value.toString() !== '0'){
+            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+            console.log(balance?.value.toString())
+            tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
+          }
+        }
+        setFalse()
+
+        return tokenList
+      }
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
       const tokensToDetect = tokenList.map((val: token) => {
@@ -195,7 +217,7 @@ const Home = () => {
     } catch (error: any) {
       swapContext?.setGlobalDialogMessage({
         type: 'error',
-        description: error.message === 'timeout of 10000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
+        description: error.message === 'timeout of 30000ms exceeded' ? 'Timeout getting token list,please try again' : (error.message || "Unknown error")
       })
 
       return []
@@ -395,7 +417,7 @@ const Home = () => {
           // // eth_getTransactionReceipt
           const data = await waitForTransaction({
             hash: hash,
-            confirmations: 2,
+            confirmations: 4,
           })
           swapContext?.pushNotificationData({
             type: 'success',
@@ -416,7 +438,7 @@ const Home = () => {
       setapproveLoading(false)
       cancel()
       if (error.message) {
-        if (error.message.indexOf('Transaction with hash') > -1 && error.message.indexOf('could not be found') > -1) {
+        if (error.name === 'TransactionNotFoundError') {
           return
         }
 
@@ -569,7 +591,7 @@ const Home = () => {
       console.log(hash)
       const data = await waitForTransaction({
         hash: hash,
-        confirmations: 2,
+        confirmations: 4,
       })
 
       swapContext?.pushNotificationData({
@@ -596,6 +618,11 @@ const Home = () => {
         swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
         return
       }
+      if (error.name === 'TransactionNotFoundError') {
+        // swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+        return
+      }
+
 
       if (error.description) {
         swapContext.setGlobalDialogMessage({
@@ -771,6 +798,7 @@ const Home = () => {
     }
   }
 
+
   const getFromTokenChange = async (val: string) => {
     if (swapContext) {
       const token = tokens?.length && val && findToken(tokens, val)
@@ -790,10 +818,22 @@ const Home = () => {
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
+
+    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+      if(swapContext?.swapFromData.tokenAddress) {
+        const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
+        if(balance?.value.toString() !== '0'){
+          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+          settokens([...tokens])
+        }
+      }
+    }
+
     // getTokenToUSDPrice(val)
   }
 
-  const getToTokenChange = (val: string) => {
+  const getToTokenChange = async (val: string) => {
     if (swapContext) {
       const token = tokens?.length && val && findToken(tokens, val)
 
@@ -811,6 +851,18 @@ const Home = () => {
     if (swapContext?.fromAmount && fromTokenAddress) {
       swapContext.setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
+    }
+
+    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+      if(swapContext?.swapToData.tokenAddress) {
+        const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
+        console.log('get to balance')
+        if(balance?.value.toString() !== '0'){
+          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+          settokens([...tokens])
+        }
+      }
     }
     // getTokenToUSDPrice(val)
   }
