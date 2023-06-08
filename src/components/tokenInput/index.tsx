@@ -140,7 +140,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if(inputProps.value && token?.price && !BigNumber(inputProps.value).isZero()) {
       const price =  BigNumber(inputProps.value).multipliedBy(token?.price);
       if(BigNumber(price).comparedTo('0.00000001') > -1) {
-        return `$${BigNumber(inputProps.value).multipliedBy(token?.price).toString()}`
+        return `$${BigNumber(inputProps.value).multipliedBy(token?.price).toFixed(8)}`
       }
       return '<$0.00000001'
     }

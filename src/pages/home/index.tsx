@@ -1012,6 +1012,7 @@ const Home = () => {
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
+            maxLength={swapContext?.swapFromData.decimals}
             ref={fromInputRef}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
@@ -1026,6 +1027,7 @@ const Home = () => {
             tokens={tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
+            maxLength={swapContext?.swapToData.decimals}
             onChange={getToInputChange}
             onTokenChange={getToTokenChange}
             placeholder='0'
