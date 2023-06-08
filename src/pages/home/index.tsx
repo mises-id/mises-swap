@@ -47,6 +47,7 @@ const Home = () => {
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
       logEvent(analytics, 'swap_page_reload')
+      sessionStorage.removeItem('isPageReLoad')
       console.log('isPageReLoad analytics')
     }
   }
@@ -729,7 +730,7 @@ const Home = () => {
   }, [address])
 
   const replaceValue = (val: string) => {
-    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,18})/g)?.[0] || ""
     return value
   }
 

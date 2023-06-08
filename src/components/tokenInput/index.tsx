@@ -137,8 +137,12 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   
   const priceValue = useMemo(() => {
     const token = props.tokens?.find(val=>val.address === props.tokenAddress)
-    if(inputProps.value && token?.price) {
-      return BigNumber(inputProps.value).multipliedBy(token?.price).toFixed(2)
+    if(inputProps.value && token?.price && !BigNumber(inputProps.value).isZero()) {
+      const price =  BigNumber(inputProps.value).multipliedBy(token?.price);
+      if(BigNumber(price).comparedTo('0.00000001') > -1) {
+        return `$${BigNumber(inputProps.value).multipliedBy(token?.price).toString()}`
+      }
+      return '<$0.00000001'
     }
     // eslint-disable-next-line
   }, [inputProps.value, props.tokenAddress])
@@ -162,7 +166,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     </div>
     {props.status !== 'ready' &&<div className='flex justify-between h-14 my-8'>
       <div>
-        {priceValue && <span>${priceValue}</span>}
+        {priceValue && <span>{priceValue}</span>}
       </div>
       <div>
         {props.tokenAddress && address && !props.isTokenLoading && <>

@@ -81,7 +81,8 @@ export function substringAmount(amount: string | undefined): string | undefined{
   const subAmount = amount.split('.');
 
   if(subAmount[1]?.length > maxLen) {
-    return `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    return returnAmount === '0.000000' ? '0.00000...' : returnAmount
   }
 
   return amount
