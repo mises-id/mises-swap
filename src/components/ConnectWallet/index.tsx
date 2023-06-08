@@ -122,10 +122,9 @@ const ConnectWallet: FC<IProps> = (props) => {
       }else {
         props.openConnectModal()
       }
-      
     }
-    // props.openConnectModal()
   }
+  
   return (
     <div className='flex items-center'>
       <ChainList chains={props.chains} chain={props.chain} openChainModal={props.openChainModal} />

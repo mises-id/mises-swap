@@ -37,12 +37,12 @@ const Home = () => {
 
   const init = async () =>{
     logEvent(analytics, 'open_swap_page')
-
     const getTokens = await getTokenList()
     if (getTokens?.length) {
-      const tokenList = await getTokenListBalance(getTokens)
+      accountChangeRun(getTokens)
+      // const tokenList = await getTokenListBalance(getTokens)
 
-      settokens([...tokenList])
+      // settokens([...tokenList])
     }
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
