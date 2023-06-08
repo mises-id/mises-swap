@@ -27,7 +27,6 @@ import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import RetryMaxStatus from './components/RetryMaxStatus';
 import { useEffect } from 'react';
-import { isIOS } from './utils';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -137,11 +136,11 @@ function App() {
       console.log('getProvider loading')
       getProvider()
     }
-    if(isIOS()){
-      getProvider()
-    }else {
-      window.onload = load
-    }
+    // if(isIOS()){
+    //   getProvider()
+    // }else {
+    //   window.onload = load
+    // }
     if (document.readyState === "complete") {
       load();
     } else {

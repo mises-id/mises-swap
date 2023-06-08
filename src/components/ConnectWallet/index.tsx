@@ -2,7 +2,7 @@ import { AuthenticationStatus, Chain } from '@rainbow-me/rainbowkit';
 import { Button } from 'antd-mobile'
 import { FC, useContext, useEffect, useState } from 'react'
 import ChainList from '../ChainList';
-import { shortenAddress } from '@/utils';
+import { isIOS, shortenAddress } from '@/utils';
 import './index.less'
 
 import {
@@ -105,7 +105,7 @@ const ConnectWallet: FC<IProps> = (props) => {
       reloadPageCancel()
       runReload()
       console.log('test connnect')
-      if(!window.befi && !window.nabox && provider.name !== "ezdefi") {
+      if(!window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS()) {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')

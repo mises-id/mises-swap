@@ -186,7 +186,7 @@ const Home = () => {
         }
       }
 
-      const chainTokenList = tokenList.filter(val=>val.chain_id === chainId)
+      const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
       // const now = new Date().getTime()
       // const cacheList = JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]')
       // let getTokenList = chainTokenList
