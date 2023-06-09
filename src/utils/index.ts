@@ -6,11 +6,11 @@ export function nowSec(): number {
 }
 
 export function parseAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.utils.parseUnits(value, unitName).toString()
+  return ethers.parseUnits(value, unitName).toString()
 }
 
 export function formatAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.utils.formatUnits(value, unitName).toString()
+  return ethers.formatUnits(value, unitName).toString()
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
@@ -81,7 +81,8 @@ export function substringAmount(amount: string | undefined): string | undefined{
   const subAmount = amount.split('.');
 
   if(subAmount[1]?.length > maxLen) {
-    return `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    return returnAmount === '0.000000' ? '0.00000...' : returnAmount
   }
 
   return amount
@@ -93,7 +94,7 @@ export function formatErrorMessage(error: any, message: string) {
     description: string
   } = {
     type: 'error',
-    description: message || 'Unknown error'
+    description: error.shortMessage || message || 'Unknown error'
   }
 
   if(error.name === 'TransactionExecutionError') {

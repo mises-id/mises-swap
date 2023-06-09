@@ -37,16 +37,17 @@ const Home = () => {
 
   const init = async () =>{
     logEvent(analytics, 'open_swap_page')
-
     const getTokens = await getTokenList()
     if (getTokens?.length) {
-      const tokenList = await getTokenListBalance(getTokens)
+      accountChangeRun(getTokens)
+      // const tokenList = await getTokenListBalance(getTokens)
 
-      settokens([...tokenList])
+      // settokens([...tokenList])
     }
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
       logEvent(analytics, 'swap_page_reload')
+      sessionStorage.removeItem('isPageReLoad')
       console.log('isPageReLoad analytics')
     }
   }
@@ -123,8 +124,8 @@ const Home = () => {
         return tokenList
 
       } catch (error: any) {
-        logEvent(analytics, `swap_error`, {
-          error_message: error.reason || error.message || 'Unknown error'
+        logEvent(analytics, 'swap_error', {
+          error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
         setFalse()
         return tokenList
@@ -185,7 +186,7 @@ const Home = () => {
         }
       }
 
-      const chainTokenList = tokenList.filter(val=>val.chain_id === chainId)
+      const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
       // const now = new Date().getTime()
       // const cacheList = JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]')
       // let getTokenList = chainTokenList
@@ -729,7 +730,7 @@ const Home = () => {
   }, [address])
 
   const replaceValue = (val: string) => {
-    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,8})/g)?.[0] || ""
+    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,18})/g)?.[0] || ""
     return value
   }
 
@@ -1011,6 +1012,7 @@ const Home = () => {
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
+            maxLength={swapContext?.swapFromData.decimals}
             ref={fromInputRef}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
@@ -1025,6 +1027,7 @@ const Home = () => {
             tokens={tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
+            maxLength={swapContext?.swapToData.decimals}
             onChange={getToInputChange}
             onTokenChange={getToTokenChange}
             placeholder='0'

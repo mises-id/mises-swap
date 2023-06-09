@@ -42,15 +42,14 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
 
   if (address && tokenAddress) {
     try {
-      const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
+      const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
       const balance = await tokenContract.balanceOf(address);
       const decimals = await tokenContract.decimals()
-      
       return {
         value: balance,
-        formatted: formatAmount(balance.toString(), decimals)
+        formatted: formatAmount(BigNumber(balance.toNumber()).toString(), decimals)
       }
     } catch (error) {
       return Promise.reject(error);
@@ -66,7 +65,7 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
 
 // get has balance from token list
 export async function getBalancesInSingleCall(walletAddress: string, tokensToDetect: string[], chain: Chain) {
-  const provider = new ethers.providers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
+  const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]); 
   if (!(chain.id in SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID) || !tokensToDetect) {
     // Only fetch balance if contract address exists
     return {};

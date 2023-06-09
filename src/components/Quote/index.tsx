@@ -150,7 +150,7 @@ const Quote: FC<Iprops> = (props) => {
   const [errorMessage, seterrorMessage] = useState('')
   const submitChange = () => {
     if(receivingAddress){
-      const isAddress = ethers.utils.isAddress(receivingAddress)
+      const isAddress = ethers.isAddress(receivingAddress)
       if(isAddress){
         swapContext?.setReceivingAddress(receivingAddress as address)
         setReceivingAddress('')
@@ -226,7 +226,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>}
 
                 <div className='flex items-center justify-between'>
-                  <span className='swap-detail-label'>Mises fee</span>
+                  <span className='swap-detail-label'>Routing fee</span>
                   <span className='swap-detail-value'>{props.data.fee}%</span>
                 </div>
 

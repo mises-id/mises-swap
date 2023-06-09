@@ -118,6 +118,7 @@ const SelectTokens: FC<Iprops> = (props) => {
             src={item?.logo_uri}
             style={{ borderRadius: 20 }}
             fit='cover'
+            placeholder=""
             width={36}
             height={36}
             fallback={item?.symbol ? <FallBackImage width={36} height={36} symbol={item?.symbol} /> : ''}
@@ -191,7 +192,6 @@ const SelectTokens: FC<Iprops> = (props) => {
         </AutoSizer>
       </List>
     </CenterPopup>
-    {/* <div>1222</div> */}
   </div>
 }
 export default SelectTokens

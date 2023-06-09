@@ -18,7 +18,7 @@ const StatusDialog: FC<Iprops> = (props) => {
   const isOpen = useMemo(() => {
     if(!!swapContext?.globalDialogMessage?.type && swapContext?.globalDialogMessage?.type !== 'pending') {
       logEvent(analytics, `swap_${swapContext?.globalDialogMessage?.type}`, {
-        error_message: swapContext?.globalDialogMessage?.description || `swap-${swapContext?.globalDialogMessage?.type}-message` 
+        error_message: `${swapContext?.globalDialogMessage?.description}=>statusDialog` || `swap-${swapContext?.globalDialogMessage?.type}-message` 
       })
     }
 
