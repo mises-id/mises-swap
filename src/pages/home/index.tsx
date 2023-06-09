@@ -124,8 +124,8 @@ const Home = () => {
         return tokenList
 
       } catch (error: any) {
-        logEvent(analytics, `swap_error`, {
-          error_message: error.reason || error.message || 'Unknown error'
+        logEvent(analytics, 'swap_error', {
+          error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
         setFalse()
         return tokenList

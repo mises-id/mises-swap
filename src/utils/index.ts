@@ -94,7 +94,7 @@ export function formatErrorMessage(error: any, message: string) {
     description: string
   } = {
     type: 'error',
-    description: message || 'Unknown error'
+    description: error.shortMessage || message || 'Unknown error'
   }
 
   if(error.name === 'TransactionExecutionError') {

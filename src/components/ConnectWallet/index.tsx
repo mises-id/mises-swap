@@ -83,7 +83,7 @@ const ConnectWallet: FC<IProps> = (props) => {
     }
     swapContext?.setGlobalDialogMessage({
       type: 'error',
-      description: 'Failed to connect to the wallet, please refresh the page'
+      description: `Failed to connect to the wallet, please refresh the page=>platform:${isIOS() ? 'IOS' : 'Android'}`
     })
     
     console.log('reloadPage-getEthereum', window.ethereum)

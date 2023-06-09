@@ -226,7 +226,7 @@ const Quote: FC<Iprops> = (props) => {
                 </div>}
 
                 <div className='flex items-center justify-between'>
-                  <span className='swap-detail-label'>Mises fee</span>
+                  <span className='swap-detail-label'>Routing fee</span>
                   <span className='swap-detail-value'>{props.data.fee}%</span>
                 </div>
 
