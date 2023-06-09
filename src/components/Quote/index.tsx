@@ -150,7 +150,7 @@ const Quote: FC<Iprops> = (props) => {
   const [errorMessage, seterrorMessage] = useState('')
   const submitChange = () => {
     if(receivingAddress){
-      const isAddress = ethers.utils.isAddress(receivingAddress)
+      const isAddress = ethers.isAddress(receivingAddress)
       if(isAddress){
         swapContext?.setReceivingAddress(receivingAddress as address)
         setReceivingAddress('')

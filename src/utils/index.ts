@@ -6,11 +6,11 @@ export function nowSec(): number {
 }
 
 export function parseAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.utils.parseUnits(value, unitName).toString()
+  return ethers.parseUnits(value, unitName).toString()
 }
 
 export function formatAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.utils.formatUnits(value, unitName).toString()
+  return ethers.formatUnits(value, unitName).toString()
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
