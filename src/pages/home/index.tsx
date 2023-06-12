@@ -320,7 +320,10 @@ const Home = () => {
           if (getBalanceAddress !== nativeTokenAddress) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
-
+            if(allowance.data.allowance && BigNumber(allowance.data.allowance).comparedTo(BigNumber(10).pow(20))>-1) {
+              swapContext?.setStatus(99999)
+              return 
+            }
             const comparedAllowance = BigNumber(formatAmount(allowance.data.allowance, fromToken?.decimals)).comparedTo(quoteType === 'from' ? amount : toTokenAmount)
 
             swapContext?.setStatus(comparedAllowance === -1 ? 9 : 99999)
@@ -332,6 +335,7 @@ const Home = () => {
         return
       }
     } catch (error: any) {
+      console.log(error, '1111')
       if (error.message && error.message === "timeout of 5000ms exceeded") {
         swapContext?.setStatus(12)
       } else {

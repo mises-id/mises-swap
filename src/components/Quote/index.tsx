@@ -136,6 +136,7 @@ const Quote: FC<Iprops> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
   const [editAddress, seteditAddress] = useState(false)
+  const [baseRoutingStatus] = useState(false)
 
   const showEditAddressDialog = () => {
     seteditAddress(true)
@@ -249,7 +250,7 @@ const Quote: FC<Iprops> = (props) => {
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Best routing</span>
                   <div className='flex items-center gap-2' onClick={()=>{
-                    
+                    // setBaseRoutingStatus(true)
                   }}>
                     <Image
                         width={20}
@@ -283,6 +284,12 @@ const Quote: FC<Iprops> = (props) => {
           <div className='flex dialog-btns'>
             <span className='flex-1' onClick={()=>seteditAddress(false)}>Cancel</span>
             <span className='flex-1' onClick={submitChange}>Confirm</span>
+          </div>
+        </CenterPopup>
+        <CenterPopup visible={baseRoutingStatus} className="dialog-container">
+          <p className='base-routing-title'>selected the base routing for you.</p>
+          <div className='base-routing-list'>
+
           </div>
         </CenterPopup>
       </div> : <></>
