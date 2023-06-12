@@ -35,26 +35,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const [isSetedMax, setIsSetedMax] = useState(false)
 
   const { chain } = useNetwork()
-  // const getBalanceFn = useCallback(async () => {
-  //     const { tokenAddress } = props
-  //     setIsSetedMax(false)
-  //     if (tokenAddress && address && chain?.id && props.tokens?.length) {
-  //       // const res = await getBalance(tokenAddress as address, address, chain)
-  //       // if (res) {
-  //       //   const num = Number(res.formatted) === 0 ? '0' : substringAmount(res.formatted)
-  //       //   return num
-  //       // }
-  //       const findToken = props.tokens.find(val=>val.address === tokenAddress)
-  //       if(findToken){
-  //         console.log(findToken)
-  //         return findToken.balance ? formatAmount(findToken.balance) : 0
-  //       }
-  //     }
-  //     return '0'
-  //   },
-  //   // eslint-disable-next-line
-  //   [props.tokens, props.tokenAddress],
-  // )
+  
   const tokenBalance = useMemo(()=> {
     if (props.tokenAddress && address && chain?.id && props.tokens?.length) {
       // setIsSetedMax(false)
@@ -70,29 +51,8 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     }
   }, [address, props.tokenAddress, chain?.id])
   
-  
-  // const { data: tokenBalance, loading, refresh } = useRequest(getBalanceFn,{
-  //   manual: false,
-  //   retryCount: 3,
-  //   debounceWait: 550,
-  //   refreshDeps: [address, props.tokenAddress, chain?.id]
-  // })
-
-  // useEffect(() => {
-  //   cancel()
-  //   refresh()
-  //   // eslint-disable-next-line
-  // }, [address, props.tokenAddress, chain?.id])
-
   const { ...inputProps } = props
 
-  // useImperativeHandle(
-  //   ref,
-  //   () => ({
-  //     getBalanceFn: ()=>{}
-  //   })
-  // )
-  
   const toMax = async () => {
     if(chain?.id){
       setIsSetedMax(true)
@@ -119,21 +79,6 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
     return props.tokenAddress && address && BigNumber(tokenBalance || 0).comparedTo(gasFee) > -1
   }, [props.tokenAddress, address, tokenBalance, chain?.id])
-
-  // const fetchUSDFn = async () => {
-  //   if(props.tokenAddress && props.tokens?.length){
-  //     const token = props.tokens.find(token=> token.address === props.tokenAddress)
-  //     if(token) {
-  //       return await fetchUSD(token.symbol)
-  //     }
-  //   }
-  // }
-  // const { data: USDprice, loading: USDloading } = useRequest(fetchUSDFn, {
-  //   manual: false,
-  //   retryCount: 3,
-  //   debounceWait: 550,
-  //   refreshDeps: [props.tokenAddress]
-  // })
   
   const priceValue = useMemo(() => {
     const token = props.tokens?.find(val=>val.address === props.tokenAddress)
