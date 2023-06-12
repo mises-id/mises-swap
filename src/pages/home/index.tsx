@@ -24,6 +24,7 @@ import Notification from "@/components/Notification";
 import ConnectWallet from "@/components/ConnectWallet";
 import { chainList } from "@/App";
 import { useNavigate } from "react-router-dom";
+import PriceImpact from "@/components/PriceImpact";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
 const Home = () => {
@@ -1037,6 +1038,8 @@ const Home = () => {
         </div>
 
         <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
+
+        <PriceImpact tokens={tokens} verifyShow />
 
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 

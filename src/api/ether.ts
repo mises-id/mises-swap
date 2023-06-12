@@ -49,7 +49,7 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
       const decimals = await tokenContract.decimals()
       return {
         value: balance,
-        formatted: formatAmount(BigNumber(balance.toNumber()).toString(), decimals)
+        formatted: formatAmount(BigNumber(balance.toString()).toString(), decimals)
       }
     } catch (error) {
       return Promise.reject(error);

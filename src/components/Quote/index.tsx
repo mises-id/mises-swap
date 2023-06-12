@@ -9,6 +9,7 @@ import { ethers } from 'ethers';
 import { useAccount, useWalletClient } from 'wagmi';
 import { chainList } from '@/App';
 import FallBackImage from '../Fallback';
+import PriceImpact from '../PriceImpact';
 interface Iprops {
   loading: boolean;
   data: swapData | undefined
@@ -174,11 +175,11 @@ const Quote: FC<Iprops> = (props) => {
   // const {chain} = useNetwork()
 
   const height = useMemo(() =>  {
-    if(showDetail){
-      if(swapContext?.receivingAddress || address) return 196
-      return 144
-    }
-    return 0
+    if(!showDetail) return 0
+
+    if(swapContext?.receivingAddress || address) return 230
+    
+    return 170
   }, [showDetail,swapContext?.receivingAddress,address ])
 
   return (
@@ -220,6 +221,9 @@ const Quote: FC<Iprops> = (props) => {
                     {props.status !== 'ready' ? <EditSOutline className='edit ml-5'/> : ''}
                   </div>
                 </div>}
+
+                <PriceImpact tokens={props.tokens} />
+
                 {networkFee && <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Network fee</span>
                   <span className='swap-detail-value'>~${networkFee}</span>
