@@ -169,6 +169,10 @@
   margin-bottom:8px;
 }
 
+.mb-10{
+  margin-bottom:10px;
+}
+
 .mb-20{
   margin-bottom:20px;
 }
@@ -177,8 +181,16 @@
   margin-bottom:40px;
 }
 
+.mb-5{
+  margin-bottom:5px;
+}
+
 .ml-10{
   margin-left:10px;
+}
+
+.ml-4{
+  margin-left:4px;
 }
 
 .ml-5{
@@ -197,24 +209,16 @@
   margin-top:20px;
 }
 
-.mb-10{
-  margin-bottom:10px;
-}
-
-.ml-4{
-  margin-left:4px;
-}
-
-.mb-5{
-  margin-bottom:5px;
-}
-
 .block{
   display:block;
 }
 
 .flex{
   display:flex;
+}
+
+.table{
+  display:table;
 }
 
 .h-14{
@@ -225,16 +229,12 @@
   height:100vh;
 }
 
-.h-50{
-  height:50px;
-}
-
-.h-40{
-  height:40px;
-}
-
 .w-auto{
   width:auto;
+}
+
+.w-full{
+  width:100%;
 }
 
 .flex-1{
@@ -247,6 +247,14 @@
 
 .flex-grow{
   flex-grow:1;
+}
+
+.table-auto{
+  table-layout:auto;
+}
+
+.border-collapse{
+  border-collapse:collapse;
 }
 
 .cursor-pointer{
@@ -303,23 +311,6 @@
   border-radius:4px;
 }
 
-.border-t{
-  border-top-width:1px;
-}
-
-.border-r{
-  border-right-width:1px;
-}
-
-.border-solid{
-  border-style:solid;
-}
-
-.border-gray-100{
-  --tw-border-opacity:1;
-  border-color:rgb(243 244 246 / var(--tw-border-opacity));
-}
-
 .p-10{
   padding:10px;
 }
@@ -352,20 +343,27 @@
   padding-bottom:20px;
 }
 
+.px-16{
+  padding-left:16px;
+  padding-right:16px;
+}
+
+.py-5{
+  padding-top:5px;
+  padding-bottom:5px;
+}
+
+.py-40{
+  padding-top:40px;
+  padding-bottom:40px;
+}
+
 .pr-12{
   padding-right:12px;
 }
 
 .pt-20{
   padding-top:20px;
-}
-
-.pb-10{
-  padding-bottom:10px;
-}
-
-.pt-10{
-  padding-top:10px;
 }
 
 .text-left{
@@ -404,28 +402,22 @@
   line-height:20px;
 }
 
-.text-base{
-  font-size:15px;
-  line-height:21px;
+.text-22{
+  font-size:22px;
 }
 
 .font-bold{
   font-weight:700;
 }
 
-.text-gray-50{
+.text-blue-600{
   --tw-text-opacity:1;
-  color:rgb(249 250 251 / var(--tw-text-opacity));
+  color:rgb(37 99 235 / var(--tw-text-opacity));
 }
 
 .text-gray-500{
   --tw-text-opacity:1;
   color:rgb(107 114 128 / var(--tw-text-opacity));
-}
-
-.text-blue-600{
-  --tw-text-opacity:1;
-  color:rgb(37 99 235 / var(--tw-text-opacity));
 }
 
 .shadow-lg{

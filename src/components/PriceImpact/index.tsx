@@ -49,7 +49,7 @@ const PriceImpact: FC<IProps> = (props)=> {
       </div>} trigger='click'>
       <div className={`flex items-center justify-between ${props.verifyShow ? 'home-show' : ''}`}>
         <span className='swap-detail-label'>Price Impact</span>
-        {priceImpactValue && <span className='swap-detail-value'>-{ priceImpactValue.toFixed(2) || ''}%</span>}
+        {priceImpactValue && <span className='swap-detail-value'>-{priceImpactValue.toFixed(2) || ''}%</span>}
       </div>
     </Popover> : <></>
   )
