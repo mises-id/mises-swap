@@ -175,12 +175,12 @@ const Home = () => {
     try {
       const cacheTokens = sessionStorage.getItem('tokenList')
       let tokenList: token[] = []
-      if (cacheTokens) {
+      if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
       } else {
         const res = await getTokens<{ "data": token[] }>()
         if (res) {
-          tokenList = res.data.data
+          tokenList = res.data.data || []
           sessionStorage.setItem('tokenList', JSON.stringify(tokenList))
         } else {
           tokenList = []
