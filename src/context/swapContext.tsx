@@ -96,26 +96,20 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
 
-  const createRemoveTask = (hash: string) =>{
-    const timeoutFn = setTimeout(() => {
-      const findItemIndex = notification.findIndex(val=>val.hash === hash)
-
-      if(findItemIndex > -1){
-        removeNotificationData(findItemIndex)
-      }
-    }, 4000);
+  const createRemoveTask = () =>{
+    const timeoutFn = setTimeout(removeNotificationData, 4000);
     settimeout(timeoutFn)
   }
 
   const pushNotificationData = (params: notificationData) => {
-    notification.push(params)
-    setNotification([...notification])
-    createRemoveTask(params.hash)
+    // notification.push(params)
+    setNotification([params])
+    createRemoveTask()
   }
 
-  const removeNotificationData = (index: number) => {
-    notification.splice(index, 1)
-    setNotification([...notification])
+  const removeNotificationData = () => {
+    // notification.splice(index, 1)
+    setNotification([])
     if(timeout) {
       clearTimeout(timeout)
       settimeout(undefined)
