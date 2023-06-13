@@ -4,7 +4,7 @@ import { formatAmount, shortenAddress, substringAmount } from '@/utils';
 import BigNumber from 'bignumber.js';
 import { DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { SwapContext, defaultSlippageValue } from '@/context/swapContext';
-import { CenterPopup, Image, TextArea } from 'antd-mobile';
+import { CenterPopup, ErrorBlock, Image, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
 import { useAccount, useWalletClient } from 'wagmi';
 import { chainList } from '@/App';
@@ -136,6 +136,7 @@ const Quote: FC<Iprops> = (props) => {
 
   const [isOpen, setisOpen] = useState(false)
   const [editAddress, seteditAddress] = useState(false)
+  const [baseRoutingStatus, setBaseRoutingStatus] = useState(false)
 
   const showEditAddressDialog = () => {
     seteditAddress(true)
@@ -181,6 +182,10 @@ const Quote: FC<Iprops> = (props) => {
     
     return 170
   }, [showDetail,swapContext?.receivingAddress,address ])
+
+  const aggList = useMemo(() => {
+    return [] as swapData[]
+  }, [])
 
   return (
     (props.loading || props.data) ?
@@ -248,7 +253,10 @@ const Quote: FC<Iprops> = (props) => {
               <div className='advanced-swap-details'>
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Best routing</span>
-                  <div className='flex items-center gap-2' onClick={()=>{
+                  <div className='flex items-center gap-2 cursor-pointer' onClick={()=>{
+                    if(aggList.length>1) {
+                      setBaseRoutingStatus(true)
+                    }
                     
                   }}>
                     <Image
@@ -283,6 +291,36 @@ const Quote: FC<Iprops> = (props) => {
           <div className='flex dialog-btns'>
             <span className='flex-1' onClick={()=>seteditAddress(false)}>Cancel</span>
             <span className='flex-1' onClick={submitChange}>Confirm</span>
+          </div>
+        </CenterPopup>
+        <CenterPopup visible={baseRoutingStatus} className="dialog-container" showCloseButton onClose={()=>setBaseRoutingStatus(false)}>
+          <p className='base-routing-title'>Selected the base routing for you.</p>
+          <div>
+            {aggList.length ? <div className='flex items-center gap-4 py-10 base-routing-table-header px-16'>
+              <span className='flex-1'>Dex</span>
+              <span className='flex-1'>{swapContext?.swapToData.symbol}Quantity(Est.)</span>
+              <span>Difference</span>
+            </div> : null}
+            <div className='base-routing-table-content'>
+              {aggList.map((agg, index) =>{
+                return <div key={index} className='flex items-center gap-4 py-10 px-16'>
+                <div className='flex-1 flex items-center gap-2'>
+                  <Image
+                    src={agg.aggregator.logo}
+                    style={{ borderRadius: 20 }}
+                    // placeholder=""
+                    fit='cover'
+                    width={16}
+                    height={16}
+                  />
+                  <span>{agg.aggregator.name}</span>
+                </div>
+                <span className='flex-1'>{agg.to_token_amount}</span>
+                <span style={{width: 50}} className='text-right'>{index === 0 ? 'optimal' : `${agg.fee}%`}</span>
+              </div>
+              })}
+              {aggList.length === 0 && <div className='py-40'><ErrorBlock status='empty' description="" /></div>}
+            </div>
           </div>
         </CenterPopup>
       </div> : <></>
