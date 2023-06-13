@@ -14,8 +14,8 @@ const PriceImpact: FC<IProps> = (props)=> {
 
   const priceImpactValue = useMemo(() => {
     const tokens = props.tokens
-    const fromAmount = swapContext?.fromAmount
-    const fromTokenData = swapContext?.swapFromData
+    const fromAmount = swapContext?.currentSwitchType === 'from' ? swapContext?.fromAmount : swapContext?.toAmount
+    const fromTokenData = swapContext?.currentSwitchType === 'from' ? swapContext?.swapFromData : swapContext?.swapToData
     const fromToken = props.tokens?.find(val=>val.address === fromTokenData?.tokenAddress)
 
     let fromTokenPrice = 0
@@ -24,8 +24,8 @@ const PriceImpact: FC<IProps> = (props)=> {
       fromTokenPrice = BigNumber(fromAmount).multipliedBy(fromToken?.price).toNumber();
     }
 
-    const toTokenData = swapContext?.swapToData
-    const toAmount = swapContext?.toAmount
+    const toTokenData = swapContext?.currentSwitchType === 'from' ? swapContext?.swapToData : swapContext?.swapFromData
+    const toAmount =  swapContext?.currentSwitchType === 'from' ?  swapContext?.toAmount : swapContext?.fromAmount
     const toToken = tokens?.find(val=>val.address === toTokenData?.tokenAddress)
 
     let toTokenPrice = 0
@@ -34,11 +34,16 @@ const PriceImpact: FC<IProps> = (props)=> {
     }
 
     if(fromTokenPrice && toTokenPrice) {
-      return BigNumber(1).minus(BigNumber(toTokenPrice).dividedBy(fromTokenPrice)).times(100).toNumber()
+      const priceImpactValue = BigNumber(1).minus(BigNumber(toTokenPrice).dividedBy(fromTokenPrice)).times(100)
+      if(priceImpactValue.abs().comparedTo(100) === 1) return 100
+      if(priceImpactValue.comparedTo(0) === -1) {
+        return priceImpactValue.abs().toNumber()
+      }
+      return priceImpactValue.toNumber()
     }
 
     return 0
-  }, [props.tokens, swapContext?.fromAmount, swapContext?.toAmount, swapContext?.swapFromData, swapContext?.swapToData])
+  }, [props.tokens, swapContext?.currentSwitchType, swapContext?.fromAmount, swapContext?.toAmount, swapContext?.swapFromData, swapContext?.swapToData])
 
   const isShow = useMemo(()=>{
     if((props.verifyShow && priceImpactValue > 15) || !props.verifyShow) return true

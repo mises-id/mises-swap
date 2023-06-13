@@ -63,7 +63,7 @@ const Home = () => {
   // const [toAmount, setToAmount] = useState('')
   const { address, isConnected } = useAccount()
   // const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
-  const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
+  // const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
   // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
@@ -774,7 +774,7 @@ const Home = () => {
 
     if (toTokenAddress && fromTokenAddress) {
       run(toTokenAddress, fromTokenAddress, value, 'to')
-      setcurrentSwitchType('to')
+      swapContext?.setcurrentSwitchType('to')
     }
   }
 
@@ -784,7 +784,7 @@ const Home = () => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (toTokenAddress && fromTokenAddress) {
-      setcurrentSwitchType('from')
+      swapContext?.setcurrentSwitchType('from')
       run(fromTokenAddress, toTokenAddress, value, 'from')
     }
   }
@@ -886,17 +886,17 @@ const Home = () => {
       const toAmount = swapContext.toAmount
       cancel()
 
-      currentSwitchType === 'from' ?
+      swapContext.currentSwitchType === 'from' ?
         run(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, 'to') :
         run(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, 'from')
-      if (currentSwitchType === 'from') {
-        console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, currentSwitchType)
+      if (swapContext.currentSwitchType === 'from') {
+        console.log(swapFromData.tokenAddress, swapToData.tokenAddress, swapContext.fromAmount, swapContext.currentSwitchType)
       } else {
-        console.log(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, currentSwitchType)
+        console.log(swapToData.tokenAddress, swapFromData.tokenAddress, toAmount, swapContext.currentSwitchType)
       }
 
 
-      setcurrentSwitchType(currentSwitchType === 'from' ? 'to' : 'from')
+      swapContext.setcurrentSwitchType(swapContext.currentSwitchType === 'from' ? 'to' : 'from')
 
       swapContext.setToAmount(swapContext.fromAmount)
       swapContext?.setFromAmount(toAmount)
