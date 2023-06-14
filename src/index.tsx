@@ -13,6 +13,8 @@ import reportWebVitals from './reportWebVitals';
 import './locales'
 
 import * as Sentry from "@sentry/react";
+import VConsole from 'vconsole';
+import { isIOS } from './utils';
 
 Sentry.init({
   enabled: process.env.NODE_ENV==='production',
@@ -26,7 +28,9 @@ Sentry.init({
   tracesSampleRate: 1.0,
   ignoreErrors:['UnhandledRejection'],
 });
-
+if(process.env.REACT_APP_NODE_ENV !== 'production' && isIOS()) {
+  new VConsole();
+}
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
