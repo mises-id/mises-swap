@@ -13,6 +13,11 @@
       --background-color: #000000;
       --icon-color: rgb(152, 161, 192)
     }
+    .dialog-container .adm-center-popup-wrap >div{
+      border: 1px solid rgba(152, 161, 192, 0.24);
+      border-radius: 12px;
+      overflow: hidden;
+    }
   }
   @media (prefers-color-scheme: light) {
     :root:root{
@@ -21,6 +26,11 @@
       --theme-text-color: #0d111c;
       --background-color: #ffffff;
       --icon-color: #7780a0
+    }
+    .dialog-container:not(.down-dialog-style) .adm-center-popup-wrap >div{
+      border: 1px solid rgb(210, 217, 238);
+      border-radius: 12px;
+      overflow: hidden;
     }
   }
   body{
@@ -77,7 +87,7 @@ body,html,#root,.App{
 }
 
 @media screen and (max-width:400px){
-  .dialog-container{
+  .dialog-container:not(.down-dialog-style){
     --min-width: 90vw;
   }
   /* .mises-title{
@@ -86,6 +96,22 @@ body,html,#root,.App{
 
   .swap-title{
     font-size: 18px;
+  }
+  .down-dialog-style{
+    --min-width: 100vw;
+  }
+  .down-dialog-style .adm-center-popup-body{
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .down-dialog-style .adm-center-popup-wrap{
+    top: unset;
+    bottom: 0;
+    transform: unset;
+    left: 0;
+    z-index: 1000;
   }
 }
 @media screen and (min-width:401px){

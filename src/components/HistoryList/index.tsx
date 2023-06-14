@@ -88,7 +88,7 @@ const HistoryList: FC<IProps> = (props) => {
         }
         extra={
           <div className='pr-12 text-right'>
-            <p className='from-amount'>-{formatAmount(item.from_token_amount, item.from_token.decimals)} {item.from_token.symbol}</p>
+            <p className='from-amount'>-{substringAmount(formatAmount(item.from_token_amount, item.from_token.decimals))} {item.from_token.symbol}</p>
             <p className='to-amount'>+{substringAmount(formatAmount(item.to_token_amount, item.to_token.decimals))} {item.to_token.symbol}</p>
           </div>
         }

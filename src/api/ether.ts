@@ -30,7 +30,7 @@ export interface BalanceMap {
 
 // get token balance
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
-  if (tokenAddress === nativeTokenAddress && address) {
+  if (tokenAddress.toLocaleLowerCase() === nativeTokenAddress.toLocaleLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
     const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
     if(getWalletBalance) {
@@ -155,7 +155,22 @@ const chainList = [{
   "id": "zksync",
   "chain_identifier": 324,
   "name": "zkSync",
-  "shortname": ""
+  "shortname": "zks"
+},{
+  "id": "okex-chain",
+  "chain_identifier": 66,
+  "name": "OKExChain",
+  "shortname": "OKEx"
+},{
+  "id": "ethereumpow",
+  "chain_identifier": 10001,
+  "name": "EthereumPoW",
+  "shortname": "ethw"
+},{
+  "id": "conflux",
+  "chain_identifier": 1030,
+  "name": "Conflux",
+  "shortname": "conflux"
 }]
 
 export async function fetchUSDList(chainId: number, contract_addresses: string) {

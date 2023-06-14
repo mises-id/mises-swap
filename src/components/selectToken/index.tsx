@@ -110,7 +110,7 @@ const SelectTokens: FC<Iprops> = (props) => {
       <List.Item
         key={key}
         style={style}
-        className={toTokenAddress === item?.address || fromTokenAddress === item?.address ? 'selected-item' : ''}
+        className={toTokenAddress?.toLowerCase() === item?.address.toLowerCase() || fromTokenAddress?.toLowerCase() === item?.address.toLowerCase() ? 'selected-item' : ''}
         arrow={false}
         onClick={() => selectToken(item)}
         prefix={
@@ -128,7 +128,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         extra={
           <div className='token-balance'>
             <span>{substringAmount(item.balance) || 0}</span>
-            {tokenAddress === item?.address && <CheckOutline className='selected-icon' />}
+            {tokenAddress?.toLowerCase() === item?.address.toLowerCase() && <CheckOutline className='selected-icon' />}
           </div>
         }
       >

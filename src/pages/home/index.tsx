@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import PriceImpact from "@/components/PriceImpact";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
+const connotUseChainId = [100, 8217, 1313161554, 324, 10001, 1030, 66]
 const Home = () => {
   // firebase
   const analytics = useAnalytics()
@@ -82,11 +83,11 @@ const Home = () => {
       console.log('call balances')
       setTrue()
 
-      if([100, 8217, 1313161554, 324].includes(chain.id)) {
+      if(connotUseChainId.includes(chain.id)) {
         if(swapContext?.swapFromData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
         }
@@ -94,7 +95,7 @@ const Home = () => {
         if(swapContext?.swapToData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
             console.log(balance?.value.toString())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
@@ -106,7 +107,7 @@ const Home = () => {
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
       const tokensToDetect = tokenList.map((val: token) => {
-        const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
+        const tokenAddress = val.address.toLocaleLowerCase() === nativeTokenAddress.toLocaleLowerCase() ? nativeTokenOtherAddress : val.address
         return tokenAddress.toLocaleLowerCase()
       })
 
@@ -114,8 +115,8 @@ const Home = () => {
         const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
         for (const key in data) {
           const balance = data[key];
-          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress ? nativeTokenAddress : `${key}`;
-          const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
+          const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
           if (tokenIndex > -1) {
             tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
             // console.log(tokenList[tokenIndex], tokenAddress, key)
@@ -179,7 +180,10 @@ const Home = () => {
       let tokenList: token[] = []
       if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
-      } else {
+        const hasChainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
+        if(hasChainTokenList.length === 0) tokenList = []
+      }
+      if(tokenList.length===0) {
         const res = await getTokens<{ "data": token[] }>()
         if (res) {
           tokenList = res.data.data || []
@@ -188,6 +192,7 @@ const Home = () => {
           tokenList = []
         }
       }
+      
 
       const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
       // const now = new Date().getTime()
@@ -232,8 +237,8 @@ const Home = () => {
   const cacheTime = 10000
   const renderTokenPrice = (fromTokenAddr: string, toTokenAddr: string) =>{
     if(!tokens) return
-    const fromToken = tokens.find(val=>val.address === fromTokenAddr)
-    const toToken = tokens.find(val=>val.address === toTokenAddr)
+    const fromToken = tokens.find(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
+    const toToken = tokens.find(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
     const contract_addresses = []
     const now = new Date().getTime()
 
@@ -246,7 +251,7 @@ const Home = () => {
       const toTokenToUsd = res[toTokenAddr]
 
       if(formTokenToUsd) {
-        const fromTokenIndex = tokens.findIndex(val=>val.address === fromTokenAddr)
+        const fromTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
         const last_updated_at = formTokenToUsd.last_updated_at
         if(fromTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[fromTokenIndex].price = formTokenToUsd.usd
@@ -255,7 +260,7 @@ const Home = () => {
       }
 
       if(toTokenToUsd) {
-        const toTokenIndex = tokens.findIndex(val=>val.address === toTokenAddr)
+        const toTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
         const last_updated_at = toTokenToUsd.last_updated_at
         if(toTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[toTokenIndex].price = toTokenToUsd.usd
@@ -278,20 +283,33 @@ const Home = () => {
 
     try {
       renderTokenPrice(fromTokenAddr, toTokenAddr)
-      const res = await getQuote<{ data: swapData[] }, quoteParams>({
+      const res = await getQuote<{ data: {
+        all_quote: swapData[],
+        error: string,
+        BestQuote: swapData
+      } }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddr,
         to_token_address: toTokenAddr,
         amount: parseAmountStr
       })
-      if (res.data.data.length) {
-        const [firstTrade] = res.data.data
+      const result = res.data.data
+      if(result.error) {
+        swapContext?.setStatus(result.error)
+        swapContext?.setquoteData(undefined)
+        return
+      }
+      const firstTrade = result.BestQuote
+      if (firstTrade) {
         if (firstTrade.error) {
           swapContext?.setStatus(firstTrade.error)
           swapContext?.setquoteData(undefined)
           return
         }
-        swapContext?.setquoteData(firstTrade)
+        swapContext?.setquoteData({
+          bestQuote: firstTrade,
+          allQuotes: result.all_quote
+        })
 
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
@@ -319,7 +337,7 @@ const Home = () => {
             return res
           }
 
-          if (getBalanceAddress !== nativeTokenAddress) {
+          if (getBalanceAddress.toLocaleLowerCase() !== nativeTokenAddress.toLocaleLowerCase()) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
             if(allowance.data.allowance && BigNumber(allowance.data.allowance).comparedTo(BigNumber(10).pow(20))>-1) {
@@ -335,6 +353,9 @@ const Home = () => {
           }
         }
         return
+      }else {
+        swapContext?.setStatus('No payment channel found')
+        swapContext?.setquoteData(undefined)
       }
     } catch (error: any) {
       console.log(error, '1111')
@@ -401,10 +422,10 @@ const Home = () => {
 
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
-    if (!tokenAddress && tokenAddress !== nativeTokenAddress) return
+    if (!tokenAddress || tokenAddress.toLocaleLowerCase() !== nativeTokenAddress.toLocaleLowerCase()) return
 
     try {
-      const contract_address = swapContext?.quoteData?.aggregator?.contract_address
+      const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
         setapproveLoading(true)
         const result = await getAllowance(tokenAddress, contract_address)
@@ -514,7 +535,7 @@ const Home = () => {
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
-      const aggregatorAddress = swapContext?.quoteData?.aggregator.contract_address
+      const aggregatorAddress = swapContext?.quoteData?.bestQuote.aggregator.contract_address
 
       if (!aggregatorAddress) {
         swapContext?.setGlobalDialogMessage({
@@ -793,7 +814,7 @@ const Home = () => {
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
     if (tokens?.length || paramsTokenList?.length) {
       const tokenList = paramsTokenList || tokens || []
-      const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+      const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
       if (tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
@@ -827,11 +848,11 @@ const Home = () => {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapFromData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
         if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
           settokens([...tokens])
         }
@@ -861,12 +882,12 @@ const Home = () => {
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapToData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
         console.log('get to balance')
         if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
           settokens([...tokens])
         }
@@ -1084,26 +1105,27 @@ const Home = () => {
         {/* <Button onClick={()=>{
           resetInputData()
               }}>reset</Button> */}
+
+        <FloatingBubble
+          style={{
+            '--initial-position-bottom': '24px',
+            '--initial-position-right': '24px',
+            '--edge-distance': '24px',
+          }}
+          axis="lock"
+          onClick={()=>{
+            navigate('/helpcenter')
+            resetInputData()
+            swapContext?.setswapToData({
+              tokenAddress: ''
+            })
+          }}
+        >
+          <MessageFill fontSize={32} />
+        </FloatingBubble>
       </div >
       <Notification />
     </div>
-    <FloatingBubble
-      style={{
-        '--initial-position-bottom': '24px',
-        '--initial-position-right': '24px',
-        '--edge-distance': '24px',
-      }}
-      axis="lock"
-      onClick={()=>{
-        navigate('/helpcenter')
-        resetInputData()
-        swapContext?.setswapToData({
-          tokenAddress: ''
-        })
-      }}
-    >
-      <MessageFill fontSize={32} />
-    </FloatingBubble>
   </div>
 };
 export default Home;

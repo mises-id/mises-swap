@@ -10,7 +10,7 @@ export function parseAmount(value: string, unitName?: BigNumberish): string {
 }
 
 export function formatAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.formatUnits(value, unitName).toString()
+  return ethers.formatUnits(value || 0, unitName).toString()
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
@@ -31,7 +31,7 @@ export function shortenAddress(
 }
 
 export function findToken(tokens: token[], address: string): token | undefined {
-  return tokens.find(token => token.address === address) || undefined;
+  return tokens.find(token => token.address.toLocaleLowerCase() === address.toLocaleLowerCase()) || undefined;
 }
 
 export function networkFee(gasPrice: string, estimatedGas: string): string {

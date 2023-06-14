@@ -47,5 +47,7 @@ interface swapData {
   error: string
   fetch_time: string
   trade?: trade | null
-  fee: number
+  fee: number,
+  to_token_format_amount?: string
+  compare_percent?: string
 }

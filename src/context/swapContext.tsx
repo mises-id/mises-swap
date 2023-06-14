@@ -27,6 +27,10 @@ export interface notificationData {
   description?: string | undefined,
   icon?: () => JSX.Element,
 }
+export interface quoteData {
+  allQuotes: swapData[],
+  bestQuote: swapData,
+}
 export type SwapContextType = {
   swapToData: swapTokenData,
   setswapToData: Dispatch<SetStateAction<swapTokenData>>
@@ -50,8 +54,8 @@ export type SwapContextType = {
   removeNotificationData: (index: number) => void,
   chainId: number, 
   setChainId: Dispatch<SetStateAction<number>>,
-  quoteData: swapData | undefined, 
-  setquoteData: Dispatch<SetStateAction<swapData | undefined>>,
+  quoteData: quoteData | undefined, 
+  setquoteData: Dispatch<SetStateAction<quoteData | undefined>>,
   pageStatus: 'default' | 'reset', 
   setPageStatus: Dispatch<SetStateAction<'default' | 'reset'>>,
   currentSwitchType: 'from' | 'to', 
@@ -88,7 +92,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   
   const [notification, setNotification] = useState<notificationData[]>([])
 
-  const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
+  const [quoteData, setquoteData] = useState<quoteData | undefined>(undefined)
 
   const [pageStatus, setPageStatus] = useState<'default' | 'reset'>('default')
 

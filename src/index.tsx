@@ -28,12 +28,15 @@ Sentry.init({
   tracesSampleRate: 1.0,
   ignoreErrors:['UnhandledRejection'],
 });
-if(process.env.REACT_APP_NODE_ENV !== 'production' && isIOS()) {
+
+if(process.env.REACT_APP_NODE_ENV === 'test' && isIOS()) {
   new VConsole();
 }
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(<App />);
 
 // If you want to start measuring performance in your app, pass a function
