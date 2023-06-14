@@ -340,14 +340,14 @@ const Quote: FC<Iprops> = (props) => {
           <p className='base-routing-title'>Selected the base routing for you.</p>
           <div>
             {aggList.length ? <div className='flex items-center py-10 base-routing-table-header px-16'>
-              <span className='dex-item'>Dex</span>
+              <span className='dex-item flex-1'>Dex</span>
               <span className='est-item text-right'>{swapContext?.swapToData.symbol}Quantity(Est.)</span>
-              <span className='flex-1 text-right'>Difference</span>
+              <span className='difference text-right'>Difference</span>
             </div> : null}
             <div className='base-routing-table-content'>
               {aggList.map((agg, index) => {
                 return <div key={index} className='flex items-center py-10 px-16'>
-                  <div className='dex-item item-value flex items-center gap-2'>
+                  <div className='flex-1 dex-item item-value flex items-center gap-2'>
                     <Image
                       src={agg.aggregator.logo}
                       style={{ borderRadius: 20 }}
@@ -359,7 +359,7 @@ const Quote: FC<Iprops> = (props) => {
                     <span>{agg.aggregator.name}</span>
                   </div>
                   <span className='est-item item-value text-right'>{agg.to_token_format_amount}</span>
-                  <div className='flex-1 text-right'>
+                  <div className='difference text-right'>
                     <span className={index === 0 ? 'optimal' : 'other'}>
                       {index === 0 ? 'optimal' : `${agg.compare_percent && BigNumber(agg.compare_percent).toFixed(4)}%`}
                     </span>
