@@ -41,6 +41,7 @@ const Home = () => {
     const getTokens = await getTokenList()
     if (getTokens?.length) {
       accountChangeRun(getTokens)
+      console.log('run init')
       // const tokenList = await getTokenListBalance(getTokens)
 
       // settokens([...tokenList])
@@ -125,6 +126,7 @@ const Home = () => {
         return tokenList
 
       } catch (error: any) {
+        console.log('getBalancesInSingleCall error', error)
         logEvent(analytics, 'swap_error', {
           error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
