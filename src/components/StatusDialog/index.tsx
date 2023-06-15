@@ -75,7 +75,7 @@ const StatusDialog: FC<Iprops> = (props) => {
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={()=>{
       dismiss()
       swapContext?.globalDialogMessage?.type === 'success' && props.successClose?.()
-    }} className='dialog-container'>
+    }} className='dialog-container down-dialog-style'>
       {swapContext?.globalDialogMessage?.type === 'error' && <p className='status-dialog-title'>Error</p>}
       {swapContext?.globalDialogMessage?.type === 'cannotEstimate' && <p className='status-dialog-title'>Rate expired</p>}
 

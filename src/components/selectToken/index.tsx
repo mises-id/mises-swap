@@ -164,7 +164,7 @@ const SelectTokens: FC<Iprops> = (props) => {
         setopen(false)
         setsearchName('')
       }}
-      className="dialog-container">
+      className="dialog-container down-dialog-style">
       <div className='dialog-header-container'>
         <p className='dialog-title'>Select a token</p>
         <div className='search-input-container'>

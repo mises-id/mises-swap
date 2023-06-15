@@ -247,9 +247,8 @@ const Home = () => {
 
     if(contract_addresses.length === 0) return 
     fetchUSDList(chainId, contract_addresses.join(',')).then(res=>{
-      const formTokenToUsd = res[fromTokenAddr]
-      const toTokenToUsd = res[toTokenAddr]
-
+      const formTokenToUsd = res[fromTokenAddr.toLowerCase()]
+      const toTokenToUsd = res[toTokenAddr.toLowerCase()]
       if(formTokenToUsd) {
         const fromTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
         const last_updated_at = formTokenToUsd.last_updated_at

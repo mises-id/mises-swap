@@ -94,7 +94,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
       return '<$0.00000001'
     }
     // eslint-disable-next-line
-  }, [inputProps.value, props.tokenAddress])
+  }, [inputProps.value, props.tokenAddress, props.tokens])
 
 
   

@@ -189,7 +189,7 @@ const Quote: FC<Iprops> = (props) => {
 
     if (swapContext?.receivingAddress || address) {
       // if (canIUseFeat) return 230
-      if(props.data?.bestQuote.fee === 0) return 204
+      if(props.data?.bestQuote.fee === 0) return 144
       return 230
     }
 
@@ -369,7 +369,7 @@ const Quote: FC<Iprops> = (props) => {
               {aggList.length === 0 && <div className='py-40'><ErrorBlock status='empty' description="" /></div>}
             </div>
           </div>
-          <div className='text-center py-15 text-lg close-pop-style' onClick={() => setBaseRoutingStatus(false)}>Close</div>
+          <div className='text-center py-15 text-lg close-pop-style cursor-pointer' onClick={() => setBaseRoutingStatus(false)}>Close</div>
         </CenterPopup>
       </div> : <></>
   )

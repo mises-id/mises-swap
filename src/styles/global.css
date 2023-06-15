@@ -512,7 +512,7 @@ body,html,#root,.App{
   cursor: pointer;
 }
 
-@media screen and (max-width:400px){
+@media screen and (max-width:767px){
   .dialog-container:not(.down-dialog-style){
     --min-width: 90vw;
   }
@@ -546,7 +546,7 @@ body,html,#root,.App{
   }
 }
 
-@media screen and (min-width:401px){
+@media screen and (min-width:768px){
   .dialog-container{
     --min-width: 408px;
     --max-width: 408px;
