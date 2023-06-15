@@ -530,8 +530,8 @@ body,html,#root,.App{
   }
 
   .down-dialog-style .adm-center-popup-body{
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
   }

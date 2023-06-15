@@ -71,17 +71,16 @@ export function isMisesBrowser(): boolean {
   return window.misesWallet
 }
 
-export function substringAmount(amount: string | undefined): string | undefined{
+export function substringAmount(amount: string | undefined, maxLen: number = 6): string | undefined{
   if(!amount) {
     return amount
   }
 
-  const maxLen = 6;
 
   const subAmount = amount.split('.');
 
   if(subAmount[1]?.length > maxLen) {
-    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, maxLen)}`
     return returnAmount === '0.000000' ? '0.00000...' : returnAmount
   }
 

@@ -199,7 +199,7 @@ const Quote: FC<Iprops> = (props) => {
   const aggList = useMemo(() => {
     return props.data?.allQuotes.map(val => {
       const token = props.tokens?.find(item => val.to_token_address.toLowerCase() === item.address.toLowerCase())
-      if (token) val.to_token_format_amount = formatAmount(val.to_token_amount, token.decimals)
+      if (token) val.to_token_format_amount = substringAmount(formatAmount(val.to_token_amount, token.decimals), 8)
       // val.compare_percent = 
       return val
     }).filter(val => val.error === '') || []
