@@ -187,14 +187,19 @@ const Quote: FC<Iprops> = (props) => {
   const height = useMemo(() => {
     if (!showDetail) return 0
 
-    if (swapContext?.receivingAddress || address) {
-      // if (canIUseFeat) return 230
-      if(props.data?.bestQuote.fee === 0) return 144
-      return 230
-    }
+    const itemArr = [!!(swapContext?.receivingAddress || address), !!networkFee, props.data?.bestQuote.fee!==0, true, true, true].filter(val=>val)
 
-    return 170
-  }, [showDetail, swapContext?.receivingAddress, address, props.data?.bestQuote.fee])
+    return itemArr.length * 30 + 53
+    // if (swapContext?.receivingAddress || address) {
+    //   // if (canIUseFeat) return 230
+    //   if(props.data?.bestQuote.fee === 0 || !networkFee) return 170
+    //   return 230
+    // }else{
+    //   if(props.data?.bestQuote.fee === 0) return 144
+    // }
+
+    // return 170
+  }, [showDetail, swapContext?.receivingAddress, address, props.data?.bestQuote.fee, networkFee])
 
   const aggList = useMemo(() => {
     return props.data?.allQuotes.map(val => {
