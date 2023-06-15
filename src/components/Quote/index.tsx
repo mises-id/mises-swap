@@ -141,7 +141,7 @@ const Quote: FC<Iprops> = (props) => {
   const [baseRoutingStatus, setBaseRoutingStatus] = useState(false)
 
   const showEditAddressDialog = () => {
-    seteditAddress(true)
+    if(props.status !== 'ready' && canIUseFeat) seteditAddress(true)
   }
 
   // const [editSlippage, seteditSlippage] = useState(false)
@@ -188,13 +188,13 @@ const Quote: FC<Iprops> = (props) => {
     if (!showDetail) return 0
 
     if (swapContext?.receivingAddress || address) {
-      if (canIUseFeat) return 230
-      if(props.data?.bestQuote.fee === 0) return 170
-      return 204
+      // if (canIUseFeat) return 230
+      if(props.data?.bestQuote.fee === 0) return 204
+      return 230
     }
 
     return 170
-  }, [showDetail, swapContext?.receivingAddress, address, canIUseFeat, props.data?.bestQuote.fee])
+  }, [showDetail, swapContext?.receivingAddress, address, props.data?.bestQuote.fee])
 
   const aggList = useMemo(() => {
     return props.data?.allQuotes.map(val => {
@@ -211,16 +211,16 @@ const Quote: FC<Iprops> = (props) => {
     setPercent(percent - 10);
   }, interval);
   useEffect(() => {
-    if((props.data&&props.loading) || !props.data) {
+    if((props.data&&props.loading) || !props.data || percent<0 || props.status === 'ready') {
       setInterval(undefined)
       setPercent(100)
       clear()
     }
-    if(props.data&&!props.loading){
+    if(props.data && props.status !== 'ready' && !props.loading ){
       setInterval(1000)
     }
     // eslint-disable-next-line
-  }, [props.loading, props.data])
+  }, [props.loading, props.data, percent])
   
   return (
     (props.loading || props.data) ?
@@ -232,7 +232,7 @@ const Quote: FC<Iprops> = (props) => {
 
             <div className='flex justify-between items-center cursor-pointer' onClick={() => setisOpen(!isOpen)}>
               <div className='quote-token-item flex items-center gap-1'>
-                <ProgressCircle percent={percent}  style={{ '--size': '15px' }}/>
+                {props.status !== 'ready' && <ProgressCircle percent={percent}  style={{ '--size': '13px', '--track-width': '1.5px' }}/>}
                 <span
                   onClick={e => {
                     e.stopPropagation()
@@ -256,11 +256,11 @@ const Quote: FC<Iprops> = (props) => {
 
             <div className='details-box' style={{ height }}>
               <div className="advanced-swap-details flex flex-col gap-4">
-                {((swapContext?.receivingAddress || address) && canIUseFeat) && <div className='flex items-center justify-between'>
+                {(swapContext?.receivingAddress || address) && <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Receiving address</span>
                   <div className='swap-detail-value cursor-pointer' onClick={showEditAddressDialog}>
                     {shortenAddress(swapContext?.receivingAddress || address)}
-                    {props.status !== 'ready' ? <EditSOutline className='edit ml-5' /> : ''}
+                    {props.status !== 'ready' && canIUseFeat ? <EditSOutline className='edit ml-5' /> : ''}
                   </div>
                 </div>}
 
@@ -291,7 +291,7 @@ const Quote: FC<Iprops> = (props) => {
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Best routing</span>
                   <div className='flex items-center gap-1 cursor-pointer' onClick={() => {
-                    if(aggList.length>1) {
+                    if(props.status !== 'ready' && aggList.length>1) {
                       setBaseRoutingStatus(true)
                     }
                   }}>
@@ -303,7 +303,7 @@ const Quote: FC<Iprops> = (props) => {
                       src={props.data.bestQuote.aggregator.logo}
                     />
                     <span className='swap-detail-value'>{props.data.bestQuote.aggregator.name || '123'}</span>
-                    {aggList.length > 1 && <DownFill className='down-fill-icon' style={{ fontSize: 12 }} />}
+                    {aggList.length > 1 && props.status !== 'ready' && <DownFill className='down-fill-icon' style={{ fontSize: 12 }} />}
                   </div>
                 </div>
               </div>

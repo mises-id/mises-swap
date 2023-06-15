@@ -286,7 +286,7 @@ const Home = () => {
       const res = await getQuote<{ data: {
         all_quote: swapData[],
         error: string,
-        BestQuote: swapData
+        best_quote: swapData
       } }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddr,
@@ -299,7 +299,7 @@ const Home = () => {
         swapContext?.setquoteData(undefined)
         return
       }
-      const firstTrade = result.BestQuote
+      const firstTrade = result.best_quote
       if (firstTrade) {
         if (firstTrade.error) {
           swapContext?.setStatus(firstTrade.error)
@@ -437,9 +437,10 @@ const Home = () => {
           // eth_sendTransaction
 
           const { gas_price, gas_limit, ...params } = transactionResult.data
+
           const { hash } = await sendTransaction({
             ...params,
-            gasPrice: gas_price,
+            gasPrice: BigInt(parseInt(gas_price)),
             gas: gas_limit as any
           })
 
@@ -470,7 +471,10 @@ const Home = () => {
         if (error.name === 'TransactionNotFoundError') {
           return
         }
-
+        if(error.message.indexOf('User rejected the request') > -1){
+          run()
+        }
+        
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
@@ -600,7 +604,7 @@ const Home = () => {
 
       const { hash } = await sendTransaction({
         ...params,
-        gasPrice: gas_price,
+        gasPrice: BigInt(parseInt(gas_price)),
         gas: gas_limit as any,
         chainId,
       })

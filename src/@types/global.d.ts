@@ -33,7 +33,7 @@ interface trade {
   gas_limit: string,
   data: `0x${string}`,
   to: string
-  gas_price: bigint,
+  gas_price: string,
   value: bigint
 }
 
