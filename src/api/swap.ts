@@ -20,13 +20,13 @@ const header = ()=>{
   } : undefined
 }
 
-// const getBaseUrl = () =>{
-//   return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.mises.site'
-// }
+const getBaseUrl = () =>{
+  return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.test.mises.site'
+}
 
 export function getTokens<T=any>(): AxiosPromise<T>{
   return swapRequest({
-    url: `https://swap.mises.site/tokens.json`,
+    url: `${getBaseUrl()}/token_list.json`,
     timeout: 30000,
     headers: header()
   })
