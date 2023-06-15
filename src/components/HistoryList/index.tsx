@@ -183,7 +183,7 @@ const HistoryList: FC<IProps> = (props) => {
     Toast.show('Copyed')
   }
   return (
-    <CenterPopup visible={isOpen} closeOnMaskClick showCloseButton className='dialog-container' onClose={() => {
+    <CenterPopup visible={isOpen} closeOnMaskClick showCloseButton className='dialog-container down-dialog-style' onClose={() => {
       props.onClose?.()
       setdetail(undefined)
     }}>

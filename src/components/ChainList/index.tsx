@@ -80,7 +80,7 @@ const ChainList: FC<IProps> = (props) => {
         <DownOutline className='ml-10 downoutline' />
       </div>}
 
-      {!currentChain.iconUrl && <Button color='danger' size='small' shape='rounded' onClick={setTrue}>
+      {!currentChain?.iconUrl && <Button color='danger' size='small' shape='rounded' onClick={setTrue}>
         Wrong Network
       </Button>}
 

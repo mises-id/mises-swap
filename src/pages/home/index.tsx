@@ -1080,7 +1080,7 @@ const Home = () => {
 
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
-        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
+        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container down-dialog-style" onClose={() => setshowConfirmDialog(false)}>
           <div className="dialog-content p-20">
             <p className="confirm-title">Confirm Swap</p>
             <div>

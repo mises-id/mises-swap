@@ -199,7 +199,7 @@ const Quote: FC<Iprops> = (props) => {
   const aggList = useMemo(() => {
     return props.data?.allQuotes.map(val => {
       const token = props.tokens?.find(item => val.to_token_address.toLowerCase() === item.address.toLowerCase())
-      if (token) val.to_token_format_amount = substringAmount(formatAmount(val.to_token_amount, token.decimals))
+      if (token) val.to_token_format_amount = formatAmount(val.to_token_amount, token.decimals)
       // val.compare_percent = 
       return val
     }).filter(val => val.error === '') || []
@@ -336,7 +336,7 @@ const Quote: FC<Iprops> = (props) => {
           closeOnMaskClick
           showCloseButton
           onClose={() => setBaseRoutingStatus(false)}>
-          <p className='base-routing-title'>Selected the base routing for you.</p>
+          <p className='base-routing-title'>Selected the best routing for you.</p>
           <div>
             {aggList.length ? <div className='flex items-center py-10 base-routing-table-header px-16'>
               <span className='dex-item flex-1'>Dex</span>
@@ -351,11 +351,12 @@ const Quote: FC<Iprops> = (props) => {
                       src={agg.aggregator.logo}
                       style={{ borderRadius: 20 }}
                       // placeholder=""
+                      fallback={agg.aggregator.name ? <FallBackImage width={16} height={16} symbol={agg.aggregator.name} /> : ''}
                       fit='cover'
                       width={16}
                       height={16}
                     />
-                    <span>{agg.aggregator.name}</span>
+                    <span className='flex-1'>{agg.aggregator.name}</span>
                   </div>
                   <span className='est-item item-value text-right'>{agg.to_token_format_amount}</span>
                   <div className='difference text-right'>
