@@ -21,20 +21,20 @@ const header = ()=>{
 }
 
 // const getBaseUrl = () =>{
-//   return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.test.mises.site'
+//   return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.mises.site'
 // }
 
 export function getTokens<T=any>(): AxiosPromise<T>{
-  // return swapRequest({
-  //   url: `${getBaseUrl()}/tokens.json`,
-  //   timeout: 30000,
-  //   headers: header()
-  // })
   return swapRequest({
-    url: `/token/list`,
+    url: `https://swap.mises.site/tokens.json`,
     timeout: 30000,
     headers: header()
   })
+  // return swapRequest({
+  //   url: `/token/list`,
+  //   timeout: 30000,
+  //   headers: header()
+  // })
   // return fetch('https://swap.mises.site/tokens.json').then(res=>{
   //   return res.json()
   // })
