@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -107,15 +107,15 @@ const Home = () => {
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
       const tokensToDetect = tokenList.map((val: token) => {
-        const tokenAddress = val.address.toLocaleLowerCase() === nativeTokenAddress.toLocaleLowerCase() ? nativeTokenOtherAddress : val.address
-        return tokenAddress.toLocaleLowerCase()
+        const tokenAddress = val.address.toLowerCase() === nativeTokenAddress.toLowerCase() ? nativeTokenOtherAddress : val.address
+        return tokenAddress.toLowerCase()
       })
 
       try {
         const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
         for (const key in data) {
           const balance = data[key];
-          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
+          const tokenAddress = key.toLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
           const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
           if (tokenIndex > -1) {
             tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
@@ -337,7 +337,7 @@ const Home = () => {
             return res
           }
 
-          if (getBalanceAddress.toLocaleLowerCase() !== nativeTokenAddress.toLocaleLowerCase()) {
+          if (getBalanceAddress.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
             if(allowance.data.allowance && BigNumber(allowance.data.allowance).comparedTo(BigNumber(10).pow(20))>-1) {
@@ -422,7 +422,7 @@ const Home = () => {
 
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
-    if (!tokenAddress || tokenAddress.toLocaleLowerCase() !== nativeTokenAddress.toLocaleLowerCase()) return
+    if (!tokenAddress || tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase()) return
 
     try {
       const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
@@ -515,7 +515,6 @@ const Home = () => {
   }
 
   const submitSwap = async () => {
-    // eth_signTypedData_v4
     const walletClient = await getWalletClient({ chainId })
     console.log(walletClient, 'not found walletClient ')
     if (!walletClient) {
@@ -714,7 +713,7 @@ const Home = () => {
     pollingWhenHidden: false,
   });
 
-  const resetInputData = async (paramTokens?: token[]) => {
+  const resetInputData = useLockFn(async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
     swapContext?.setToAmount('')
     cancel()
@@ -724,7 +723,7 @@ const Home = () => {
       const tokenBalanceList = await getTokenListBalance(tokenList)
       settokens([...tokenBalanceList])
     }
-  }
+  })
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
     debounceWait: 1000,
@@ -741,20 +740,26 @@ const Home = () => {
   }, [chainId])
 
   useUpdateEffect(() => {
-    const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
-    if (isNotFirstConnected) {
-      cancel()
-      // run()
-      accountChangeCancel()
-      accountChangeRun()
-      console.log("watchAccount", isConnected, chain?.id, address)
-    } else {
-      sessionStorage.setItem('isFirstConnected', '1')
-    }
+    // const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
+    // if (isNotFirstConnected) {
+    //   cancel()
+    //   // run()
+    //   accountChangeCancel()
+    //   accountChangeRun()
+    //   console.log("watchAccount", isConnected, chain?.id, address)
+    // } else {
+    //   console.log(address)
+    //   resetInputData()
+    //   sessionStorage.setItem('isFirstConnected', '1')
+    // }
     // if(!address) {
     //   sessionStorage.removeItem('isFirstConnected')
     // }
 
+    cancel()
+    accountChangeCancel()
+    accountChangeRun()
+    console.log("watchAccount", isConnected, chain?.id, address)
   }, [address])
 
   const replaceValue = (val: string) => {
@@ -1008,6 +1013,7 @@ const Home = () => {
 
 
   const navigate = useNavigate()
+
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       {/* <Image width={80} src='/logo192.png' /> */}

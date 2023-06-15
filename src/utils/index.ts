@@ -31,7 +31,7 @@ export function shortenAddress(
 }
 
 export function findToken(tokens: token[], address: string): token | undefined {
-  return tokens.find(token => token.address.toLocaleLowerCase() === address.toLocaleLowerCase()) || undefined;
+  return tokens.find(token => token.address.toLowerCase() === address.toLowerCase()) || undefined;
 }
 
 export function networkFee(gasPrice: string, estimatedGas: string): string {

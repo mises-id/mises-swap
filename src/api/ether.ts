@@ -30,7 +30,7 @@ export interface BalanceMap {
 
 // get token balance
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
-  if (tokenAddress.toLocaleLowerCase() === nativeTokenAddress.toLocaleLowerCase() && address) {
+  if (tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
     const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
     if(getWalletBalance) {

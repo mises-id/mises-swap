@@ -21,7 +21,7 @@ const header = ()=>{
 }
 
 // const getBaseUrl = () =>{
-//   return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.mises.site'
+//   return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.test.mises.site'
 // }
 
 export function getTokens<T=any>(): AxiosPromise<T>{

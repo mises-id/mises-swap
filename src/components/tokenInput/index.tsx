@@ -56,7 +56,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const toMax = async () => {
     if(chain?.id){
       setIsSetedMax(true)
-      if (props.tokenAddress?.toLocaleLowerCase() === nativeTokenAddress.toLocaleLowerCase()){
+      if (props.tokenAddress?.toLowerCase() === nativeTokenAddress.toLowerCase()){
         const gasFee = networksFee[chain?.id] || '0.01'
         const fromAmount = BigNumber(tokenBalance || 0).minus(gasFee).toString()
         if (BigNumber(fromAmount).comparedTo(0) > -1) {
@@ -73,7 +73,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const showMax = useMemo(() => {
     if(!chain?.id) return false;
     if(tokenBalance ==='0.00000...') return false;
-    if(props.tokenAddress?.toLocaleLowerCase() !== nativeTokenAddress.toLocaleLowerCase()) {
+    if(props.tokenAddress?.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
       return true
     }
     const gasFee = networksFee[chain?.id] || '0.01'

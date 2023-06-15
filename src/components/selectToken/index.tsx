@@ -56,17 +56,17 @@ const SelectTokens: FC<Iprops> = (props) => {
   const tokenList = useMemo(
     () => {
       if (props.tokens) {
-        const searchQuery = searchName.toLocaleLowerCase()
+        const searchQuery = searchName.toLowerCase()
         const getTokenList = props.tokens.filter(val => {
             if (searchName && val) {
-              return val.symbol?.toLocaleLowerCase().indexOf(searchQuery) > -1 || val.name?.toLocaleLowerCase().indexOf(searchQuery) > -1
+              return val.symbol?.toLowerCase().indexOf(searchQuery) > -1 || val.name?.toLowerCase().indexOf(searchQuery) > -1
             }
             return val
           })
         if(searchQuery){
           return getTokenList
-          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
-          .sort((a, b) => (a.symbol || b.symbol).toLocaleLowerCase() === searchQuery ? -1 : 1)
+          .sort((a, b) => (a.symbol || b.symbol).toLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)
+          .sort((a, b) => (a.symbol || b.symbol).toLowerCase() === searchQuery ? -1 : 1)
           .sort((a, b) => a.name > b.name ? 1 : -1)
           .sort((a, b) => Number(a.balance) > Number(b.balance) ? -1 : 1)
         }else{

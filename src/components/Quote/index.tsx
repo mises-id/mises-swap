@@ -209,7 +209,6 @@ const Quote: FC<Iprops> = (props) => {
 
   const clear = useInterval(() => {
     setPercent(percent - 10);
-    console.log(percent)
   }, interval);
   useEffect(() => {
     if((props.data&&props.loading) || !props.data) {
@@ -292,9 +291,9 @@ const Quote: FC<Iprops> = (props) => {
                 <div className='flex items-center justify-between'>
                   <span className='swap-detail-label'>Best routing</span>
                   <div className='flex items-center gap-1 cursor-pointer' onClick={() => {
-                    // if(aggList.length>1) {
-                    setBaseRoutingStatus(true)
-                    // }
+                    if(aggList.length>1) {
+                      setBaseRoutingStatus(true)
+                    }
                   }}>
                     <Image
                       width={20}
