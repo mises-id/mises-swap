@@ -181,7 +181,8 @@ const Home = () => {
       if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
         const hasChainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
-        if(hasChainTokenList.length === 0) tokenList = []
+        const isCheckChainId = chainList.some(val=>val.id === chainId)
+        if(hasChainTokenList.length === 0 && isCheckChainId) tokenList = []
       }
       if(tokenList.length===0) {
         const res = await getTokens<{ "data": token[] }>()

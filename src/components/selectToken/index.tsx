@@ -16,6 +16,7 @@ import { SwapContext } from '@/context/swapContext';
 import SelectedToken from '../SelectedToken';
 import { substringAmount } from '@/utils';
 import FallBackImage from '../Fallback';
+import { ethers } from 'ethers';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -58,11 +59,17 @@ const SelectTokens: FC<Iprops> = (props) => {
       if (props.tokens) {
         const searchQuery = searchName.toLowerCase()
         const getTokenList = props.tokens.filter(val => {
-            if (searchName && val) {
-              return val.symbol?.toLowerCase().indexOf(searchQuery) > -1 || val.name?.toLowerCase().indexOf(searchQuery) > -1
-            }
-            return val
-          })
+          if (searchName && val) {
+            const isSymbol = val.symbol?.toLowerCase().indexOf(searchQuery) > -1
+            const isName = val.name?.toLowerCase().indexOf(searchQuery) > -1
+            const isAddress = val.address?.toLowerCase() === searchQuery
+            return isSymbol || isName || isAddress
+          }
+          return val
+        })
+        // if(getTokenList.length === 0 && ethers.isAddress(searchQuery)) {
+        //   console.log(111111)
+        // }
         if(searchQuery){
           return getTokenList
           .sort((a, b) => (a.symbol || b.symbol).toLowerCase().indexOf(searchQuery) > -1 ? -1 : 1)

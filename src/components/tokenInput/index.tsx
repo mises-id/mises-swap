@@ -118,10 +118,10 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         {priceValue && <span>{priceValue}</span>}
       </div>
       <div>
-        {props.tokenAddress && address && !props.isTokenLoading && <>
+        {props.tokenAddress && address && !props.isTokenLoading && props.tokens?.length ? <>
           Balance: {tokenBalance}
           {props.type === 'from' && tokenBalance !== '0' && showMax && !isSetedMax && <span onClick={toMax} className='max'>Max</span>}
-        </>}
+        </> : null}
       </div>
     </div>}
   </div>
