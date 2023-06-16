@@ -119,3 +119,7 @@ export function formatErrorMessage(error: any, message: string) {
   }
   return errorMessage
 }
+
+export function isRequest(provider: any) {
+  return !window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS() && !window.phantom
+}

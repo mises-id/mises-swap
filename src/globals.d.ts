@@ -4,7 +4,8 @@ interface Window {
   ethereum: any
   BinanceChain: any,
   nabox: any,
-  befi: any
+  befi: any,
+  phantom: any
 }
 interface globalThis {
   IS_REACT_ACT_ENVIRONMENT: boolean
