@@ -10,7 +10,8 @@ export function parseAmount(value: string, unitName?: BigNumberish): string {
 }
 
 export function formatAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.formatUnits(value || 0, unitName).toString()
+  const formatAmount = ethers.formatUnits(value || 0, Number(unitName))
+  return BigNumber(formatAmount).toString()
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
@@ -71,7 +72,7 @@ export function isMisesBrowser(): boolean {
   return window.misesWallet
 }
 
-export function substringAmount(amount: string | undefined, maxLen: number = 6): string | undefined{
+export function substringAmount(amount: string | undefined, maxLen: number = 8): string | undefined{
   if(!amount) {
     return amount
   }

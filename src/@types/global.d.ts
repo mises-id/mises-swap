@@ -9,6 +9,7 @@ interface token {
   'balance'?: string,
   'price'?: string,
   'cacheTime'?: number,
+  'isImport'?: boolean,
 }
 
 interface quoteParams {

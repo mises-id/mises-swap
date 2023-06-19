@@ -61,12 +61,8 @@ const Home = () => {
   const { chain } = useNetwork()
 
   const chainId = chain?.id || swapContext?.chainId || 1
-  const [tokens, settokens] = useState<token[] | undefined>(undefined)
-  // const [toAmount, setToAmount] = useState('')
+  
   const { address, isConnected } = useAccount()
-  // const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
-  // const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
-  // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
 
@@ -106,6 +102,7 @@ const Home = () => {
       }
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
+
       const tokensToDetect = tokenList.map((val: token) => {
         const tokenAddress = val.address.toLowerCase() === nativeTokenAddress.toLowerCase() ? nativeTokenOtherAddress : val.address
         return tokenAddress.toLowerCase()
@@ -177,6 +174,7 @@ const Home = () => {
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem('tokenList')
+      const importTokensStr = localStorage.getItem('importTokenList')
       let tokenList: token[] = []
       if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
@@ -193,6 +191,11 @@ const Home = () => {
           tokenList = []
         }
       }
+
+      if(importTokensStr) {
+        const importTokens: token[] = JSON.parse(importTokensStr)
+        tokenList = [...tokenList, ...importTokens]
+      }
       
 
       const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
@@ -208,7 +211,7 @@ const Home = () => {
       //   console.log('getTokenListToUSDPriceRun')
       // }
       
-      settokens([...chainTokenList])
+      swapContext!.settokens([...chainTokenList])
       getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
 
       if (swapContext) {
@@ -237,7 +240,8 @@ const Home = () => {
   const [approveLoading, setapproveLoading] = useState(false)
   const cacheTime = 10000
   const renderTokenPrice = (fromTokenAddr: string, toTokenAddr: string) =>{
-    if(!tokens) return
+    if(!swapContext!.tokens) return
+    const tokens = swapContext!.tokens
     const fromToken = tokens.find(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
     const toToken = tokens.find(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
     const contract_addresses = []
@@ -268,11 +272,12 @@ const Home = () => {
         }
       }
       
-      settokens([...tokens])
+      swapContext!.settokens([...tokens])
     })
   }
 
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
+    const tokens = swapContext!.tokens
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
@@ -534,7 +539,7 @@ const Home = () => {
 
     try {
 
-      const fromToken = tokens?.length && fromTokenAddress && findToken(tokens, fromTokenAddress)
+      const fromToken = swapContext!.tokens?.length && fromTokenAddress && findToken(swapContext!.tokens, fromTokenAddress)
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
@@ -682,7 +687,7 @@ const Home = () => {
   const resetData = async () => {
     swapContext?.setToAmount('')
     cancel()
-    settokens(undefined)
+    swapContext!.settokens(undefined)
 
     if (swapContext) {
       swapContext.swapToData = {
@@ -722,10 +727,10 @@ const Home = () => {
     swapContext?.setToAmount('')
     cancel()
     swapContext?.setquoteData(undefined)
-    const tokenList = paramTokens || tokens
+    const tokenList = paramTokens || swapContext!.tokens
     if (tokenList?.length) {
       const tokenBalanceList = await getTokenListBalance(tokenList)
-      settokens([...tokenBalanceList])
+      swapContext!.settokens([...tokenBalanceList])
     }
   })
 
@@ -821,6 +826,7 @@ const Home = () => {
     }
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
+    const tokens = swapContext!.tokens
     if (tokens?.length || paramsTokenList?.length) {
       const tokenList = paramsTokenList || tokens || []
       const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
@@ -828,7 +834,7 @@ const Home = () => {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
           tokenList[tokenIndex].price = price
-          settokens([...tokenList])
+          swapContext!.settokens([...tokenList])
         } catch (error) {
           console.log(error, 'getTokenToUSDPrice-error')
         }
@@ -838,7 +844,9 @@ const Home = () => {
 
 
   const getFromTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
+      
       const token = tokens?.length && val && findToken(tokens, val)
 
       swapContext.swapFromData = {
@@ -863,7 +871,7 @@ const Home = () => {
         if(balance?.value.toString() !== '0'){
           const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
+          swapContext!.settokens([...tokens])
         }
       }
     }
@@ -872,6 +880,7 @@ const Home = () => {
   }
 
   const getToTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const token = tokens?.length && val && findToken(tokens, val)
 
@@ -898,7 +907,7 @@ const Home = () => {
         if(balance?.value.toString() !== '0'){
           const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
+          swapContext!.settokens([...tokens])
         }
       }
     }
@@ -909,7 +918,7 @@ const Home = () => {
     if (swapLoading) {
       return
     }
-
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const swapToData = swapContext.swapToData
       const swapFromData = swapContext.swapFromData
@@ -1041,12 +1050,12 @@ const Home = () => {
           </div>
         </div>
         <div>
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="from"
             onChange={getFromInputChange}
             onTokenChange={getFromTokenChange}
             setInputChange={setFromInputChange}
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
@@ -1060,9 +1069,9 @@ const Home = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
 
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="to"
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
             maxLength={swapContext?.swapToData.decimals}
@@ -1074,9 +1083,9 @@ const Home = () => {
           /> : <Skeleton animated className="custom-skeleton" />}
         </div>
 
-        <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
+        <Quote tokens={swapContext!.tokens} data={swapContext?.quoteData} loading={swapLoading} />
 
-        <PriceImpact tokens={tokens} verifyShow />
+        <PriceImpact tokens={swapContext!.tokens} verifyShow />
 
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
@@ -1086,7 +1095,7 @@ const Home = () => {
             <div>
               <TokenInput
                 type="from"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 status="ready"
                 tokenAddress={swapContext?.swapFromData.tokenAddress}
                 placeholder='0'
@@ -1099,12 +1108,12 @@ const Home = () => {
               <TokenInput
                 type="to"
                 status="ready"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 value={swapContext?.toAmount}
                 tokenAddress={swapContext?.swapToData.tokenAddress}
               />
             </div>
-            <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+            <Quote data={swapContext?.quoteData} tokens={swapContext!.tokens} loading={swapLoading} status="ready" />
             <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
           </div>
         </CenterPopup>

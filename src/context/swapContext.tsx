@@ -60,6 +60,8 @@ export type SwapContextType = {
   setPageStatus: Dispatch<SetStateAction<'default' | 'reset'>>,
   currentSwitchType: 'from' | 'to', 
   setcurrentSwitchType: Dispatch<SetStateAction<'from' | 'to'>>,
+  tokens: token[] | undefined, 
+  settokens: Dispatch<SetStateAction<token[] | undefined>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -100,6 +102,8 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
 
+  const [tokens, settokens] = useState<token[] | undefined>(undefined)
+
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
     settimeout(timeoutFn)
@@ -119,6 +123,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
       settimeout(undefined)
     }
   }
+
   return <SwapContext.Provider value={{
     swapToData,
     setswapToData,
@@ -147,7 +152,9 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     pageStatus, 
     setPageStatus,
     currentSwitchType, 
-    setcurrentSwitchType
+    setcurrentSwitchType,
+    tokens, 
+    settokens
   }}>{children}</SwapContext.Provider>;
 };
 

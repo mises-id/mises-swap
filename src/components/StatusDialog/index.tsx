@@ -69,8 +69,10 @@ const StatusDialog: FC<Iprops> = (props) => {
     }
     // eslint-disable-next-line
   }, [swapContext?.chainId])
-
   if(swapContext?.globalDialogMessage?.description) console.log(swapContext?.globalDialogMessage?.description, '=====submiterror====')
+
+  if(!swapContext?.globalDialogMessage) return <div></div>
+
   return (
     <CenterPopup {...props} visible={isOpen} showCloseButton onClose={()=>{
       dismiss()
@@ -82,7 +84,7 @@ const StatusDialog: FC<Iprops> = (props) => {
       <div className='status-dialog-container flex flex-col items-center text-center'>
         {swapContext?.globalDialogMessage?.type === 'error' && <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="#FA2B39" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>}
 
-        {swapContext?.globalDialogMessage?.type === 'pending' && <Image src='/images/loading.svg' className='loading-icon' width={90} height={90} />}
+        {swapContext?.globalDialogMessage?.type === 'pending' && <Image src='/images/loading.svg' placeholder="" className='loading-icon' width={90} height={90} />}
 
         {swapContext?.globalDialogMessage?.type === 'success' && <svg xmlns="http://www.w3.org/2000/svg" width="75px" height="75px" viewBox="0 0 24 24" fill="none" stroke="#4C82FB" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></svg>}
 

@@ -42,7 +42,10 @@ const Quote: FC<Iprops> = (props) => {
         const toTokenSymbol = showToToken.symbol
         const toAmountNumber = BigNumber(fromAmount).dividedBy(toAmount)
         const toTokenCompared = toAmountNumber.comparedTo(0.00001) > -1
-        const toAmountStr = tokenType === 'from' ? substringAmount(BigNumber(toAmount).dividedBy(fromAmount).toString()) : (toTokenCompared ? substringAmount(toAmountNumber.toString()) : '<0.00001')
+
+        const fromAmountNumber = BigNumber(toAmount).dividedBy(fromAmount)
+        const fromTokenCompared = fromAmountNumber.comparedTo(0.00001) > -1
+        const toAmountStr = tokenType === 'from' ? (fromTokenCompared ? substringAmount(fromAmountNumber.toString()) : '<0.00001') : (toTokenCompared ? substringAmount(toAmountNumber.toString()) : '<0.00001')
 
         return `1 ${fromTokenSymbol} = ${toAmountStr} ${toTokenSymbol}`
       }
