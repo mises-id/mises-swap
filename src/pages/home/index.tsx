@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import PriceImpact from "@/components/PriceImpact";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
+const connotUseChainId = [100, 8217, 1313161554, 324, 10001, 1030, 66]
 const Home = () => {
   // firebase
   const analytics = useAnalytics()
@@ -41,6 +42,7 @@ const Home = () => {
     const getTokens = await getTokenList()
     if (getTokens?.length) {
       accountChangeRun(getTokens)
+      console.log('run init')
       // const tokenList = await getTokenListBalance(getTokens)
 
       // settokens([...tokenList])
@@ -59,12 +61,8 @@ const Home = () => {
   const { chain } = useNetwork()
 
   const chainId = chain?.id || swapContext?.chainId || 1
-  const [tokens, settokens] = useState<token[] | undefined>(undefined)
-  // const [toAmount, setToAmount] = useState('')
+  
   const { address, isConnected } = useAccount()
-  // const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
-  // const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
-  // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
 
@@ -81,11 +79,11 @@ const Home = () => {
       console.log('call balances')
       setTrue()
 
-      if([100, 8217, 1313161554, 324].includes(chain.id)) {
+      if(connotUseChainId.includes(chain.id)) {
         if(swapContext?.swapFromData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
         }
@@ -93,7 +91,7 @@ const Home = () => {
         if(swapContext?.swapToData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
             console.log(balance?.value.toString())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
@@ -104,17 +102,18 @@ const Home = () => {
       }
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
+
       const tokensToDetect = tokenList.map((val: token) => {
-        const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
-        return tokenAddress.toLocaleLowerCase()
+        const tokenAddress = val.address.toLowerCase() === nativeTokenAddress.toLowerCase() ? nativeTokenOtherAddress : val.address
+        return tokenAddress.toLowerCase()
       })
 
       try {
         const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
         for (const key in data) {
           const balance = data[key];
-          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress ? nativeTokenAddress : `${key}`;
-          const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+          const tokenAddress = key.toLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
+          const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
           if (tokenIndex > -1) {
             tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
             // console.log(tokenList[tokenIndex], tokenAddress, key)
@@ -125,6 +124,7 @@ const Home = () => {
         return tokenList
 
       } catch (error: any) {
+        console.log('getBalancesInSingleCall error', error)
         logEvent(analytics, 'swap_error', {
           error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
@@ -174,18 +174,29 @@ const Home = () => {
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem('tokenList')
+      const importTokensStr = localStorage.getItem('importTokenList')
       let tokenList: token[] = []
-      if (cacheTokens) {
+      if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
-      } else {
+        const hasChainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
+        const isCheckChainId = chainList.some(val=>val.id === chainId)
+        if(hasChainTokenList.length === 0 && isCheckChainId) tokenList = []
+      }
+      if(tokenList.length===0) {
         const res = await getTokens<{ "data": token[] }>()
         if (res) {
-          tokenList = res.data.data
+          tokenList = res.data.data || []
           sessionStorage.setItem('tokenList', JSON.stringify(tokenList))
         } else {
           tokenList = []
         }
       }
+
+      if(importTokensStr) {
+        const importTokens: token[] = JSON.parse(importTokensStr)
+        tokenList = [...tokenList, ...importTokens]
+      }
+      
 
       const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
       // const now = new Date().getTime()
@@ -200,7 +211,7 @@ const Home = () => {
       //   console.log('getTokenListToUSDPriceRun')
       // }
       
-      settokens([...chainTokenList])
+      swapContext!.settokens([...chainTokenList])
       getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
 
       if (swapContext) {
@@ -229,9 +240,10 @@ const Home = () => {
   const [approveLoading, setapproveLoading] = useState(false)
   const cacheTime = 10000
   const renderTokenPrice = (fromTokenAddr: string, toTokenAddr: string) =>{
-    if(!tokens) return
-    const fromToken = tokens.find(val=>val.address === fromTokenAddr)
-    const toToken = tokens.find(val=>val.address === toTokenAddr)
+    if(!swapContext!.tokens) return
+    const tokens = swapContext!.tokens
+    const fromToken = tokens.find(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
+    const toToken = tokens.find(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
     const contract_addresses = []
     const now = new Date().getTime()
 
@@ -240,11 +252,10 @@ const Home = () => {
 
     if(contract_addresses.length === 0) return 
     fetchUSDList(chainId, contract_addresses.join(',')).then(res=>{
-      const formTokenToUsd = res[fromTokenAddr]
-      const toTokenToUsd = res[toTokenAddr]
-
+      const formTokenToUsd = res[fromTokenAddr.toLowerCase()]
+      const toTokenToUsd = res[toTokenAddr.toLowerCase()]
       if(formTokenToUsd) {
-        const fromTokenIndex = tokens.findIndex(val=>val.address === fromTokenAddr)
+        const fromTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
         const last_updated_at = formTokenToUsd.last_updated_at
         if(fromTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[fromTokenIndex].price = formTokenToUsd.usd
@@ -253,7 +264,7 @@ const Home = () => {
       }
 
       if(toTokenToUsd) {
-        const toTokenIndex = tokens.findIndex(val=>val.address === toTokenAddr)
+        const toTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
         const last_updated_at = toTokenToUsd.last_updated_at
         if(toTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[toTokenIndex].price = toTokenToUsd.usd
@@ -261,11 +272,12 @@ const Home = () => {
         }
       }
       
-      settokens([...tokens])
+      swapContext!.settokens([...tokens])
     })
   }
 
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
+    const tokens = swapContext!.tokens
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
@@ -276,20 +288,33 @@ const Home = () => {
 
     try {
       renderTokenPrice(fromTokenAddr, toTokenAddr)
-      const res = await getQuote<{ data: swapData[] }, quoteParams>({
+      const res = await getQuote<{ data: {
+        all_quote: swapData[],
+        error: string,
+        best_quote: swapData
+      } }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddr,
         to_token_address: toTokenAddr,
         amount: parseAmountStr
       })
-      if (res.data.data.length) {
-        const [firstTrade] = res.data.data
+      const result = res.data.data
+      if(result.error) {
+        swapContext?.setStatus(result.error)
+        swapContext?.setquoteData(undefined)
+        return
+      }
+      const firstTrade = result.best_quote
+      if (firstTrade) {
         if (firstTrade.error) {
           swapContext?.setStatus(firstTrade.error)
           swapContext?.setquoteData(undefined)
           return
         }
-        swapContext?.setquoteData(firstTrade)
+        swapContext?.setquoteData({
+          bestQuote: firstTrade,
+          allQuotes: result.all_quote
+        })
 
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
@@ -317,7 +342,7 @@ const Home = () => {
             return res
           }
 
-          if (getBalanceAddress !== nativeTokenAddress) {
+          if (getBalanceAddress.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
             if(allowance.data.allowance && BigNumber(allowance.data.allowance).comparedTo(BigNumber(10).pow(20))>-1) {
@@ -333,6 +358,9 @@ const Home = () => {
           }
         }
         return
+      }else {
+        swapContext?.setStatus('No payment channel found')
+        swapContext?.setquoteData(undefined)
       }
     } catch (error: any) {
       console.log(error, '1111')
@@ -399,10 +427,10 @@ const Home = () => {
 
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
-    if (!tokenAddress && tokenAddress !== nativeTokenAddress) return
+    if (!tokenAddress || tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase()) return
 
     try {
-      const contract_address = swapContext?.quoteData?.aggregator?.contract_address
+      const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
         setapproveLoading(true)
         const result = await getAllowance(tokenAddress, contract_address)
@@ -414,9 +442,10 @@ const Home = () => {
           // eth_sendTransaction
 
           const { gas_price, gas_limit, ...params } = transactionResult.data
+
           const { hash } = await sendTransaction({
             ...params,
-            gasPrice: gas_price,
+            gasPrice: BigInt(parseInt(gas_price)),
             gas: gas_limit as any
           })
 
@@ -447,7 +476,10 @@ const Home = () => {
         if (error.name === 'TransactionNotFoundError') {
           return
         }
-
+        if(error.message.indexOf('User rejected the request') > -1){
+          run()
+        }
+        
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
@@ -492,7 +524,6 @@ const Home = () => {
   }
 
   const submitSwap = async () => {
-    // eth_signTypedData_v4
     const walletClient = await getWalletClient({ chainId })
     console.log(walletClient, 'not found walletClient ')
     if (!walletClient) {
@@ -508,11 +539,11 @@ const Home = () => {
 
     try {
 
-      const fromToken = tokens?.length && fromTokenAddress && findToken(tokens, fromTokenAddress)
+      const fromToken = swapContext!.tokens?.length && fromTokenAddress && findToken(swapContext!.tokens, fromTokenAddress)
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
-      const aggregatorAddress = swapContext?.quoteData?.aggregator.contract_address
+      const aggregatorAddress = swapContext?.quoteData?.bestQuote.aggregator.contract_address
 
       if (!aggregatorAddress) {
         swapContext?.setGlobalDialogMessage({
@@ -578,7 +609,7 @@ const Home = () => {
 
       const { hash } = await sendTransaction({
         ...params,
-        gasPrice: gas_price,
+        gasPrice: BigInt(parseInt(gas_price)),
         gas: gas_limit as any,
         chainId,
       })
@@ -656,7 +687,7 @@ const Home = () => {
   const resetData = async () => {
     swapContext?.setToAmount('')
     cancel()
-    settokens(undefined)
+    swapContext!.settokens(undefined)
 
     if (swapContext) {
       swapContext.swapToData = {
@@ -691,17 +722,17 @@ const Home = () => {
     pollingWhenHidden: false,
   });
 
-  const resetInputData = async (paramTokens?: token[]) => {
+  const resetInputData = useLockFn(async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
     swapContext?.setToAmount('')
     cancel()
     swapContext?.setquoteData(undefined)
-    const tokenList = paramTokens || tokens
+    const tokenList = paramTokens || swapContext!.tokens
     if (tokenList?.length) {
       const tokenBalanceList = await getTokenListBalance(tokenList)
-      settokens([...tokenBalanceList])
+      swapContext!.settokens([...tokenBalanceList])
     }
-  }
+  })
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
     debounceWait: 1000,
@@ -718,20 +749,26 @@ const Home = () => {
   }, [chainId])
 
   useUpdateEffect(() => {
-    const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
-    if (isNotFirstConnected) {
-      cancel()
-      // run()
-      accountChangeCancel()
-      accountChangeRun()
-      console.log("watchAccount", isConnected, chain?.id, address)
-    } else {
-      sessionStorage.setItem('isFirstConnected', '1')
-    }
+    // const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
+    // if (isNotFirstConnected) {
+    //   cancel()
+    //   // run()
+    //   accountChangeCancel()
+    //   accountChangeRun()
+    //   console.log("watchAccount", isConnected, chain?.id, address)
+    // } else {
+    //   console.log(address)
+    //   resetInputData()
+    //   sessionStorage.setItem('isFirstConnected', '1')
+    // }
     // if(!address) {
     //   sessionStorage.removeItem('isFirstConnected')
     // }
 
+    cancel()
+    accountChangeCancel()
+    accountChangeRun()
+    console.log("watchAccount", isConnected, chain?.id, address)
   }, [address])
 
   const replaceValue = (val: string) => {
@@ -789,14 +826,15 @@ const Home = () => {
     }
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
+    const tokens = swapContext!.tokens
     if (tokens?.length || paramsTokenList?.length) {
       const tokenList = paramsTokenList || tokens || []
-      const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+      const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
       if (tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
           tokenList[tokenIndex].price = price
-          settokens([...tokenList])
+          swapContext!.settokens([...tokenList])
         } catch (error) {
           console.log(error, 'getTokenToUSDPrice-error')
         }
@@ -806,7 +844,9 @@ const Home = () => {
 
 
   const getFromTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
+      
       const token = tokens?.length && val && findToken(tokens, val)
 
       swapContext.swapFromData = {
@@ -825,13 +865,13 @@ const Home = () => {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapFromData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
         if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
+          swapContext!.settokens([...tokens])
         }
       }
     }
@@ -840,6 +880,7 @@ const Home = () => {
   }
 
   const getToTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const token = tokens?.length && val && findToken(tokens, val)
 
@@ -859,14 +900,14 @@ const Home = () => {
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
+    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapToData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
         console.log('get to balance')
         if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
           tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
+          swapContext!.settokens([...tokens])
         }
       }
     }
@@ -877,7 +918,7 @@ const Home = () => {
     if (swapLoading) {
       return
     }
-
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const swapToData = swapContext.swapToData
       const swapFromData = swapContext.swapFromData
@@ -985,6 +1026,7 @@ const Home = () => {
 
 
   const navigate = useNavigate()
+
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       {/* <Image width={80} src='/logo192.png' /> */}
@@ -1008,12 +1050,12 @@ const Home = () => {
           </div>
         </div>
         <div>
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="from"
             onChange={getFromInputChange}
             onTokenChange={getFromTokenChange}
             setInputChange={setFromInputChange}
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
@@ -1027,9 +1069,9 @@ const Home = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
 
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="to"
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
             maxLength={swapContext?.swapToData.decimals}
@@ -1041,19 +1083,19 @@ const Home = () => {
           /> : <Skeleton animated className="custom-skeleton" />}
         </div>
 
-        <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
+        <Quote tokens={swapContext!.tokens} data={swapContext?.quoteData} loading={swapLoading} />
 
-        <PriceImpact tokens={tokens} verifyShow />
+        <PriceImpact tokens={swapContext!.tokens} verifyShow />
 
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
-        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
+        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container down-dialog-style" onClose={() => setshowConfirmDialog(false)}>
           <div className="dialog-content p-20">
             <p className="confirm-title">Confirm Swap</p>
             <div>
               <TokenInput
                 type="from"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 status="ready"
                 tokenAddress={swapContext?.swapFromData.tokenAddress}
                 placeholder='0'
@@ -1066,12 +1108,12 @@ const Home = () => {
               <TokenInput
                 type="to"
                 status="ready"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 value={swapContext?.toAmount}
                 tokenAddress={swapContext?.swapToData.tokenAddress}
               />
             </div>
-            <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+            <Quote data={swapContext?.quoteData} tokens={swapContext!.tokens} loading={swapLoading} status="ready" />
             <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
           </div>
         </CenterPopup>
@@ -1082,26 +1124,27 @@ const Home = () => {
         {/* <Button onClick={()=>{
           resetInputData()
               }}>reset</Button> */}
+
+        <FloatingBubble
+          style={{
+            '--initial-position-bottom': '24px',
+            '--initial-position-right': '24px',
+            '--edge-distance': '24px',
+          }}
+          axis="lock"
+          onClick={()=>{
+            navigate('/helpcenter')
+            resetInputData()
+            swapContext?.setswapToData({
+              tokenAddress: ''
+            })
+          }}
+        >
+          <MessageFill fontSize={32} />
+        </FloatingBubble>
       </div >
       <Notification />
     </div>
-    <FloatingBubble
-      style={{
-        '--initial-position-bottom': '24px',
-        '--initial-position-right': '24px',
-        '--edge-distance': '24px',
-      }}
-      axis="lock"
-      onClick={()=>{
-        navigate('/helpcenter')
-        resetInputData()
-        swapContext?.setswapToData({
-          tokenAddress: ''
-        })
-      }}
-    >
-      <MessageFill fontSize={32} />
-    </FloatingBubble>
   </div>
 };
 export default Home;

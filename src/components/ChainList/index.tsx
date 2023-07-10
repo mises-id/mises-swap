@@ -40,10 +40,9 @@ const ChainList: FC<IProps> = (props) => {
       setFalse()
       setisConnectId(undefined)
     },
-    onSettled(data, error, variables) {
+    onSettled(data, error: any, variables) {
       const switchChain = chainList.find(chain => chain.id === variables.chainId)
-      
-      if(error?.name === 'SwitchChainError') {
+      if(error?.name === 'SwitchChainError' || error?.details === 'May not specify default MetaMask chain.') {
         swapContext?.pushNotificationData({
           type: 'success',
           hash: `${Math.round(100)}`,
@@ -81,7 +80,7 @@ const ChainList: FC<IProps> = (props) => {
         <DownOutline className='ml-10 downoutline' />
       </div>}
 
-      {!currentChain.iconUrl && <Button color='danger' size='small' shape='rounded' onClick={setTrue}>
+      {!currentChain?.iconUrl && <Button color='danger' size='small' shape='rounded' onClick={setTrue}>
         Wrong Network
       </Button>}
 

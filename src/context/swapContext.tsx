@@ -27,6 +27,10 @@ export interface notificationData {
   description?: string | undefined,
   icon?: () => JSX.Element,
 }
+export interface quoteData {
+  allQuotes: swapData[],
+  bestQuote: swapData,
+}
 export type SwapContextType = {
   swapToData: swapTokenData,
   setswapToData: Dispatch<SetStateAction<swapTokenData>>
@@ -50,12 +54,14 @@ export type SwapContextType = {
   removeNotificationData: (index: number) => void,
   chainId: number, 
   setChainId: Dispatch<SetStateAction<number>>,
-  quoteData: swapData | undefined, 
-  setquoteData: Dispatch<SetStateAction<swapData | undefined>>,
+  quoteData: quoteData | undefined, 
+  setquoteData: Dispatch<SetStateAction<quoteData | undefined>>,
   pageStatus: 'default' | 'reset', 
   setPageStatus: Dispatch<SetStateAction<'default' | 'reset'>>,
   currentSwitchType: 'from' | 'to', 
   setcurrentSwitchType: Dispatch<SetStateAction<'from' | 'to'>>,
+  tokens: token[] | undefined, 
+  settokens: Dispatch<SetStateAction<token[] | undefined>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -88,7 +94,7 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   
   const [notification, setNotification] = useState<notificationData[]>([])
 
-  const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
+  const [quoteData, setquoteData] = useState<quoteData | undefined>(undefined)
 
   const [pageStatus, setPageStatus] = useState<'default' | 'reset'>('default')
 
@@ -96,31 +102,28 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
 
-  const createRemoveTask = (hash: string) =>{
-    const timeoutFn = setTimeout(() => {
-      const findItemIndex = notification.findIndex(val=>val.hash === hash)
+  const [tokens, settokens] = useState<token[] | undefined>(undefined)
 
-      if(findItemIndex > -1){
-        removeNotificationData(findItemIndex)
-      }
-    }, 4000);
+  const createRemoveTask = () =>{
+    const timeoutFn = setTimeout(removeNotificationData, 4000);
     settimeout(timeoutFn)
   }
 
   const pushNotificationData = (params: notificationData) => {
-    notification.push(params)
-    setNotification([...notification])
-    createRemoveTask(params.hash)
+    // notification.push(params)
+    setNotification([params])
+    createRemoveTask()
   }
 
-  const removeNotificationData = (index: number) => {
-    notification.splice(index, 1)
-    setNotification([...notification])
+  const removeNotificationData = () => {
+    // notification.splice(index, 1)
+    setNotification([])
     if(timeout) {
       clearTimeout(timeout)
       settimeout(undefined)
     }
   }
+
   return <SwapContext.Provider value={{
     swapToData,
     setswapToData,
@@ -149,7 +152,9 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     pageStatus, 
     setPageStatus,
     currentSwitchType, 
-    setcurrentSwitchType
+    setcurrentSwitchType,
+    tokens, 
+    settokens
   }}>{children}</SwapContext.Provider>;
 };
 

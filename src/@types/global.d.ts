@@ -9,6 +9,7 @@ interface token {
   'balance'?: string,
   'price'?: string,
   'cacheTime'?: number,
+  'isImport'?: boolean,
 }
 
 interface quoteParams {
@@ -33,7 +34,7 @@ interface trade {
   gas_limit: string,
   data: `0x${string}`,
   to: string
-  gas_price: bigint,
+  gas_price: string,
   value: bigint
 }
 
@@ -47,5 +48,7 @@ interface swapData {
   error: string
   fetch_time: string
   trade?: trade | null
-  fee: number
+  fee: number,
+  to_token_format_amount?: string
+  compare_percent?: string
 }

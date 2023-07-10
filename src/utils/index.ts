@@ -10,7 +10,8 @@ export function parseAmount(value: string, unitName?: BigNumberish): string {
 }
 
 export function formatAmount(value: string, unitName?: BigNumberish): string {
-  return ethers.formatUnits(value, unitName).toString()
+  const formatAmount = ethers.formatUnits(value || 0, Number(unitName))
+  return BigNumber(formatAmount).toString()
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
@@ -31,7 +32,7 @@ export function shortenAddress(
 }
 
 export function findToken(tokens: token[], address: string): token | undefined {
-  return tokens.find(token => token.address === address) || undefined;
+  return tokens.find(token => token.address.toLowerCase() === address.toLowerCase()) || undefined;
 }
 
 export function networkFee(gasPrice: string, estimatedGas: string): string {
@@ -71,17 +72,16 @@ export function isMisesBrowser(): boolean {
   return window.misesWallet
 }
 
-export function substringAmount(amount: string | undefined): string | undefined{
+export function substringAmount(amount: string | undefined, maxLen: number = 8): string | undefined{
   if(!amount) {
     return amount
   }
 
-  const maxLen = 6;
 
   const subAmount = amount.split('.');
 
   if(subAmount[1]?.length > maxLen) {
-    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, 6)}`
+    const returnAmount = `${subAmount[0]}.${subAmount[1].substring(0, maxLen)}`
     return returnAmount === '0.000000' ? '0.00000...' : returnAmount
   }
 
@@ -119,4 +119,8 @@ export function formatErrorMessage(error: any, message: string) {
     // }
   }
   return errorMessage
+}
+
+export function isRequest(provider: any) {
+  return !window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS() && !window.phantom
 }

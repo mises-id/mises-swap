@@ -39,7 +39,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const tokenBalance = useMemo(()=> {
     if (props.tokenAddress && address && chain?.id && props.tokens?.length) {
       // setIsSetedMax(false)
-      const findToken = props.tokens.find(val=>val.address === props.tokenAddress)
+      const findToken = props.tokens.find(val=>val.address.toLowerCase() === props.tokenAddress?.toLowerCase())
       return findToken && findToken.balance ? substringAmount(findToken.balance) : '0'
     }
     return '0'
@@ -56,7 +56,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const toMax = async () => {
     if(chain?.id){
       setIsSetedMax(true)
-      if (props.tokenAddress === nativeTokenAddress){
+      if (props.tokenAddress?.toLowerCase() === nativeTokenAddress.toLowerCase()){
         const gasFee = networksFee[chain?.id] || '0.01'
         const fromAmount = BigNumber(tokenBalance || 0).minus(gasFee).toString()
         if (BigNumber(fromAmount).comparedTo(0) > -1) {
@@ -73,7 +73,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const showMax = useMemo(() => {
     if(!chain?.id) return false;
     if(tokenBalance ==='0.00000...') return false;
-    if(props.tokenAddress !== nativeTokenAddress) {
+    if(props.tokenAddress?.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
       return true
     }
     const gasFee = networksFee[chain?.id] || '0.01'
@@ -82,7 +82,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   }, [props.tokenAddress, address, tokenBalance, chain?.id])
   
   const priceValue = useMemo(() => {
-    const token = props.tokens?.find(val=>val.address === props.tokenAddress)
+    const token = props.tokens?.find(val=>val.address.toLowerCase() === props.tokenAddress?.toLowerCase())
     if(inputProps.value && token?.price && !BigNumber(inputProps.value).isZero()) {
       const price =  BigNumber(inputProps.value).multipliedBy(token?.price);
       if(BigNumber(price).comparedTo('0.00000001') > -1) {
@@ -94,7 +94,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
       return '<$0.00000001'
     }
     // eslint-disable-next-line
-  }, [inputProps.value, props.tokenAddress])
+  }, [inputProps.value, props.tokenAddress, props.tokens])
 
 
   
@@ -118,10 +118,10 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
         {priceValue && <span>{priceValue}</span>}
       </div>
       <div>
-        {props.tokenAddress && address && !props.isTokenLoading && <>
+        {props.tokenAddress && address && !props.isTokenLoading && props.tokens?.length ? <>
           Balance: {tokenBalance}
           {props.type === 'from' && tokenBalance !== '0' && showMax && !isSetedMax && <span onClick={toMax} className='max'>Max</span>}
-        </>}
+        </> : null}
       </div>
     </div>}
   </div>

@@ -27,6 +27,6 @@ const SelectedToken = memo((props: Iprops) => {
     {props.status !== 'ready' && <DownOutline className='downOutline' />}
   </div>
 }, (prevProps: Readonly<Iprops>, nextProps: Readonly<Iprops>)=>{
-  return prevProps.tokenAddress === nextProps.tokenAddress && JSON.stringify(prevProps.tokens) === JSON.stringify(nextProps.tokens)
+  return prevProps.tokenAddress.toLowerCase() === nextProps.tokenAddress.toLowerCase() && JSON.stringify(prevProps.tokens) === JSON.stringify(nextProps.tokens)
 })
 export default SelectedToken
