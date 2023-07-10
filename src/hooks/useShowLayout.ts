@@ -2,7 +2,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import { useBoolean, useRequest } from "ahooks";
 import { useAnalytics } from "./useAnalytics";
 import { logEvent } from "firebase/analytics";
-import { isIOS } from "@/utils";
+import { isRequest } from "@/utils";
 
 export function useShowLayout() {
   const [isShowLayout, { setTrue }] = useBoolean(false)
@@ -25,7 +25,7 @@ export function useShowLayout() {
     try {
       runReload()
       console.log('start connnect >>>>>>',)
-      if(!window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS()) {
+      if(isRequest(provider)) {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')

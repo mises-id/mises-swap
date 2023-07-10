@@ -30,7 +30,7 @@ export interface BalanceMap {
 
 // get token balance
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
-  if (tokenAddress === nativeTokenAddress && address) {
+  if (tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
     const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
     if(getWalletBalance) {
@@ -45,11 +45,12 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
       const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
+      
       const balance = await tokenContract.balanceOf(address);
       const decimals = await tokenContract.decimals()
       return {
         value: balance,
-        formatted: formatAmount(BigNumber(balance.toString()).toString(), decimals)
+        formatted: formatAmount(balance.toString(), decimals)
       }
     } catch (error) {
       return Promise.reject(error);
@@ -70,7 +71,7 @@ export async function getBalancesInSingleCall(walletAddress: string, tokensToDet
     // Only fetch balance if contract address exists
     return {};
   }
-  const contractAddress = SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID[chain.id]; 
+  const contractAddress = SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID[chain.id];
   const data = await getAddressBalances(provider, walletAddress, tokensToDetect, {
     contractAddress
   })
@@ -90,8 +91,9 @@ export async function getBalancesInSingleCall(walletAddress: string, tokensToDet
 // get fiat from token
 // https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 export async function fetchUSD(fsym: string) {
+  const fsymFormat = fsym.toUpperCase().indexOf('ETH') > -1 ? 'ETH' : fsym.toUpperCase()
   const params = {
-    fsym: fsym.toLocaleUpperCase(),
+    fsym: fsymFormat,
     tsyms: 'USD'
   }
   try {
@@ -155,7 +157,22 @@ const chainList = [{
   "id": "zksync",
   "chain_identifier": 324,
   "name": "zkSync",
-  "shortname": ""
+  "shortname": "zks"
+},{
+  "id": "okex-chain",
+  "chain_identifier": 66,
+  "name": "OKExChain",
+  "shortname": "OKEx"
+},{
+  "id": "ethereumpow",
+  "chain_identifier": 10001,
+  "name": "EthereumPoW",
+  "shortname": "ethw"
+},{
+  "id": "conflux",
+  "chain_identifier": 1030,
+  "name": "Conflux",
+  "shortname": "conflux"
 }]
 
 export async function fetchUSDList(chainId: number, contract_addresses: string) {
@@ -172,4 +189,23 @@ export async function fetchUSDList(chainId: number, contract_addresses: string) 
     }
   }
   return Promise.resolve({})
+}
+
+export async function fetchToken(tokenAddress: address, chain: Chain) {
+  const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]); 
+  const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
+  const decimals = await tokenContract.decimals()
+  const tokenName = await tokenContract.name()
+  const symbol = await tokenContract.symbol()
+  
+  return {
+    "symbol": symbol.toUpperCase(),
+    "name": tokenName,
+    "address": tokenAddress,
+    "decimals": BigNumber(decimals).toNumber(),
+    'chain_id': chain.id,
+    "logo_uri": '',
+    'balance': '0',
+    'isImport': true
+  }
 }

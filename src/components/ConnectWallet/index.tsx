@@ -2,7 +2,7 @@ import { AuthenticationStatus, Chain } from '@rainbow-me/rainbowkit';
 import { Button } from 'antd-mobile'
 import { FC, useContext, useEffect, useState } from 'react'
 import ChainList from '../ChainList';
-import { isIOS, shortenAddress } from '@/utils';
+import { isRequest, shortenAddress } from '@/utils';
 import './index.less'
 
 import {
@@ -83,7 +83,7 @@ const ConnectWallet: FC<IProps> = (props) => {
     }
     swapContext?.setGlobalDialogMessage({
       type: 'error',
-      description: `Failed to connect to the wallet, please refresh the page=>platform:${isIOS() ? 'IOS' : 'Android'}`
+      description: `Failed to connect to the wallet, please refresh the page`
     })
     
     console.log('reloadPage-getEthereum', window.ethereum)
@@ -105,7 +105,7 @@ const ConnectWallet: FC<IProps> = (props) => {
       reloadPageCancel()
       runReload()
       console.log('test connnect')
-      if(!window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS()) {
+      if(isRequest(provider)) {
         await provider?.request({ method: 'eth_chainId', params: [] })
       }
       console.log('test connnect success>>>>>>')

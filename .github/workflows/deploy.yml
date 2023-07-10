@@ -36,7 +36,7 @@ jobs:
       - name: Put object index.html to S3
         run: |
           aws s3api put-object --bucket swap.mises \
-           --key test/index.html \
+           --key main/index.html \
            --body build/index.html \
            --cache-control max-age=86400 \
            --content-type text/html

@@ -16,7 +16,7 @@ const PriceImpact: FC<IProps> = (props)=> {
     const tokens = props.tokens
     const fromAmount = swapContext?.currentSwitchType === 'from' ? swapContext?.fromAmount : swapContext?.toAmount
     const fromTokenData = swapContext?.currentSwitchType === 'from' ? swapContext?.swapFromData : swapContext?.swapToData
-    const fromToken = props.tokens?.find(val=>val.address === fromTokenData?.tokenAddress)
+    const fromToken = props.tokens?.find(val=>val.address.toLowerCase() === fromTokenData?.tokenAddress.toLowerCase())
 
     let fromTokenPrice = 0
 
@@ -26,7 +26,7 @@ const PriceImpact: FC<IProps> = (props)=> {
 
     const toTokenData = swapContext?.currentSwitchType === 'from' ? swapContext?.swapToData : swapContext?.swapFromData
     const toAmount =  swapContext?.currentSwitchType === 'from' ?  swapContext?.toAmount : swapContext?.fromAmount
-    const toToken = tokens?.find(val=>val.address === toTokenData?.tokenAddress)
+    const toToken = tokens?.find(val=>val.address.toLowerCase() === toTokenData?.tokenAddress.toLowerCase())
 
     let toTokenPrice = 0
     if(toAmount && toToken?.price && !BigNumber(toAmount).isZero()) {
