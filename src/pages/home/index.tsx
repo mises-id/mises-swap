@@ -445,7 +445,7 @@ const Home = () => {
 
           const { hash } = await sendTransaction({
             ...params,
-            gasPrice: gas_price && BigInt(parseInt(gas_price)),
+            gasPrice: BigInt(parseInt(gas_price ? gas_price : 0)),
             gas: gas_limit as any
           })
 
@@ -609,7 +609,7 @@ const Home = () => {
 
       const { hash } = await sendTransaction({
         ...params,
-        gasPrice: gas_price && BigInt(parseInt(gas_price)),
+        gasPrice: BigInt(parseInt(gas_price ? gas_price : 0)),
         gas: gas_limit as any,
         chainId,
       })
