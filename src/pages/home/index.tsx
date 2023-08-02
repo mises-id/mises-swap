@@ -441,11 +441,10 @@ const Home = () => {
           const transactionResult = await getTransaction(tokenAddress, contract_address)
           // eth_sendTransaction
 
-          const { gas_price, gas_limit, ...params } = transactionResult.data
+          const { gas_limit, ...params } = transactionResult.data
 
           const { hash } = await sendTransaction({
             ...params,
-            gasPrice: BigInt(parseInt(gas_price ? gas_price : '0')),
             gas: gas_limit as any
           })
 
@@ -597,7 +596,7 @@ const Home = () => {
         return
       }
 
-      const { gas_price, gas_limit, ...params } = firstTrade.trade
+      const { gas_limit, ...params } = firstTrade.trade
 
       if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== firstTrade.from_token_amount.toString()) {
         swapContext?.setGlobalDialogMessage({
@@ -609,7 +608,6 @@ const Home = () => {
 
       const { hash } = await sendTransaction({
         ...params,
-        gasPrice: BigInt(parseInt(gas_price ? gas_price : '0')),
         gas: gas_limit as any,
         chainId,
       })
