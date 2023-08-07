@@ -35,6 +35,8 @@ const Quote: FC<Iprops> = (props) => {
         const to_token_amount = fromToken.tokenAddress.toLowerCase() === data.from_token_address.toLowerCase() ? data.to_token_amount : data.from_token_amount
 
         const fromAmount = formatAmount(from_token_amount, fromToken?.decimals)
+        if(!toToken?.decimals) return;
+
         const toAmount = formatAmount(to_token_amount, toToken?.decimals)
         const showFromToken = tokenType === 'from' ? fromToken : toToken
         const showToToken = tokenType === 'from' ? toToken : fromToken
@@ -67,7 +69,7 @@ const Quote: FC<Iprops> = (props) => {
     if (props.data && slippage && props.tokens) {
       const data = props.data.bestQuote
       const toToken = swapContext?.swapToData
-      if (!toToken) return
+      if(!toToken?.decimals) return;
 
       const from_token_amount = toToken.tokenAddress.toLowerCase() === data.to_token_address.toLowerCase() ? data.to_token_amount : data.from_token_amount
       const toAmount = formatAmount(from_token_amount, toToken?.decimals)
@@ -83,7 +85,7 @@ const Quote: FC<Iprops> = (props) => {
     if (props.data && props.tokens) {
       const data = props.data.bestQuote
       const toToken = swapContext?.swapToData
-      if (!toToken) return
+      if(!toToken?.decimals) return;
 
       const from_token_amount = toToken.tokenAddress.toLowerCase() === data.to_token_address.toLowerCase() ? data.to_token_amount : data.from_token_amount
       const toAmount = formatAmount(from_token_amount, toToken?.decimals)

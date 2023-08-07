@@ -223,7 +223,7 @@ const SelectTokens: FC<Iprops> = (props) => {
   });
 
   const selectToken = (token?: token) => {
-    if (swapContext && token && token.address !== toTokenAddress && token.address !== fromTokenAddress) {
+    if (swapContext && token && token.address.toLowerCase() !== toTokenAddress?.toLowerCase() && token.address.toLowerCase() !== fromTokenAddress?.toLowerCase()) {
       props.onChange?.(token.address)
       setopen(false)
       setTokenAddress(token.address)
