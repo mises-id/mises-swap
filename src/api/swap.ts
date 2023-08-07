@@ -87,3 +87,11 @@ export function getOrderList<T=any,P=any>(from_address: string, params: P): Axio
     headers: header()
   })
 }
+export function walletsAnd_Tokens<T=any,P=any>(data: P): AxiosPromise<T>{
+  return swapRequest({
+    url: `/wallets_and_tokens`,
+    data,
+    method: 'post',
+    headers: header()
+  })
+}
