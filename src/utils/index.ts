@@ -99,7 +99,7 @@ export function formatErrorMessage(error: any, message: string) {
     type: 'error',
     description: error.shortMessage || message || 'Unknown error'
   }
-
+  const userRejectedNotAlert = undefined // 用户取消不提醒
   if(error.name === 'TransactionExecutionError') {
     if(error.details === `[ethjs-query] while formatting outputs from RPC '{"value":{"code":-32603,"data":{"code":-32000,"message":"transaction underpriced"}}}'`) {
       // low gas fee failed
@@ -108,14 +108,17 @@ export function formatErrorMessage(error: any, message: string) {
     if(error.details?.indexOf(`User denied transaction signature.`) > -1 || error.details?.indexOf(`The user rejected the request.`) > -1) {
       // User denied
       errorMessage.description = error.shortMessage
+      return userRejectedNotAlert
     }
     if(error.shortMessage?.indexOf(`User rejected the request.`) > -1) {
       // User denied
       errorMessage.description = error.shortMessage
+      return userRejectedNotAlert
     }
     if(error.details?.indexOf(`User rejected the provision of an Identity`) > -1) {
       // User denied
       errorMessage.description = 'User rejected the request.'
+      return userRejectedNotAlert
     }
     // if(error.details?.indexOf('Fetching fee data failed') > -1) {
     //   errorMessage.description = 'Fetching fee data failed.'

@@ -428,19 +428,25 @@ const Home = () => {
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
     if (!tokenAddress || tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase()) return
-
+    let beforeStatus = swapContext?.status // 记录当前status, 失败恢复此status
     try {
+      
       const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
-        setapproveLoading(true)
         const result = await getAllowance(tokenAddress, contract_address)
 
         const comparedAllowance = swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
 
         if (comparedAllowance === -1) {
+          swapContext?.setStatus(10) // 修改status为: approve pending 
+          setapproveLoading(true)
           const transactionResult = await getTransaction(tokenAddress, contract_address)
+           // show pending transaction
+           swapContext.setGlobalDialogMessage({
+            type: 'pending',
+            description: `Waiting for confirmation Approve`
+          })
           // eth_sendTransaction
-
           const { gas_limit, ...params } = transactionResult.data
 
           const { hash } = await sendTransaction({
@@ -448,11 +454,14 @@ const Home = () => {
             gas: gas_limit as any
           })
 
-          // // eth_getTransactionReceipt
+          // eth_getTransactionReceipt
           const data = await waitForTransaction({
             hash: hash,
             confirmations: 4,
+            timeout: 8000
           })
+          swapContext.setGlobalDialogMessage(undefined) // close approve pending
+          
           swapContext?.pushNotificationData({
             type: 'success',
             fromToken: swapContext?.swapFromData as unknown as token,
@@ -463,33 +472,83 @@ const Home = () => {
 
           setapproveLoading(false)
           swapContext?.setStatus(99999)
+          beforeStatus = 99999
           await submitSwap()
         }else {
           swapContext?.setStatus(99999)
         }
       }
     } catch (error: any) {
+      console.log("approve error: ",error)
+      if (beforeStatus) {
+        swapContext?.setStatus(beforeStatus) // 恢复之前状态
+      }
       setapproveLoading(false)
       cancel()
-      if (error.message) {
-        if (error.name === 'TransactionNotFoundError') {
-          return
-        }
-        if(error.message.indexOf('User rejected the request') > -1){
-          run()
-        }
-        
-        swapContext?.setGlobalDialogMessage({
+       // Network error
+       if (isNetworkError(error)) {
+        swapContext.setGlobalDialogMessage({
           type: 'error',
-          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
+          description: "Network error, please try again later."
         })
         return
       }
-      swapContext?.setGlobalDialogMessage({
+
+      // 用户拒绝请求不提示
+      if (isUserRejectedRequestError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        run()
+        return
+      }
+      
+      // Send Transition error
+
+      if (isSendTransactionError(error)) {
+        swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+        return
+      }
+
+      // Wait For Transaction 不提示
+      if (isWaitForTransactionError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        // 直接提交swap
+        setapproveLoading(false)
+        swapContext?.setStatus(99999)
+        await submitSwap()
+        return
+      }
+
+      let errorDesc = error.description || error.reason || error.message || 'Unknown error'
+      swapContext.setGlobalDialogMessage({
         type: 'error',
-        description: 'Unknown error'
+        description: errorDesc
       })
     }
+  }
+
+  const isNetworkError = (error: any) => {
+    return error.code && error.code === "ERR_NETWORK" 
+  }
+
+  const isUserRejectedRequestError = (error: any) => {
+    if(error.details?.indexOf(`User denied transaction signature.`) > -1 || error.details?.indexOf(`The user rejected the request.`) > -1) {
+      return true
+    }
+    if(error.shortMessage?.indexOf(`User rejected the request.`) > -1) {
+      return true
+    }
+    if(error.details?.indexOf(`User rejected the provision of an Identity`) > -1) {
+      return true
+    }
+    return false
+  }
+
+  const isSendTransactionError = (error: any) =>  {
+    return error.name && error.name === "TransactionExecutionError"
+  }
+
+  const isWaitForTransactionError = (error: any) =>  {
+    return error.name && (error.name === "TransactionNotFoundError" || error.name === "TransactionReceiptNotFoundError" || error.name === "WaitForTransactionReceiptTimeoutError")
   }
 
   const confirmSwap = async () => {
@@ -535,7 +594,8 @@ const Home = () => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
-
+    swapContext?.setStatus(99999)
+    const beforeStatus = swapContext?.status // 记录当前status, 失败恢复此status
     try {
 
       const fromToken = swapContext!.tokens?.length && fromTokenAddress && findToken(swapContext!.tokens, fromTokenAddress)
@@ -553,6 +613,7 @@ const Home = () => {
       }
 
       if (swapContext) {
+        swapContext?.setStatus(21) // 修改status为: swap pending
         setapproveLoading(true)
         const fromTokenAmount = `${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol}`
         const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(swapContext?.toAmount).toString())} ${swapContext?.swapToData.symbol}`
@@ -583,6 +644,9 @@ const Home = () => {
             type: 'cannotEstimate',
             description: ''
           })
+          if (beforeStatus) {
+            swapContext?.setStatus(beforeStatus)
+          }
           setapproveLoading(false)
           return
         }
@@ -591,11 +655,12 @@ const Home = () => {
           type: 'error',
           description: firstTrade.error || 'Unknown error'
         })
-
+        if (beforeStatus) {
+          swapContext?.setStatus(beforeStatus)
+        }
         setapproveLoading(false)
         return
       }
-
       const { gas_limit, ...params } = firstTrade.trade
 
       if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== firstTrade.from_token_amount.toString()) {
@@ -603,6 +668,9 @@ const Home = () => {
           type: 'error',
           description: 'Internal error, please try again'
         })
+        if (beforeStatus) {
+          swapContext?.setStatus(beforeStatus)
+        }
         return
       }
 
@@ -611,7 +679,9 @@ const Home = () => {
         gas: gas_limit as any,
         chainId,
       })
-
+      if (beforeStatus) {
+        swapContext?.setStatus(beforeStatus)
+      }
       swapContext?.setGlobalDialogMessage({
         type: 'success',
         description: 'Transaction submitted',
@@ -627,6 +697,7 @@ const Home = () => {
       const data = await waitForTransaction({
         hash: hash,
         confirmations: 4,
+        //timeout: 20000
       })
 
       swapContext?.pushNotificationData({
@@ -641,43 +712,44 @@ const Home = () => {
       setapproveLoading(false)
       cancel()
       resetInputData()
-      console.log(data)
 
     } catch (error: any) {
+      swapContext?.setStatus(99999) // 恢复此状态
       setapproveLoading(false)
       if (!swapContext) return
+      
+      // Network error
+      if (isNetworkError(error)) {
+        swapContext.setGlobalDialogMessage({
+          type: 'error',
+          description: "Network error, please try again later."
+        })
+        return
+      }
 
-      console.log(JSON.stringify(error), 'error message log')
+      // 用户拒绝请求不提示
+      if (isUserRejectedRequestError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        return
+      }
+      
+      // Send Transition error
 
-      if (error.name === 'TransactionExecutionError') {
+      if (isSendTransactionError(error)) {
         swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
         return
       }
-      if (error.name === 'TransactionNotFoundError') {
-        // swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+
+      // Wait For Transaction 不提示
+      if (isWaitForTransactionError(error)) {
+        //swapContext.setGlobalDialogMessage(undefined)
         return
       }
 
-
-      if (error.description) {
-        swapContext.setGlobalDialogMessage({
-          type: 'error',
-          description: error.description
-        })
-        return
-      }
-
-      if (error.message && swapContext) {
-        swapContext.setGlobalDialogMessage({
-          type: 'error',
-          description: (error.reason || error.message || 'Unknown error')
-        })
-        return
-      }
-
+      let errorDesc = error.description || error.reason || error.message || 'Unknown error'
       swapContext.setGlobalDialogMessage({
         type: 'error',
-        description: 'Unknown error'
+        description: errorDesc
       })
     }
   }

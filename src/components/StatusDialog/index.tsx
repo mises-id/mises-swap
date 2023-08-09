@@ -74,7 +74,7 @@ const StatusDialog: FC<Iprops> = (props) => {
   if(!swapContext?.globalDialogMessage) return <div></div>
 
   return (
-    <CenterPopup {...props} visible={isOpen} showCloseButton onClose={()=>{
+    <CenterPopup {...props} visible={isOpen} showCloseButton bodyStyle={{ minHeight: '45vh' }} onClose={()=>{
       dismiss()
       swapContext?.globalDialogMessage?.type === 'success' && props.successClose?.()
     }} className='dialog-container down-dialog-style'>
