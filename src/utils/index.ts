@@ -21,6 +21,10 @@ export const TRUNCATED_ADDRESS_START_CHARS = 5;
 export const TRUNCATED_NAME_CHAR_LIMIT = 11;
 export const TRUNCATED_ADDRESS_END_CHARS = 4;
 
+export function isETH(address: string): boolean { 
+  return address.toLowerCase() === nativeTokenAddress
+}
+
 export function shortenAddress(
   address = '',
   prefix = TRUNCATED_ADDRESS_START_CHARS,
@@ -129,4 +133,61 @@ export function formatErrorMessage(error: any, message: string) {
 
 export function isRequest(provider: any) {
   return !window.befi && !window.nabox && provider.name !== "ezdefi" && !isIOS() && !window.phantom
+}
+
+// retryRequest
+type Service<TData, TParams extends any[]> = (...args: TParams) => Promise<TData>;
+interface Options {
+  retryCount?: number;
+  retryInterval?: number;
+}
+export const retryRequest = <TData, TParams extends any[]>(
+  service: Service<TData,TParams>,
+  options?: Options
+) => {
+  const defaultRetryCount = 3
+  const defaultRetryInterval = -1
+  const retryCount = options?.retryCount || defaultRetryCount
+  const fn = async (...args: TParams) => { 
+    let output: [any, TData | null] = [null, null];
+    const maxSleep = 1000 * 30 //30s
+    for (let a = 0; a < retryCount; a++) {
+      output = await requestWrap(service(...args))
+
+      if (output[1]) {
+        break;
+      }
+      let retryInterval = options?.retryInterval || defaultRetryInterval
+      if (retryInterval < 0) {
+        retryInterval = 500 * 2 ** (a + 1)
+        if (retryInterval > maxSleep) retryInterval = maxSleep
+      }
+      console.log(`retry ${a + 1} times, error: ${output[0]}, sleep time: ${retryInterval}`);
+      await sleep(retryInterval);
+    }
+
+    if (output[0]) {
+      throw output[0];
+    }
+
+    return output[1] as TData;
+  }
+  return fn
+};
+
+const sleep = (time: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, time);
+  });
+};
+
+const requestWrap = async <TData, U = any>(
+  promise: Promise<TData>
+): Promise<[U | null, TData | null]> => {
+  try {
+    const data = await promise;
+    return [null, data];
+  } catch (err: any) {
+    return [err, null];
+  }
 }

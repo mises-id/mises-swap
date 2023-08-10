@@ -5,9 +5,9 @@ import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
-import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
+import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest, isETH } from "@/utils";
 import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
-import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
+import { sendTransaction, waitForTransaction, getWalletClient, fetchBalance } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
@@ -68,6 +68,8 @@ const Home = () => {
 
   const [isTokenLoading, { setTrue, setFalse }] = useBoolean(true);
 
+  const getBalancesInSingleCallWithRetry = retryRequest(getBalancesInSingleCall)
+
   const getTokenListBalance = async (tokenList: token[]) => {
 
     tokenList = tokenList.map(val => {
@@ -109,7 +111,7 @@ const Home = () => {
       })
 
       try {
-        const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
+        const data = await getBalancesInSingleCallWithRetry(address, tokensToDetect, chain)
         for (const key in data) {
           const balance = data[key];
           const tokenAddress = key.toLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
@@ -119,7 +121,6 @@ const Home = () => {
             // console.log(tokenList[tokenIndex], tokenAddress, key)
           }
         }
-        console.log(tokenList, 'getBalancesInSingleCall')
         setFalse()
         return tokenList
 
@@ -581,6 +582,8 @@ const Home = () => {
     }
   }
 
+  const getSwapTradeWithRetry = retryRequest(trade,{retryCount:5})
+
   const submitSwap = async () => {
     const walletClient = await getWalletClient({ chainId })
     console.log(walletClient, 'not found walletClient ')
@@ -616,7 +619,7 @@ const Home = () => {
         swapContext?.setStatus(21) // 修改status为: swap pending
         setapproveLoading(true)
         const fromTokenAmount = `${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol}`
-        const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(swapContext?.toAmount).toString())} ${swapContext?.swapToData.symbol}`
+        const toTokenAmount = `${swapContext?.swapToData.decimals && swapContext?.toAmount} ${swapContext?.swapToData.symbol}`
         swapContext.setGlobalDialogMessage({
           type: 'pending',
           description: `Waiting for confirmation Swapping ${fromTokenAmount} for ${toTokenAmount}`
@@ -634,7 +637,7 @@ const Home = () => {
         aggregator_address: aggregatorAddress
       }
 
-      const result = await trade<{ data: swapData }, quoteParams>(tradeParams)
+      const result = await getSwapTradeWithRetry<{ data: swapData }, quoteParams>(tradeParams)
 
       const firstTrade = result.data.data
 
@@ -712,6 +715,8 @@ const Home = () => {
       setapproveLoading(false)
       cancel()
       resetInputData()
+      updateTokenBalance(fromTokenAddress)
+      updateTokenBalance(toTokenAddress)
 
     } catch (error: any) {
       swapContext?.setStatus(99999) // 恢复此状态
@@ -912,6 +917,26 @@ const Home = () => {
     }
   }
 
+  const updateTokenBalance = async (tokenAddress: string) => {
+    const tokens = swapContext!.tokens
+    if (chain && address && tokens ) { 
+      const balance = await fetchBalance({
+        address: address,
+        formatUnits: 'wei',
+        token: isETH(tokenAddress) ? undefined : tokenAddress as address
+      })
+      if(balance?.formatted && balance?.formatted !== '0'){
+        const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
+        const newBalance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+        if (tokens[tokenIndex].balance !== newBalance) {
+          tokens[tokenIndex].balance = newBalance
+          swapContext!.settokens([...tokens])
+        }
+       
+      }
+      console.log("balance: ", balance)
+    }
+  }
 
   const getFromTokenChange = async (val: string) => {
     const tokens = swapContext!.tokens
@@ -928,14 +953,13 @@ const Home = () => {
         ...swapContext.swapFromData
       })
     }
-
+    updateTokenBalance(val) // update from token balance
     const toTokenAddress = swapContext!.swapToData.tokenAddress
 
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
-
-    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
+    if(chain && address && !connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapFromData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
         if(balance?.value.toString() !== '0'){

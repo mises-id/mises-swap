@@ -1,5 +1,5 @@
 import { Input, InputProps } from 'antd-mobile'
-import { Ref, forwardRef, useContext, useEffect, useMemo, useState } from 'react'
+import { Ref, forwardRef, useContext, useEffect, useMemo } from 'react'
 import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
@@ -32,7 +32,7 @@ interface Iprops extends InputProps {
 const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
   const { address } = useAccount()
   const swapContext = useContext(SwapContext)
-  const [isSetedMax, setIsSetedMax] = useState(false)
+  //const [isSetedMax, setIsSetedMax] = useState(false)
 
   const { chain } = useNetwork()
   
@@ -40,14 +40,13 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if (props.tokenAddress && address && chain?.id && props.tokens?.length) {
       // setIsSetedMax(false)
       const findToken = props.tokens.find(val=>val.address.toLowerCase() === props.tokenAddress?.toLowerCase())
-      return findToken && findToken.balance ? substringAmount(findToken.balance) : '0'
+      return findToken && findToken.balance ? (findToken.balance) : '0'
     }
     return '0'
   }, [props.tokenAddress, props.tokens, address, chain])
-
   useEffect(() => {
     if(address) {
-      setIsSetedMax(false)
+      //setIsSetedMax(false)
     }
   }, [address, props.tokenAddress, chain?.id])
   
@@ -55,7 +54,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
   const toMax = async () => {
     if(chain?.id){
-      setIsSetedMax(true)
+      //setIsSetedMax(true)
       if (props.tokenAddress?.toLowerCase() === nativeTokenAddress.toLowerCase()){
         const gasFee = networksFee[chain?.id] || '0.01'
         const fromAmount = BigNumber(tokenBalance || 0).minus(gasFee).toString()
@@ -72,14 +71,18 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
 
   const showMax = useMemo(() => {
     if(!chain?.id) return false;
-    if(tokenBalance ==='0.00000...') return false;
-    if(props.tokenAddress?.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
-      return true
+    if (tokenBalance === '0') return false;
+    if (tokenBalance === '0.00000...') return false;
+    const currentBalance = BigNumber(swapContext?.fromAmount || 0)
+    let maxBalance = BigNumber(tokenBalance || 0)
+    // eth: tokenBalance - gas
+    if (props.tokenAddress?.toLowerCase() === nativeTokenAddress.toLowerCase()) {
+      const gasFee = networksFee[chain?.id] || '0.01'
+      maxBalance = maxBalance.minus(gasFee)
     }
-    const gasFee = networksFee[chain?.id] || '0.01'
-
-    return props.tokenAddress && address && BigNumber(tokenBalance || 0).comparedTo(gasFee) > -1
-  }, [props.tokenAddress, address, tokenBalance, chain?.id])
+  
+    return props.tokenAddress && address && currentBalance < maxBalance
+  }, [props.tokenAddress, address, tokenBalance, chain?.id, swapContext?.fromAmount])
   
   const priceValue = useMemo(() => {
     const token = props.tokens?.find(val=>val.address.toLowerCase() === props.tokenAddress?.toLowerCase())
@@ -119,8 +122,8 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
       </div>
       <div>
         {props.tokenAddress && address && !props.isTokenLoading && props.tokens?.length ? <>
-          Balance: {tokenBalance}
-          {props.type === 'from' && tokenBalance !== '0' && showMax && !isSetedMax && <span onClick={toMax} className='max'>Max</span>}
+          Balance: {substringAmount(tokenBalance)}
+          {props.type === 'from' && tokenBalance !== '0' && showMax && <span onClick={toMax} className='max'>Max</span>}
         </> : null}
       </div>
     </div>}
