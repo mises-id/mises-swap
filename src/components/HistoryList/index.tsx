@@ -248,7 +248,7 @@ const HistoryList: FC<IProps> = (props) => {
             setdetail(undefined)
           }} />
         </div>
-        <div className='flex flex-col justify-between' style={{ height: 'calc(100% - 40px)' }}>
+        <div className='flex flex-col justify-between' style={{ height: 'calc(100% - 40px)', overflow: 'auto' }}>
           <div className='flex-none relative'>
             <div className='swap-token-item'>
               <p className='token-item-title'>You sold</p>
