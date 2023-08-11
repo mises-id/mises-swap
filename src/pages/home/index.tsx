@@ -172,6 +172,8 @@ const Home = () => {
   //   getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
   // });
 
+  const getTokensWithRetry = retryRequest(getTokens,{retryCount: 5})
+
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem('tokenList')
@@ -184,7 +186,7 @@ const Home = () => {
         if(hasChainTokenList.length === 0 && isCheckChainId) tokenList = []
       }
       if(tokenList.length===0) {
-        const res = await getTokens<{ "data": token[] }>()
+        const res = await getTokensWithRetry<{ "data": token[] }>()
         if (res) {
           tokenList = res.data.data || []
           sessionStorage.setItem('tokenList', JSON.stringify(tokenList))
@@ -277,6 +279,8 @@ const Home = () => {
     })
   }
 
+  const getQuotesWithRetry = retryRequest(getQuote)
+
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
     const tokens = swapContext!.tokens
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
@@ -289,7 +293,7 @@ const Home = () => {
 
     try {
       renderTokenPrice(fromTokenAddr, toTokenAddr)
-      const res = await getQuote<{ data: {
+      const res = await getQuotesWithRetry<{ data: {
         all_quote: swapData[],
         error: string,
         best_quote: swapData
@@ -846,9 +850,9 @@ const Home = () => {
     console.log("watchAccount", isConnected, chain?.id, address)
   }, [address])
 
-  const replaceValue = (val: string) => {
-    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,18})/g)?.[0] || ""
-    return value
+  const replaceValue = (val: string, decimals: number = 18) => {
+    const valueRegex = new RegExp( `^\\d*[.]?\\d{0,${decimals}}`,'g')
+    return val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(valueRegex)?.[0] || ""
   }
 
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
@@ -856,7 +860,7 @@ const Home = () => {
   const getFromInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = replaceValue(val)
+      const value = replaceValue(val,swapContext?.swapFromData.decimals)
       setFromInputChange(value)
     } else {
       swapContext?.setFromAmount('')
@@ -868,7 +872,7 @@ const Home = () => {
   const getToInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = replaceValue(val)
+      const value = replaceValue(val,swapContext?.swapToData.decimals)
       swapContext?.setToAmount(value)
       setToInputChange(value)
     } else {
@@ -934,7 +938,6 @@ const Home = () => {
         }
        
       }
-      console.log("balance: ", balance)
     }
   }
 
@@ -959,7 +962,7 @@ const Home = () => {
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
-    if(chain && address && !connotUseChainId.includes(chain.id) && tokens) {
+    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
       if(swapContext?.swapFromData.tokenAddress) {
         const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
         if(balance?.value.toString() !== '0'){
@@ -1153,7 +1156,7 @@ const Home = () => {
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
-            maxLength={swapContext?.swapFromData.decimals}
+            //maxLength={swapContext?.swapFromData.decimals}
             ref={fromInputRef}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
@@ -1168,7 +1171,7 @@ const Home = () => {
             tokens={swapContext!.tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
-            maxLength={swapContext?.swapToData.decimals}
+            //maxLength={swapContext?.swapToData.decimals}
             onChange={getToInputChange}
             onTokenChange={getToTokenChange}
             placeholder='0'

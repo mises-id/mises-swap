@@ -4,7 +4,7 @@ import './index.less'
 import SelectTokens from '../selectToken'
 import { useAccount , useNetwork } from 'wagmi'
 import { SwapContext } from '@/context/swapContext'
-import { nativeTokenAddress, substringAmount } from '@/utils'
+import { nativeTokenAddress, substringAmount, toNonExponential } from '@/utils'
 import BigNumber from 'bignumber.js'
 export interface tokenInputRef {
   getBalanceFn: () => void
@@ -81,7 +81,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
       maxBalance = maxBalance.minus(gasFee)
     }
   
-    return props.tokenAddress && address && currentBalance < maxBalance
+    return props.tokenAddress && address && currentBalance.comparedTo(maxBalance) === -1
   }, [props.tokenAddress, address, tokenBalance, chain?.id, swapContext?.fromAmount])
   
   const priceValue = useMemo(() => {
@@ -89,7 +89,7 @@ const TokenInput = (props: Iprops, ref: Ref<tokenInputRef>) => {
     if(inputProps.value && token?.price && !BigNumber(inputProps.value).isZero()) {
       const price =  BigNumber(inputProps.value).multipliedBy(token?.price);
       if(BigNumber(price).comparedTo('0.00000001') > -1) {
-        const toStringPrice = price.toString()
+        const toStringPrice = toNonExponential(price.toNumber())
         const decimalPrice = toStringPrice.split('.')[1]
         if(decimalPrice && decimalPrice.length > 8) return `$${price.toFixed(8)}`
         return `$${toStringPrice}`

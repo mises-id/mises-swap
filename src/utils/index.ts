@@ -8,7 +8,7 @@ export function nowSec(): number {
 export function parseAmount(value: string, unitName?: BigNumberish): string {
   return ethers.parseUnits(value, unitName).toString()
 }
-function toNonExponential(num: number) {
+export function toNonExponential(num: number) {
   const m: any = num.toExponential().match(/\d(?:\.(\d*))?e([+-]\d+)/);
   return num.toFixed(Math.max(0, (m[1] || '').length - m[2]));
 }
