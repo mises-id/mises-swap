@@ -14,7 +14,7 @@ export function toNonExponential(num: number) {
 }
 export function formatAmount(value: string, unitName?: BigNumberish): string {
   const formatAmount = ethers.formatUnits(value || 0, Number(unitName))
-  return toNonExponential(BigNumber(formatAmount).toNumber())
+  return formatAmount
 }
 export const nativeTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const TRUNCATED_ADDRESS_START_CHARS = 5;
