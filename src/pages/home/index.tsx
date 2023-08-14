@@ -45,9 +45,6 @@ const Home = () => {
     if (getTokens?.length) {
       accountChangeRun(getTokens)
       console.log('run init')
-      // const tokenList = await getTokenListBalance(getTokens)
-
-      // settokens([...tokenList])
     }
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
@@ -132,7 +129,7 @@ const Home = () => {
       } catch (error: any) {
         console.log('getBalancesInSingleCall error', error)
         logEvent(analytics, 'swap_error', {
-          error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
+          error_message: `Failed to get balance of token list=>${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
         setFalse()
         return tokenList
@@ -776,6 +773,7 @@ const Home = () => {
     swapContext?.setquoteData(undefined)
     const tokenList = paramTokens || swapContext!.tokens
     if (tokenList?.length) {
+      updateTokenBalance(swapContext!.swapFromData.tokenAddress, tokenList)
       const tokenBalanceList = await getTokenListBalance(tokenList)
       swapContext!.settokens([...tokenBalanceList])
     }
@@ -889,8 +887,8 @@ const Home = () => {
     }
   }
 
-  const updateTokenBalance = async (tokenAddress: string) => {
-    const tokens = swapContext!.tokens
+  const updateTokenBalance = async (tokenAddress: string, tokenList?: token[]) => {
+    const tokens = swapContext!.tokens || tokenList
     if (chain && address && tokens ) { 
       
       const balance = await getBalance(tokenAddress as address, address, chain);
