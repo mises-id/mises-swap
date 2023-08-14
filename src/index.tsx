@@ -13,6 +13,8 @@ import reportWebVitals from './reportWebVitals';
 import './locales'
 
 import * as Sentry from "@sentry/react";
+import VConsole from 'vconsole';
+import { isIOS } from './utils';
 
 Sentry.init({
   enabled: process.env.NODE_ENV==='production',
@@ -27,9 +29,14 @@ Sentry.init({
   ignoreErrors:['UnhandledRejection'],
 });
 
+if(process.env.REACT_APP_NODE_ENV === 'test' && isIOS()) {
+  new VConsole();
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
 root.render(<App />);
 
 // If you want to start measuring performance in your app, pass a function

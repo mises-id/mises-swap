@@ -5,8 +5,8 @@ import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
-import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount } from "@/utils";
-import { useBoolean, useRequest, useUpdateEffect } from "ahooks";
+import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest } from "@/utils";
+import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -27,6 +27,9 @@ import { useNavigate } from "react-router-dom";
 import PriceImpact from "@/components/PriceImpact";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
+// Obtain token balance separately for the following chains
+// The chain list does not support batch retrieval of token balances
+const connotUseChainId = [100, 8217, 1313161554, 324, 10001, 1030, 66];
 const Home = () => {
   // firebase
   const analytics = useAnalytics()
@@ -41,6 +44,7 @@ const Home = () => {
     const getTokens = await getTokenList()
     if (getTokens?.length) {
       accountChangeRun(getTokens)
+      console.log('run init')
       // const tokenList = await getTokenListBalance(getTokens)
 
       // settokens([...tokenList])
@@ -59,16 +63,14 @@ const Home = () => {
   const { chain } = useNetwork()
 
   const chainId = chain?.id || swapContext?.chainId || 1
-  const [tokens, settokens] = useState<token[] | undefined>(undefined)
-  // const [toAmount, setToAmount] = useState('')
+  
   const { address, isConnected } = useAccount()
-  // const [quoteData, setquoteData] = useState<swapData | undefined>(undefined)
-  // const [currentSwitchType, setcurrentSwitchType] = useState<'from' | 'to'>('from')
-  // const latestCurrentSwitchTypeRef = useLatest(currentSwitchType);
 
   const [showConfirmDialog, setshowConfirmDialog] = useState(false)
 
   const [isTokenLoading, { setTrue, setFalse }] = useBoolean(true);
+
+  const getBalancesInSingleCallWithRetry = retryRequest(getBalancesInSingleCall)
 
   const getTokenListBalance = async (tokenList: token[]) => {
 
@@ -80,12 +82,15 @@ const Home = () => {
     if (address && chain) {
       console.log('call balances')
       setTrue()
-
-      if([100, 8217, 1313161554, 324].includes(chain.id)) {
+      /* 
+       * The chain does not support batch retrieval of token balances
+       * So, by using `connotUseChainId` to filter the chain list, we only obtain the matching ID
+      */
+      if(connotUseChainId.includes(chain.id)) {
         if(swapContext?.swapFromData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
         }
@@ -93,7 +98,7 @@ const Home = () => {
         if(swapContext?.swapToData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
           if(balance?.value.toString() !== '0'){
-            const tokenIndex = tokenList.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
+            const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
             console.log(balance?.value.toString())
             tokenList[tokenIndex].balance = formatAmount(balance?.value.toString(), tokenList[tokenIndex].decimals)
           }
@@ -104,27 +109,28 @@ const Home = () => {
       }
 
       const nativeTokenOtherAddress = '0x0000000000000000000000000000000000000000'
+
       const tokensToDetect = tokenList.map((val: token) => {
-        const tokenAddress = val.address === nativeTokenAddress ? nativeTokenOtherAddress : val.address
-        return tokenAddress.toLocaleLowerCase()
+        const tokenAddress = val.address.toLowerCase() === nativeTokenAddress.toLowerCase() ? nativeTokenOtherAddress : val.address
+        return tokenAddress.toLowerCase()
       })
 
       try {
-        const data = await getBalancesInSingleCall(address, tokensToDetect, chain)
+        const data = await getBalancesInSingleCallWithRetry(address, tokensToDetect, chain)
         for (const key in data) {
           const balance = data[key];
-          const tokenAddress = key.toLocaleLowerCase() === nativeTokenOtherAddress ? nativeTokenAddress : `${key}`;
-          const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+          const tokenAddress = key.toLowerCase() === nativeTokenOtherAddress.toLowerCase() ? nativeTokenAddress : `${key}`;
+          const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
           if (tokenIndex > -1) {
             tokenList[tokenIndex].balance = formatAmount(balance, tokenList[tokenIndex].decimals)
             // console.log(tokenList[tokenIndex], tokenAddress, key)
           }
         }
-        console.log(tokenList, 'getBalancesInSingleCall')
         setFalse()
         return tokenList
 
       } catch (error: any) {
+        console.log('getBalancesInSingleCall error', error)
         logEvent(analytics, 'swap_error', {
           error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
@@ -135,57 +141,34 @@ const Home = () => {
     return tokenList
   }
 
-  // const chunk = (arr: string[], counts: number) => {
-  //   const cloneArr = [...arr];
-  //   const result = [];
-  //   while(cloneArr.length) {
-  //     result.push(cloneArr.splice(0, counts));
-  //   }
-  //   return result;
-  // }
-
-  // const getTokenListToUSDPrice = async (tokenList: token[]) =>{
-  //   const ids = tokenList.map(val=>val.address)
-  //   const idsList = chunk(ids, 180);
-  //   const promiseAllIds = idsList.map((ids: string[]) => fetchUSDList(chainId, ids.join(',')))
-  //   const idsUSD = await Promise.all(promiseAllIds)
-
-  //   idsUSD.forEach(item =>{
-  //     for (const key in item) {
-  //       const element = item[key];
-  //       const findIndex = tokenList.findIndex(val=>val.address === key);
-  //       if(findIndex > -1 && element.usd) {
-  //         tokenList[findIndex].price = element.usd
-  //       }
-  //     }
-  //   })
-  //   return tokenList
-  // }
-
-  // const staleTime = 1000 * 60 * 6
-  // const { run: getTokenListToUSDPriceRun } = useRequest(getTokenListToUSDPrice, {
-  //   cacheKey: `${chainId}`,
-  //   staleTime,
-  //   manual: true,
-  //   setCache: (data) => sessionStorage.setItem(`${chainId}`, JSON.stringify(data)),
-  //   getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
-  // });
+  const getTokensWithRetry = retryRequest(getTokens,{retryCount: 5})
 
   const getTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem('tokenList')
+      const importTokensStr = localStorage.getItem('importTokenList')
       let tokenList: token[] = []
-      if (cacheTokens) {
+      if (cacheTokens && cacheTokens!=='undefined') {
         tokenList = JSON.parse(cacheTokens)
-      } else {
-        const res = await getTokens<{ "data": token[] }>()
+        const hasChainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
+        const isCheckChainId = chainList.some(val=>val.id === chainId)
+        if(hasChainTokenList.length === 0 && isCheckChainId) tokenList = []
+      }
+      if(tokenList.length===0) {
+        const res = await getTokensWithRetry<{ "data": token[] }>()
         if (res) {
-          tokenList = res.data.data
+          tokenList = res.data.data || []
           sessionStorage.setItem('tokenList', JSON.stringify(tokenList))
         } else {
           tokenList = []
         }
       }
+
+      if(importTokensStr) {
+        const importTokens: token[] = JSON.parse(importTokensStr)
+        tokenList = [...tokenList, ...importTokens]
+      }
+      
 
       const chainTokenList = tokenList?.filter(val=>val.chain_id === chainId) || []
       // const now = new Date().getTime()
@@ -200,7 +183,7 @@ const Home = () => {
       //   console.log('getTokenListToUSDPriceRun')
       // }
       
-      settokens([...chainTokenList])
+      swapContext!.settokens([...chainTokenList])
       getTokenToUSDPrice(nativeTokenAddress, chainTokenList)
 
       if (swapContext) {
@@ -229,9 +212,10 @@ const Home = () => {
   const [approveLoading, setapproveLoading] = useState(false)
   const cacheTime = 10000
   const renderTokenPrice = (fromTokenAddr: string, toTokenAddr: string) =>{
-    if(!tokens) return
-    const fromToken = tokens.find(val=>val.address === fromTokenAddr)
-    const toToken = tokens.find(val=>val.address === toTokenAddr)
+    if(!swapContext!.tokens) return
+    const tokens = swapContext!.tokens
+    const fromToken = tokens.find(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
+    const toToken = tokens.find(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
     const contract_addresses = []
     const now = new Date().getTime()
 
@@ -240,11 +224,10 @@ const Home = () => {
 
     if(contract_addresses.length === 0) return 
     fetchUSDList(chainId, contract_addresses.join(',')).then(res=>{
-      const formTokenToUsd = res[fromTokenAddr]
-      const toTokenToUsd = res[toTokenAddr]
-
+      const formTokenToUsd = res[fromTokenAddr.toLowerCase()]
+      const toTokenToUsd = res[toTokenAddr.toLowerCase()]
       if(formTokenToUsd) {
-        const fromTokenIndex = tokens.findIndex(val=>val.address === fromTokenAddr)
+        const fromTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === fromTokenAddr.toLowerCase())
         const last_updated_at = formTokenToUsd.last_updated_at
         if(fromTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[fromTokenIndex].price = formTokenToUsd.usd
@@ -253,7 +236,7 @@ const Home = () => {
       }
 
       if(toTokenToUsd) {
-        const toTokenIndex = tokens.findIndex(val=>val.address === toTokenAddr)
+        const toTokenIndex = tokens.findIndex(val=>val.address.toLowerCase() === toTokenAddr.toLowerCase())
         const last_updated_at = toTokenToUsd.last_updated_at
         if(toTokenIndex > -1 && now - last_updated_at * 1000 < 24 * 60 * 60 * 1000) {
           tokens[toTokenIndex].price = toTokenToUsd.usd
@@ -261,11 +244,14 @@ const Home = () => {
         }
       }
       
-      settokens([...tokens])
+      swapContext!.settokens([...tokens])
     })
   }
 
+  const getQuotesWithRetry = retryRequest(getQuote)
+
   const quote = async (fromTokenAddr = swapContext?.swapFromData.tokenAddress, toTokenAddr = swapContext?.swapToData.tokenAddress, amount = swapContext?.fromAmount, quoteType: 'from' | 'to' = 'from') => {
+    const tokens = swapContext!.tokens
     const fromToken = tokens?.length && fromTokenAddr && findToken(tokens, fromTokenAddr)
     if (!fromTokenAddr || !toTokenAddr || (!amount || amount === '0' || amount === '') || !fromToken || approveLoading) {
       return
@@ -276,20 +262,33 @@ const Home = () => {
 
     try {
       renderTokenPrice(fromTokenAddr, toTokenAddr)
-      const res = await getQuote<{ data: swapData[] }, quoteParams>({
+      const res = await getQuotesWithRetry<{ data: {
+        all_quote: swapData[],
+        error: string,
+        best_quote: swapData
+      } }, quoteParams>({
         chain_id: chainId,
         from_token_address: fromTokenAddr,
         to_token_address: toTokenAddr,
         amount: parseAmountStr
       })
-      if (res.data.data.length) {
-        const [firstTrade] = res.data.data
+      const result = res.data.data
+      if(result.error) {
+        swapContext?.setStatus(result.error)
+        swapContext?.setquoteData(undefined)
+        return
+      }
+      const firstTrade = result.best_quote
+      if (firstTrade) {
         if (firstTrade.error) {
           swapContext?.setStatus(firstTrade.error)
           swapContext?.setquoteData(undefined)
           return
         }
-        swapContext?.setquoteData(firstTrade)
+        swapContext?.setquoteData({
+          bestQuote: firstTrade,
+          allQuotes: result.all_quote
+        })
 
         const toToken = findToken(tokens, firstTrade.to_token_address)
         const toTokenAmount = formatAmount(firstTrade.to_token_amount, toToken?.decimals)
@@ -317,7 +316,7 @@ const Home = () => {
             return res
           }
 
-          if (getBalanceAddress !== nativeTokenAddress) {
+          if (getBalanceAddress.toLowerCase() !== nativeTokenAddress.toLowerCase()) {
             // allowance
             const allowance = await getAllowance(getBalanceAddress, firstTrade.aggregator.contract_address)
             if(allowance.data.allowance && BigNumber(allowance.data.allowance).comparedTo(BigNumber(10).pow(20))>-1) {
@@ -333,9 +332,11 @@ const Home = () => {
           }
         }
         return
+      }else {
+        swapContext?.setStatus('No payment channel found')
+        swapContext?.setquoteData(undefined)
       }
     } catch (error: any) {
-      console.log(error, '1111')
       if (error.message && error.message === "timeout of 5000ms exceeded") {
         swapContext?.setStatus(12)
       } else {
@@ -399,32 +400,41 @@ const Home = () => {
 
   const approve = async () => {
     const tokenAddress = swapContext?.swapFromData.tokenAddress
-    if (!tokenAddress && tokenAddress !== nativeTokenAddress) return
-
+    if (!tokenAddress || tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase()) return
+    let beforeStatus = swapContext?.status // 记录当前status, 失败恢复此status
     try {
-      const contract_address = swapContext?.quoteData?.aggregator?.contract_address
+      
+      const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
-        setapproveLoading(true)
         const result = await getAllowance(tokenAddress, contract_address)
 
         const comparedAllowance = swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
 
         if (comparedAllowance === -1) {
+          swapContext?.setStatus(10) // 修改status为: approve pending 
+          setapproveLoading(true)
           const transactionResult = await getTransaction(tokenAddress, contract_address)
+           // show pending transaction
+           swapContext.setGlobalDialogMessage({
+            type: 'pending',
+            description: `Waiting for confirmation Approve`
+          })
           // eth_sendTransaction
+          const { gas_limit, ...params } = transactionResult.data
 
-          const { gas_price, gas_limit, ...params } = transactionResult.data
           const { hash } = await sendTransaction({
             ...params,
-            gasPrice: gas_price,
             gas: gas_limit as any
           })
 
-          // // eth_getTransactionReceipt
+          // eth_getTransactionReceipt
           const data = await waitForTransaction({
             hash: hash,
             confirmations: 4,
+            timeout: 8000
           })
+          swapContext.setGlobalDialogMessage(undefined) // close approve pending
+          
           swapContext?.pushNotificationData({
             type: 'success',
             fromToken: swapContext?.swapFromData as unknown as token,
@@ -435,30 +445,83 @@ const Home = () => {
 
           setapproveLoading(false)
           swapContext?.setStatus(99999)
+          beforeStatus = 99999
           await submitSwap()
         }else {
           swapContext?.setStatus(99999)
         }
       }
     } catch (error: any) {
+      console.log("approve error: ",error)
+      if (beforeStatus) {
+        swapContext?.setStatus(beforeStatus) // 恢复之前状态
+      }
       setapproveLoading(false)
       cancel()
-      if (error.message) {
-        if (error.name === 'TransactionNotFoundError') {
-          return
-        }
-
-        swapContext?.setGlobalDialogMessage({
+       // Network error
+       if (isNetworkError(error)) {
+        swapContext.setGlobalDialogMessage({
           type: 'error',
-          description: error.message.indexOf('User rejected the request') > -1 ? 'User rejected the request' : (error.reason || error.message || 'Unknown error')
+          description: "Network error, please try again later."
         })
         return
       }
-      swapContext?.setGlobalDialogMessage({
+
+      // 用户拒绝请求不提示
+      if (isUserRejectedRequestError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        run()
+        return
+      }
+      
+      // Send Transition error
+
+      if (isSendTransactionError(error)) {
+        swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+        return
+      }
+
+      // Wait For Transaction 不提示
+      if (isWaitForTransactionError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        // 直接提交swap
+        setapproveLoading(false)
+        swapContext?.setStatus(99999)
+        await submitSwap()
+        return
+      }
+
+      let errorDesc = error.description || error.reason || error.message || 'Unknown error'
+      swapContext.setGlobalDialogMessage({
         type: 'error',
-        description: 'Unknown error'
+        description: errorDesc
       })
     }
+  }
+
+  const isNetworkError = (error: any) => {
+    return error.code && error.code === "ERR_NETWORK" 
+  }
+
+  const isUserRejectedRequestError = (error: any) => {
+    if(error.details?.indexOf(`User denied transaction signature.`) > -1 || error.details?.indexOf(`The user rejected the request.`) > -1) {
+      return true
+    }
+    if(error.shortMessage?.indexOf(`User rejected the request.`) > -1) {
+      return true
+    }
+    if(error.details?.indexOf(`User rejected the provision of an Identity`) > -1) {
+      return true
+    }
+    return false
+  }
+
+  const isSendTransactionError = (error: any) =>  {
+    return error.name && error.name === "TransactionExecutionError"
+  }
+
+  const isWaitForTransactionError = (error: any) =>  {
+    return error.name && (error.name === "TransactionNotFoundError" || error.name === "TransactionReceiptNotFoundError" || error.name === "WaitForTransactionReceiptTimeoutError")
   }
 
   const confirmSwap = async () => {
@@ -491,8 +554,9 @@ const Home = () => {
     }
   }
 
+  const getSwapTradeWithRetry = retryRequest(trade,{retryCount:5})
+
   const submitSwap = async () => {
-    // eth_signTypedData_v4
     const walletClient = await getWalletClient({ chainId })
     console.log(walletClient, 'not found walletClient ')
     if (!walletClient) {
@@ -505,14 +569,15 @@ const Home = () => {
     const fromTokenAddress = swapContext!.swapFromData.tokenAddress
     const toTokenAddress = swapContext!.swapToData.tokenAddress
     if (!address) return
-
+    swapContext?.setStatus(99999)
+    const beforeStatus = swapContext?.status // 记录当前status, 失败恢复此status
     try {
 
-      const fromToken = tokens?.length && fromTokenAddress && findToken(tokens, fromTokenAddress)
+      const fromToken = swapContext!.tokens?.length && fromTokenAddress && findToken(swapContext!.tokens, fromTokenAddress)
 
       const parseAmountStr = fromToken && swapContext?.fromAmount ? parseAmount(swapContext.fromAmount, fromToken?.decimals) : '0'
 
-      const aggregatorAddress = swapContext?.quoteData?.aggregator.contract_address
+      const aggregatorAddress = swapContext?.quoteData?.bestQuote.aggregator.contract_address
 
       if (!aggregatorAddress) {
         swapContext?.setGlobalDialogMessage({
@@ -523,9 +588,10 @@ const Home = () => {
       }
 
       if (swapContext) {
+        swapContext?.setStatus(21) // 修改status为: swap pending
         setapproveLoading(true)
         const fromTokenAmount = `${swapContext?.fromAmount} ${swapContext?.swapFromData.symbol}`
-        const toTokenAmount = `${swapContext?.swapToData.decimals && substringAmount(BigNumber(swapContext?.toAmount).toString())} ${swapContext?.swapToData.symbol}`
+        const toTokenAmount = `${swapContext?.swapToData.decimals && swapContext?.toAmount} ${swapContext?.swapToData.symbol}`
         swapContext.setGlobalDialogMessage({
           type: 'pending',
           description: `Waiting for confirmation Swapping ${fromTokenAmount} for ${toTokenAmount}`
@@ -543,7 +609,7 @@ const Home = () => {
         aggregator_address: aggregatorAddress
       }
 
-      const result = await trade<{ data: swapData }, quoteParams>(tradeParams)
+      const result = await getSwapTradeWithRetry<{ data: swapData }, quoteParams>(tradeParams)
 
       const firstTrade = result.data.data
 
@@ -553,6 +619,9 @@ const Home = () => {
             type: 'cannotEstimate',
             description: ''
           })
+          if (beforeStatus) {
+            swapContext?.setStatus(beforeStatus)
+          }
           setapproveLoading(false)
           return
         }
@@ -561,28 +630,33 @@ const Home = () => {
           type: 'error',
           description: firstTrade.error || 'Unknown error'
         })
-
+        if (beforeStatus) {
+          swapContext?.setStatus(beforeStatus)
+        }
         setapproveLoading(false)
         return
       }
-
-      const { gas_price, gas_limit, ...params } = firstTrade.trade
+      const { gas_limit, ...params } = firstTrade.trade
 
       if (tradeParams.from_token_address !== firstTrade.from_token_address || tradeParams.to_token_address !== firstTrade.to_token_address || tradeParams.amount !== firstTrade.from_token_amount.toString()) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: 'Internal error, please try again'
         })
+        if (beforeStatus) {
+          swapContext?.setStatus(beforeStatus)
+        }
         return
       }
 
       const { hash } = await sendTransaction({
         ...params,
-        gasPrice: gas_price,
         gas: gas_limit as any,
         chainId,
       })
-
+      if (beforeStatus) {
+        swapContext?.setStatus(beforeStatus)
+      }
       swapContext?.setGlobalDialogMessage({
         type: 'success',
         description: 'Transaction submitted',
@@ -598,6 +672,7 @@ const Home = () => {
       const data = await waitForTransaction({
         hash: hash,
         confirmations: 4,
+        //timeout: 20000
       })
 
       swapContext?.pushNotificationData({
@@ -612,43 +687,46 @@ const Home = () => {
       setapproveLoading(false)
       cancel()
       resetInputData()
-      console.log(data)
+      updateTokenBalance(fromTokenAddress)
+      updateTokenBalance(toTokenAddress)
 
     } catch (error: any) {
+      swapContext?.setStatus(99999) // 恢复此状态
       setapproveLoading(false)
       if (!swapContext) return
+      
+      // Network error
+      if (isNetworkError(error)) {
+        swapContext.setGlobalDialogMessage({
+          type: 'error',
+          description: "Network error, please try again later."
+        })
+        return
+      }
 
-      console.log(JSON.stringify(error), 'error message log')
+      // 用户拒绝请求不提示
+      if (isUserRejectedRequestError(error)) {
+        swapContext.setGlobalDialogMessage(undefined)
+        return
+      }
+      
+      // Send Transition error
 
-      if (error.name === 'TransactionExecutionError') {
+      if (isSendTransactionError(error)) {
         swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
         return
       }
-      if (error.name === 'TransactionNotFoundError') {
-        // swapContext.setGlobalDialogMessage(formatErrorMessage(error, 'Swap failed'))
+
+      // Wait For Transaction 不提示
+      if (isWaitForTransactionError(error)) {
+        //swapContext.setGlobalDialogMessage(undefined)
         return
       }
 
-
-      if (error.description) {
-        swapContext.setGlobalDialogMessage({
-          type: 'error',
-          description: error.description
-        })
-        return
-      }
-
-      if (error.message && swapContext) {
-        swapContext.setGlobalDialogMessage({
-          type: 'error',
-          description: (error.reason || error.message || 'Unknown error')
-        })
-        return
-      }
-
+      let errorDesc = error.description || error.reason || error.message || 'Unknown error'
       swapContext.setGlobalDialogMessage({
         type: 'error',
-        description: 'Unknown error'
+        description: errorDesc
       })
     }
   }
@@ -656,7 +734,7 @@ const Home = () => {
   const resetData = async () => {
     swapContext?.setToAmount('')
     cancel()
-    settokens(undefined)
+    swapContext!.settokens(undefined)
 
     if (swapContext) {
       swapContext.swapToData = {
@@ -691,17 +769,17 @@ const Home = () => {
     pollingWhenHidden: false,
   });
 
-  const resetInputData = async (paramTokens?: token[]) => {
+  const resetInputData = useLockFn(async (paramTokens?: token[]) => {
     swapContext?.setFromAmount('')
     swapContext?.setToAmount('')
     cancel()
     swapContext?.setquoteData(undefined)
-    const tokenList = paramTokens || tokens
+    const tokenList = paramTokens || swapContext!.tokens
     if (tokenList?.length) {
       const tokenBalanceList = await getTokenListBalance(tokenList)
-      settokens([...tokenBalanceList])
+      swapContext!.settokens([...tokenBalanceList])
     }
-  }
+  })
 
   const { run: accountChangeRun, cancel: accountChangeCancel } = useRequest(resetInputData, {
     debounceWait: 1000,
@@ -718,25 +796,31 @@ const Home = () => {
   }, [chainId])
 
   useUpdateEffect(() => {
-    const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
-    if (isNotFirstConnected) {
-      cancel()
-      // run()
-      accountChangeCancel()
-      accountChangeRun()
-      console.log("watchAccount", isConnected, chain?.id, address)
-    } else {
-      sessionStorage.setItem('isFirstConnected', '1')
-    }
+    // const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
+    // if (isNotFirstConnected) {
+    //   cancel()
+    //   // run()
+    //   accountChangeCancel()
+    //   accountChangeRun()
+    //   console.log("watchAccount", isConnected, chain?.id, address)
+    // } else {
+    //   console.log(address)
+    //   resetInputData()
+    //   sessionStorage.setItem('isFirstConnected', '1')
+    // }
     // if(!address) {
     //   sessionStorage.removeItem('isFirstConnected')
     // }
 
+    cancel()
+    accountChangeCancel()
+    accountChangeRun()
+    console.log("watchAccount", isConnected, chain?.id, address)
   }, [address])
 
-  const replaceValue = (val: string) => {
-    const value = val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(/^\d*(\.?\d{0,18})/g)?.[0] || ""
-    return value
+  const replaceValue = (val: string, decimals: number = 18) => {
+    const valueRegex = new RegExp( `^\\d*[.]?\\d{0,${decimals}}`,'g')
+    return val.replace(/[^\d^.?]+/g, "")?.replace(/^0+(\d)/, "$1")?.replace(/^\./, "0.")?.match(valueRegex)?.[0] || ""
   }
 
   const swapLoading = useMemo(() => loading || approveLoading, [loading, approveLoading])
@@ -744,7 +828,7 @@ const Home = () => {
   const getFromInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = replaceValue(val)
+      const value = replaceValue(val,swapContext?.swapFromData.decimals)
       setFromInputChange(value)
     } else {
       swapContext?.setFromAmount('')
@@ -756,7 +840,7 @@ const Home = () => {
   const getToInputChange = (val: string) => {
     cancel()
     if (val) {
-      const value = replaceValue(val)
+      const value = replaceValue(val,swapContext?.swapToData.decimals)
       swapContext?.setToAmount(value)
       setToInputChange(value)
     } else {
@@ -789,14 +873,15 @@ const Home = () => {
     }
   }
   const getTokenToUSDPrice = async (tokenAddress: string, paramsTokenList?: token[]) => {
+    const tokens = swapContext!.tokens
     if (tokens?.length || paramsTokenList?.length) {
       const tokenList = paramsTokenList || tokens || []
-      const tokenIndex = tokenList.findIndex(val => val.address === tokenAddress)
+      const tokenIndex = tokenList.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
       if (tokenIndex > -1 && !tokenList[tokenIndex].price) {
         try {
           const price = await fetchUSD(tokenList[tokenIndex].symbol)
           tokenList[tokenIndex].price = price
-          settokens([...tokenList])
+          swapContext!.settokens([...tokenList])
         } catch (error) {
           console.log(error, 'getTokenToUSDPrice-error')
         }
@@ -804,9 +889,23 @@ const Home = () => {
     }
   }
 
+  const updateTokenBalance = async (tokenAddress: string) => {
+    const tokens = swapContext!.tokens
+    if (chain && address && tokens ) { 
+      
+      const balance = await getBalance(tokenAddress as address, address, chain);
+      if(balance){
+        const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
+        tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+        swapContext!.settokens([...tokens])
+      }
+    }
+  }
 
   const getFromTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
+      
       const token = tokens?.length && val && findToken(tokens, val)
 
       swapContext.swapFromData = {
@@ -818,28 +917,19 @@ const Home = () => {
         ...swapContext.swapFromData
       })
     }
-
     const toTokenAddress = swapContext!.swapToData.tokenAddress
 
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
-      if(swapContext?.swapFromData.tokenAddress) {
-        const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
-        if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapFromData.tokenAddress)
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
-        }
-      }
-    }
+    updateTokenBalance(val) // update from token balance
 
     // getTokenToUSDPrice(val)
   }
 
   const getToTokenChange = async (val: string) => {
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const token = tokens?.length && val && findToken(tokens, val)
 
@@ -858,26 +948,15 @@ const Home = () => {
       swapContext.setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
+    updateTokenBalance(val) // update to token balance
 
-    if(chain && address && [100, 8217, 1313161554, 324].includes(chain.id) && tokens) {
-      if(swapContext?.swapToData.tokenAddress) {
-        const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
-        console.log('get to balance')
-        if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address === swapContext?.swapToData.tokenAddress)
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          settokens([...tokens])
-        }
-      }
-    }
-    // getTokenToUSDPrice(val)
   }
 
   const switchToken = () => {
     if (swapLoading) {
       return
     }
-
+    const tokens = swapContext!.tokens
     if (swapContext) {
       const swapToData = swapContext.swapToData
       const swapFromData = swapContext.swapFromData
@@ -985,6 +1064,7 @@ const Home = () => {
 
 
   const navigate = useNavigate()
+
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       {/* <Image width={80} src='/logo192.png' /> */}
@@ -1008,16 +1088,16 @@ const Home = () => {
           </div>
         </div>
         <div>
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="from"
             onChange={getFromInputChange}
             onTokenChange={getFromTokenChange}
             setInputChange={setFromInputChange}
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             tokenAddress={swapContext?.swapFromData.tokenAddress}
             placeholder='0'
             isTokenLoading={isTokenLoading}
-            maxLength={swapContext?.swapFromData.decimals}
+            //maxLength={swapContext?.swapFromData.decimals}
             ref={fromInputRef}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
@@ -1027,12 +1107,12 @@ const Home = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
 
-          {tokens ? <TokenInput
+          {swapContext!.tokens ? <TokenInput
             type="to"
-            tokens={tokens}
+            tokens={swapContext!.tokens}
             value={swapContext?.toAmount}
             ref={toInputRef}
-            maxLength={swapContext?.swapToData.decimals}
+            //maxLength={swapContext?.swapToData.decimals}
             onChange={getToInputChange}
             onTokenChange={getToTokenChange}
             placeholder='0'
@@ -1041,19 +1121,19 @@ const Home = () => {
           /> : <Skeleton animated className="custom-skeleton" />}
         </div>
 
-        <Quote tokens={tokens} data={swapContext?.quoteData} loading={swapLoading} />
+        <Quote tokens={swapContext!.tokens} data={swapContext?.quoteData} loading={swapLoading} />
 
-        <PriceImpact tokens={tokens} verifyShow />
+        <PriceImpact tokens={swapContext!.tokens} verifyShow />
 
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
-        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container" onClose={() => setshowConfirmDialog(false)}>
+        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container down-dialog-style" onClose={() => setshowConfirmDialog(false)}>
           <div className="dialog-content p-20">
             <p className="confirm-title">Confirm Swap</p>
             <div>
               <TokenInput
                 type="from"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 status="ready"
                 tokenAddress={swapContext?.swapFromData.tokenAddress}
                 placeholder='0'
@@ -1066,12 +1146,12 @@ const Home = () => {
               <TokenInput
                 type="to"
                 status="ready"
-                tokens={tokens}
+                tokens={swapContext!.tokens}
                 value={swapContext?.toAmount}
                 tokenAddress={swapContext?.swapToData.tokenAddress}
               />
             </div>
-            <Quote data={swapContext?.quoteData} tokens={tokens} loading={swapLoading} status="ready" />
+            <Quote data={swapContext?.quoteData} tokens={swapContext!.tokens} loading={swapLoading} status="ready" />
             <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
           </div>
         </CenterPopup>
@@ -1082,26 +1162,27 @@ const Home = () => {
         {/* <Button onClick={()=>{
           resetInputData()
               }}>reset</Button> */}
+
+        <FloatingBubble
+          style={{
+            '--initial-position-bottom': '24px',
+            '--initial-position-right': '24px',
+            '--edge-distance': '24px',
+          }}
+          axis="lock"
+          onClick={()=>{
+            navigate('/helpcenter')
+            resetInputData()
+            swapContext?.setswapToData({
+              tokenAddress: ''
+            })
+          }}
+        >
+          <MessageFill fontSize={32} />
+        </FloatingBubble>
       </div >
       <Notification />
     </div>
-    <FloatingBubble
-      style={{
-        '--initial-position-bottom': '24px',
-        '--initial-position-right': '24px',
-        '--edge-distance': '24px',
-      }}
-      axis="lock"
-      onClick={()=>{
-        navigate('/helpcenter')
-        resetInputData()
-        swapContext?.setswapToData({
-          tokenAddress: ''
-        })
-      }}
-    >
-      <MessageFill fontSize={32} />
-    </FloatingBubble>
   </div>
 };
 export default Home;

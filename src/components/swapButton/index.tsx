@@ -16,7 +16,8 @@ const swapStatus = {
   9: (token: string)=>`Approve use of ${token}`,
   10: 'Approval pending',
   11: 'No payment channel found',
-  12: 'Network error, retrying'
+  12: 'Network error, retrying',
+  21: 'Swap pending'
 }
 
 export type status = keyof typeof swapStatus
@@ -52,13 +53,25 @@ const SwapButton: FC<Iprops> = (props) => {
     return (status && (typeof status === 'string' || isNumberStatus)) || false
   }, [status])
   
+  // loading text
+  const loadingText = useMemo((): string => {
+    switch (status) { 
+      default:
+        return "Finding best routing";
+      case 10:
+        return "Approval pending";
+      case 21:
+        return "Swap pending";
+    }
+  },[status])
+
   return <Button
     onClick={props?.onClick}
     block
     {...props}
     color={status===12 ? 'danger' : "primary"}
     disabled={isDisabled}
-    loadingText='Finding best routing'
+    loadingText={loadingText}
     className='swap-button'>{text}</Button>
 }
 export default SwapButton

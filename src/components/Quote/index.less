@@ -71,7 +71,7 @@
   }
 }
 .error-message{
-  color: red;
+  color: var(--rk-colors-error);
   margin-top: 10px;
 }
 .swap-detail-value{
@@ -82,13 +82,47 @@
 }
 .base-routing-title{
   color: var(--theme-text-color);
-  font-size: 18px;
-  padding: 15px 16px 20px;
+  font-size: 16px;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 .base-routing-table-header{
   color: #7780a0
 }
 .base-routing-table-content{
-  max-height: 300px;
+  max-height: 36vh;
   overflow-y: auto;
+}
+.dex-item{
+  &.item-value{
+    color: var(--theme-text-color);
+  }
+}
+.est-item{
+  width: 140px;
+  &.item-value{
+    color: var(--theme-text-color);
+    word-break: break-all;
+  }
+}
+.optimal{
+  color: var(--adm-color-primary);
+  background-color: rgba(93,97,255,0.15);
+  display: inline-block;
+  padding: 3px 4px;
+  border-radius: 2px;
+}
+.other {
+  color: var(--rk-colors-error);
+}
+.close-pop-style{
+  border-top: 4px solid var(--border-color);
+  color: var(--theme-text-color);
+  margin-top: 20px;
+}
+.down-fill-icon{
+  color: var(--icon-color);
+}
+.difference{
+  width: 90px;
 }

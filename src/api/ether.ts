@@ -3,9 +3,10 @@ import { erc20ABI, Chain } from '@wagmi/core'
 import { ethers } from 'ethers';
 import { formatUSD, formatUSDList } from './request';
 import { arbitrum, avalanche, bsc, fantom, mainnet, optimism, polygon } from 'viem/chains';
-import { getAddressBalances } from 'eth-balance-checker/lib/ethers';
+// import { getAddressBalances } from 'eth-balance-checker/lib/ethers';
 import { getWalletClient } from '@wagmi/core'
 import BigNumber from 'bignumber.js';
+import { walletsAnd_Tokens } from './swap';
 
 export const SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID: Record<number, string> = {
   [mainnet.id]:
@@ -30,7 +31,7 @@ export interface BalanceMap {
 
 // get token balance
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
-  if (tokenAddress === nativeTokenAddress && address) {
+  if (tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
     const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
     if(getWalletBalance) {
@@ -45,11 +46,12 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
       const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]);
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
+      
       const balance = await tokenContract.balanceOf(address);
       const decimals = await tokenContract.decimals()
       return {
         value: balance,
-        formatted: formatAmount(BigNumber(balance.toString()).toString(), decimals)
+        formatted: formatAmount(balance.toString(), decimals)
       }
     } catch (error) {
       return Promise.reject(error);
@@ -65,21 +67,51 @@ export const getBalance = async (tokenAddress: address, address: address, chain:
 
 // get has balance from token list
 export async function getBalancesInSingleCall(walletAddress: string, tokensToDetect: string[], chain: Chain) {
-  const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]); 
-  if (!(chain.id in SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID) || !tokensToDetect) {
-    // Only fetch balance if contract address exists
-    return {};
-  }
-  const contractAddress = SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID[chain.id]; 
-  const data = await getAddressBalances(provider, walletAddress, tokensToDetect, {
-    contractAddress
+  const res = await walletsAnd_Tokens<{
+    data: {
+      [key: string]: {
+        [key: string] : string
+      }
+    }
+  }, {
+    tokens: string[],
+    wallets: string[],
+    chainID: number
+  }>({
+    tokens: tokensToDetect,
+    wallets: [walletAddress],
+    chainID: chain.id
   })
+  // const address = [walletAddress]
+  // fetch('https://api.test.mises.site/api/v1/swap/wallets_and_tokens', {
+  //   method: 'post',
+  //   body: JSON.stringify({
+  //     "tokens": tokensToDetect,
+  //     "wallets": address
+  //   }),
+  //   headers: {
+  //     "Authorization" : `Bearer CCV2rGhgyFEK3oTGfnKFtW6mKLcXJf9S`
+  //   }
+  // }).then(res=>res.json()).then(res=>{
+  //   console.log(res)
+  // })
+  // const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]); 
+  // if (!(chain.id in SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID) || !tokensToDetect) {
+  //   // Only fetch balance if contract address exists
+  //   return {};
+  // }
+  // const contractAddress = SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID[chain.id];
+  // const data = await getAddressBalances(provider, walletAddress, tokensToDetect, {
+  //   contractAddress
+  // })
 
-  // const contract = new ethers.Contract(contractAddress, abiSingleCallBalancesContract, provider);
-  // const result = await contract.balances([walletAddress], tokensToDetect);
+  // // const contract = new ethers.Contract(contractAddress, abiSingleCallBalancesContract, provider);
+  // // const result = await contract.balances([walletAddress], tokensToDetect);
   const nonZeroBalances: BalanceMap = {};
-  for (const key in data) {
-    const element = data[key];
+  console.log(walletAddress, res.data.data)
+  const data = res.data.data
+  for (const key in data[walletAddress]) {
+    const element = data[walletAddress][key];
     if(element !=='0'){
       nonZeroBalances[key] = element;
     }
@@ -90,8 +122,9 @@ export async function getBalancesInSingleCall(walletAddress: string, tokensToDet
 // get fiat from token
 // https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD
 export async function fetchUSD(fsym: string) {
+  const fsymFormat = fsym.toUpperCase().indexOf('ETH') > -1 ? 'ETH' : fsym.toUpperCase()
   const params = {
-    fsym: fsym.toLocaleUpperCase(),
+    fsym: fsymFormat,
     tsyms: 'USD'
   }
   try {
@@ -155,7 +188,22 @@ const chainList = [{
   "id": "zksync",
   "chain_identifier": 324,
   "name": "zkSync",
-  "shortname": ""
+  "shortname": "zks"
+},{
+  "id": "okex-chain",
+  "chain_identifier": 66,
+  "name": "OKExChain",
+  "shortname": "OKEx"
+},{
+  "id": "ethereumpow",
+  "chain_identifier": 10001,
+  "name": "EthereumPoW",
+  "shortname": "ethw"
+},{
+  "id": "conflux",
+  "chain_identifier": 1030,
+  "name": "Conflux",
+  "shortname": "conflux"
 }]
 
 export async function fetchUSDList(chainId: number, contract_addresses: string) {
@@ -172,4 +220,23 @@ export async function fetchUSDList(chainId: number, contract_addresses: string) 
     }
   }
   return Promise.resolve({})
+}
+
+export async function fetchToken(tokenAddress: address, chain: Chain) {
+  const provider = new ethers.JsonRpcProvider(chain.rpcUrls.default.http[0]); 
+  const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, provider);
+  const decimals = await tokenContract.decimals()
+  const tokenName = await tokenContract.name()
+  const symbol = await tokenContract.symbol()
+  
+  return {
+    "symbol": symbol.toUpperCase(),
+    "name": tokenName,
+    "address": tokenAddress,
+    "decimals": BigNumber(decimals).toNumber(),
+    'chain_id': chain.id,
+    "logo_uri": '',
+    'balance': '0',
+    'isImport': true
+  }
 }

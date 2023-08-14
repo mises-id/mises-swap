@@ -14,7 +14,7 @@ import enUS from 'antd-mobile/es/locales/en-US'
 import '@rainbow-me/rainbowkit/styles.css';
 import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { Chain, configureChains, createConfig, WagmiConfig } from 'wagmi';
-import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, optimism, polygon, zkSync } from 'wagmi/chains';
+import { arbitrum, aurora, avalanche, bsc, fantom, gnosis, mainnet, okc, optimism, polygon, zkSync } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import SwapProvider from './context/swapContext';
 // import { bitskiWallet } from './wallets/bitskiWallet';
@@ -51,7 +51,51 @@ export const klaytnChain: Chain = {
   },
   testnet: false,
 };
+export const ethPoWChain: Chain = {
+  id: 10001,
+  name: 'EthereumPoW',
+  network: 'EthereumPoW',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'ETHW',
+    symbol: 'ETHW',
+  },
+  rpcUrls: {
+    public: {
+      http: ['https://mainnet.ethereumpow.org'],
+    },
+    default: {
+      http: ['https://mainnet.ethereumpow.org'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'EthereumPoW', url: 'https://www.oklink.com/en/ethw/' }
+  },
+  testnet: false,
+};
 
+export const confluxChain: Chain = {
+  id: 1030,
+  name: 'Conflux eSpace',
+  network: 'Conflux eSpace',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'CFX',
+    symbol: 'CFX',
+  },
+  rpcUrls: {
+    public: {
+      http: ['https://evm.confluxrpc.com', 'https://conflux-espace-public.unifra.io'],
+    },
+    default: {
+      http: ['https://evm.confluxrpc.com'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Conflux eSpace', url: 'https://evm.confluxscan.net' }
+  },
+  testnet: false,
+};
 export const chainList = [
   {
     ...mainnet,
@@ -120,6 +164,18 @@ export const chainList = [
   {
     ...zkSync,
     iconUrl: '/images/zksync-era.svg'
+  },
+  {
+    ...okc,
+    iconUrl: '/images/okc.png'
+  },
+  {
+    ...ethPoWChain,
+    iconUrl: '/images/ethw.png'
+  },
+  {
+    ...confluxChain,
+    iconUrl: '/images/conflux.svg'
   },
 ]
 

@@ -19,12 +19,25 @@ const header = ()=>{
     'User-Wallet-Address': address as string
   } : undefined
 }
+
+const getBaseUrl = () =>{
+  return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://swap.mises.site' : 'https://swap.test.mises.site'
+}
+
 export function getTokens<T=any>(): AxiosPromise<T>{
   return swapRequest({
-    url: `/token/list`,
+    url: `${getBaseUrl()}/token_list.json`,
     timeout: 30000,
     headers: header()
   })
+  // return swapRequest({
+  //   url: `/token/list`,
+  //   timeout: 30000,
+  //   headers: header()
+  // })
+  // return fetch('https://swap.mises.site/tokens.json').then(res=>{
+  //   return res.json()
+  // })
 }
 
 export function allowance<T=any,P=any>(params: P): AxiosPromise<T>{
@@ -71,6 +84,14 @@ export function getOrderList<T=any,P=any>(from_address: string, params: P): Axio
   return swapRequest({
     url: `/order/${from_address}`,
     params,
+    headers: header()
+  })
+}
+export function walletsAnd_Tokens<T=any,P=any>(data: P): AxiosPromise<T>{
+  return swapRequest({
+    url: `/wallets_and_tokens`,
+    data,
+    method: 'post',
     headers: header()
   })
 }
