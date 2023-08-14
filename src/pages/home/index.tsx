@@ -5,9 +5,9 @@ import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
-import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest, isETH } from "@/utils";
+import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest } from "@/utils";
 import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
-import { sendTransaction, waitForTransaction, getWalletClient, fetchBalance } from '@wagmi/core'
+import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
 import TokenInput, { tokenInputRef } from "@/components/tokenInput";
@@ -27,7 +27,9 @@ import { useNavigate } from "react-router-dom";
 import PriceImpact from "@/components/PriceImpact";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
-const connotUseChainId = [100, 8217, 1313161554, 324, 10001, 1030, 66]
+// Obtain token balance separately for the following chains
+// The chain list does not support batch retrieval of token balances
+const connotUseChainId = [100, 8217, 1313161554, 324, 10001, 1030, 66];
 const Home = () => {
   // firebase
   const analytics = useAnalytics()
@@ -80,7 +82,10 @@ const Home = () => {
     if (address && chain) {
       console.log('call balances')
       setTrue()
-
+      /* 
+       * The chain does not support batch retrieval of token balances
+       * So, by using `connotUseChainId` to filter the chain list, we only obtain the matching ID
+      */
       if(connotUseChainId.includes(chain.id)) {
         if(swapContext?.swapFromData.tokenAddress) {
           const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
@@ -135,42 +140,6 @@ const Home = () => {
     }
     return tokenList
   }
-
-  // const chunk = (arr: string[], counts: number) => {
-  //   const cloneArr = [...arr];
-  //   const result = [];
-  //   while(cloneArr.length) {
-  //     result.push(cloneArr.splice(0, counts));
-  //   }
-  //   return result;
-  // }
-
-  // const getTokenListToUSDPrice = async (tokenList: token[]) =>{
-  //   const ids = tokenList.map(val=>val.address)
-  //   const idsList = chunk(ids, 180);
-  //   const promiseAllIds = idsList.map((ids: string[]) => fetchUSDList(chainId, ids.join(',')))
-  //   const idsUSD = await Promise.all(promiseAllIds)
-
-  //   idsUSD.forEach(item =>{
-  //     for (const key in item) {
-  //       const element = item[key];
-  //       const findIndex = tokenList.findIndex(val=>val.address === key);
-  //       if(findIndex > -1 && element.usd) {
-  //         tokenList[findIndex].price = element.usd
-  //       }
-  //     }
-  //   })
-  //   return tokenList
-  // }
-
-  // const staleTime = 1000 * 60 * 6
-  // const { run: getTokenListToUSDPriceRun } = useRequest(getTokenListToUSDPrice, {
-  //   cacheKey: `${chainId}`,
-  //   staleTime,
-  //   manual: true,
-  //   setCache: (data) => sessionStorage.setItem(`${chainId}`, JSON.stringify(data)),
-  //   getCache: () => JSON.parse(sessionStorage.getItem(`${chainId}`) || '[]'),
-  // });
 
   const getTokensWithRetry = retryRequest(getTokens,{retryCount: 5})
 
@@ -368,7 +337,6 @@ const Home = () => {
         swapContext?.setquoteData(undefined)
       }
     } catch (error: any) {
-      console.log(error, '1111')
       if (error.message && error.message === "timeout of 5000ms exceeded") {
         swapContext?.setStatus(12)
       } else {
@@ -924,19 +892,12 @@ const Home = () => {
   const updateTokenBalance = async (tokenAddress: string) => {
     const tokens = swapContext!.tokens
     if (chain && address && tokens ) { 
-      const balance = await fetchBalance({
-        address: address,
-        formatUnits: 'wei',
-        token: isETH(tokenAddress) ? undefined : tokenAddress as address
-      })
-      if(balance?.formatted && balance?.formatted !== '0'){
+      
+      const balance = await getBalance(tokenAddress as address, address, chain);
+      if(balance){
         const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
-        const newBalance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-        if (tokens[tokenIndex].balance !== newBalance) {
-          tokens[tokenIndex].balance = newBalance
-          swapContext!.settokens([...tokens])
-        }
-       
+        tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+        swapContext!.settokens([...tokens])
       }
     }
   }
@@ -956,22 +917,13 @@ const Home = () => {
         ...swapContext.swapFromData
       })
     }
-    updateTokenBalance(val) // update from token balance
     const toTokenAddress = swapContext!.swapToData.tokenAddress
 
     if (swapContext?.fromAmount && toTokenAddress) {
       run(val, toTokenAddress, swapContext.fromAmount, 'from')
     }
-    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
-      if(swapContext?.swapFromData.tokenAddress) {
-        const balance = await getBalance(swapContext?.swapFromData.tokenAddress as address, address, chain)
-        if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapFromData.tokenAddress.toLowerCase())
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          swapContext!.settokens([...tokens])
-        }
-      }
-    }
+
+    updateTokenBalance(val) // update from token balance
 
     // getTokenToUSDPrice(val)
   }
@@ -996,19 +948,8 @@ const Home = () => {
       swapContext.setToAmount('')
       run(fromTokenAddress, val, swapContext.fromAmount, 'from')
     }
+    updateTokenBalance(val) // update to token balance
 
-    if(chain && address && connotUseChainId.includes(chain.id) && tokens) {
-      if(swapContext?.swapToData.tokenAddress) {
-        const balance = await getBalance(swapContext?.swapToData.tokenAddress as address, address, chain)
-        console.log('get to balance')
-        if(balance?.value.toString() !== '0'){
-          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === swapContext?.swapToData.tokenAddress.toLowerCase())
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          swapContext!.settokens([...tokens])
-        }
-      }
-    }
-    // getTokenToUSDPrice(val)
   }
 
   const switchToken = () => {
