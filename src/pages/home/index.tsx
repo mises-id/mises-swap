@@ -894,8 +894,10 @@ const Home = () => {
       const balance = await getBalance(tokenAddress as address, address, chain);
       if(balance){
         const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
-        tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-        swapContext!.settokens([...tokens])
+        if(tokens[tokenIndex]) {
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+          swapContext!.settokens([...tokens])
+        }
       }
     }
   }
