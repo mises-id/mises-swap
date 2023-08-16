@@ -404,8 +404,9 @@ const Home = () => {
       const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
         const result = await getAllowance(tokenAddress, contract_address)
-
-        const comparedAllowance = swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
+        const maximumAllowance = result.data.allowance === '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+        console.log(maximumAllowance, 'maximumAllowance')
+        const comparedAllowance = maximumAllowance ? 1 : swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
 
         if (comparedAllowance === -1) {
           swapContext?.setStatus(10) // 修改status为: approve pending 

@@ -26,7 +26,7 @@ Sentry.init({
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-  ignoreErrors:['UnhandledRejection'],
+  ignoreErrors:['UnhandledRejection', 'WebSocket connection'],
 });
 
 if(process.env.REACT_APP_NODE_ENV === 'test' && isIOS()) {
