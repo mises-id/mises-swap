@@ -146,8 +146,8 @@ const SelectTokens: FC<Iprops> = (props) => {
         }
       }
       delete token.isImport
-      const tokens = [...swapContext.tokens, token]
-      swapContext?.settokens(tokens)
+      swapContext.tokens.push(token)
+      swapContext?.settokens([...swapContext.tokens])
 
       selectToken(token)
 

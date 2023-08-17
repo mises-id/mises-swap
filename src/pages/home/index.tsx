@@ -45,9 +45,6 @@ const Home = () => {
     if (getTokens?.length) {
       accountChangeRun(getTokens)
       console.log('run init')
-      // const tokenList = await getTokenListBalance(getTokens)
-
-      // settokens([...tokenList])
     }
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
@@ -132,7 +129,7 @@ const Home = () => {
       } catch (error: any) {
         console.log('getBalancesInSingleCall error', error)
         logEvent(analytics, 'swap_error', {
-          error_message: `Failed to get balance of token list=>getTokenListBalance-${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
+          error_message: `Failed to get balance of token list=>${chainId}-${swapContext?.swapFromData.tokenAddress}-${swapContext?.swapToData.tokenAddress || ''}`
         })
         setFalse()
         return tokenList
@@ -407,8 +404,9 @@ const Home = () => {
       const contract_address = swapContext?.quoteData?.bestQuote.aggregator?.contract_address
       if (contract_address) {
         const result = await getAllowance(tokenAddress, contract_address)
-
-        const comparedAllowance = swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
+        const maximumAllowance = result.data.allowance === '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+        console.log(maximumAllowance, 'maximumAllowance')
+        const comparedAllowance = maximumAllowance ? 1 : swapContext?.fromAmount && BigNumber(formatAmount(result.data.allowance, swapContext?.swapFromData?.decimals)).comparedTo(swapContext?.fromAmount)
 
         if (comparedAllowance === -1) {
           swapContext?.setStatus(10) // 修改status为: approve pending 
@@ -776,6 +774,7 @@ const Home = () => {
     swapContext?.setquoteData(undefined)
     const tokenList = paramTokens || swapContext!.tokens
     if (tokenList?.length) {
+      updateTokenBalance(swapContext!.swapFromData.tokenAddress, tokenList)
       const tokenBalanceList = await getTokenListBalance(tokenList)
       swapContext!.settokens([...tokenBalanceList])
     }
@@ -889,15 +888,17 @@ const Home = () => {
     }
   }
 
-  const updateTokenBalance = async (tokenAddress: string) => {
-    const tokens = swapContext!.tokens
+  const updateTokenBalance = async (tokenAddress: string, tokenList?: token[]) => {
+    const tokens = swapContext!.tokens || tokenList
     if (chain && address && tokens ) { 
       
       const balance = await getBalance(tokenAddress as address, address, chain);
       if(balance){
         const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
-        tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-        swapContext!.settokens([...tokens])
+        if(tokens[tokenIndex]) {
+          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+          swapContext!.settokens([...tokens])
+        }
       }
     }
   }
