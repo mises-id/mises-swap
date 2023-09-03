@@ -34,11 +34,15 @@ const PriceImpact: FC<IProps> = (props)=> {
     }
 
     if(fromTokenPrice && toTokenPrice) {
+      // priceImpactValue: (1 - toTokenPrice / fromTokenPrice) * 100
       const priceImpactValue = BigNumber(1).minus(BigNumber(toTokenPrice).dividedBy(fromTokenPrice)).times(100)
+      // if priceImpactValue.abs > 100 
       if(priceImpactValue.abs().comparedTo(100) === 1) return 100
+      // if priceImpactValue < 0
       if(priceImpactValue.comparedTo(0) === -1) {
         return priceImpactValue.abs().toNumber()
       }
+      // if priceImpactValue < 100 && priceImpactValue > 0
       return priceImpactValue.toNumber()
     }
 
