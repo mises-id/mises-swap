@@ -793,7 +793,13 @@ const Home = () => {
     networkChangeRun()
 
     console.log("watchNetwork", isConnected, chain?.id, address)
+
   }, [chainId])
+
+  // useEffect(() => {
+  //   chain && address && testpublicKey(chain, address)
+  // }, [chain, address])
+  
 
   useUpdateEffect(() => {
     // const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
