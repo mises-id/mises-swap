@@ -27,6 +27,7 @@ import { injectedWallet } from './wallets/injectedWallet';
 import { useShowLayout } from './hooks/useShowLayout';
 import RetryMaxStatus from './components/RetryMaxStatus';
 import { useEffect } from 'react';
+import { misesWallet } from './wallets/misesWallet';
 // import { coinbaseWallet } from './wallets/coinbase';
 
 export const klaytnChain: Chain = {
@@ -220,6 +221,7 @@ function App() {
       groupName: 'Recommended',
       wallets: [
         injectedWallet({ chains }),
+        misesWallet({ projectId, chains }),
         metaMaskWallet({ projectId, chains }),
         // coinbaseWallet({ chains, appName: 'Mises Swap' }),
         // bitskiWallet({ chains }),
