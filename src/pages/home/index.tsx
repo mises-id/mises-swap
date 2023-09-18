@@ -1160,7 +1160,7 @@ const Home = () => {
           <MessageFill fontSize={32} />
         </FloatingBubble>
       </div >
-      <div className="swap-container">
+      <div className="swap-container" style={{zIndex: -1}}>
         <Bonuses />
       </div>
     </div>
