@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest } from "@/utils";
-import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
+import { useBoolean, useCookieState, useLockFn, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -553,7 +553,13 @@ const Home = () => {
     }
   }
 
-  const getSwapTradeWithRetry = retryRequest(trade,{retryCount:5})
+  const [token] = useCookieState('_ga_20B48Y5GN1');
+  const getSwapTradeWithRetry = retryRequest(async (params) =>{
+    console.log(token)
+    return await trade(params, token ? {
+      Authorization: `Bearer ${token}`
+    } : {})
+  },{retryCount:5})
 
   const submitSwap = async () => {
     const walletClient = await getWalletClient({ chainId })
@@ -608,7 +614,7 @@ const Home = () => {
         aggregator_address: aggregatorAddress
       }
 
-      const result = await getSwapTradeWithRetry<{ data: swapData }, quoteParams>(tradeParams)
+      const result = await getSwapTradeWithRetry(tradeParams)
 
       const firstTrade = result.data.data
 
@@ -662,6 +668,7 @@ const Home = () => {
         info: {
           txHash: hash,
           blockExplorer: chain?.blockExplorers?.default.url,
+          chainId: chain?.id,
           ...swapContext!.swapToData
         }
       })
