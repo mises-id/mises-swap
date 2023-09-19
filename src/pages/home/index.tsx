@@ -553,7 +553,7 @@ const Home = () => {
     }
   }
 
-  const [token] = useCookieState('_ga_20B48Y5GN1');
+  const [token] = useCookieState('token');
   const getSwapTradeWithRetry = retryRequest(async (params) =>{
     console.log(token)
     return await trade(params, token ? {
