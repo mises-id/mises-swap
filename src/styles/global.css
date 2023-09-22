@@ -221,16 +221,8 @@
   height:14px;
 }
 
-.h-40{
-  height:40px;
-}
-
 .h-screen{
   height:100vh;
-}
-
-.w-10{
-  width:40px;
 }
 
 .w-auto{
@@ -239,10 +231,6 @@
 
 .flex-1{
   flex:1 1 0%;
-}
-
-.flex-auto{
-  flex:1 1 auto;
 }
 
 .flex-none{
@@ -263,10 +251,6 @@
 
 .list-decimal{
   list-style-type:decimal;
-}
-
-.flex-row{
-  flex-direction:row;
 }
 
 .flex-col{

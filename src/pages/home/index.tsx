@@ -6,7 +6,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAccount, useNetwork } from "wagmi";
 import { allowance, getQuote, getTokens, trade, transaction } from "@/api/swap";
 import { findToken, formatAmount, formatErrorMessage, nativeTokenAddress, parseAmount, substringAmount, retryRequest } from "@/utils";
-import { useBoolean, useCookieState, useLockFn, useRequest, useUpdateEffect } from "ahooks";
+import { useBoolean, useLockFn, useRequest, useUpdateEffect } from "ahooks";
 import { sendTransaction, waitForTransaction, getWalletClient } from '@wagmi/core'
 import { SwapContext, defaultSlippageValue } from "@/context/swapContext";
 // import { SetOutline } from "antd-mobile-icons";
@@ -553,8 +553,9 @@ const Home = () => {
     }
   }
 
-  const [token] = useCookieState('token');
+  
   const getSwapTradeWithRetry = retryRequest(async (params) =>{
+    const token = localStorage.getItem('token');
     console.log(token)
     return await trade(params, token ? {
       Authorization: `Bearer ${token}`
@@ -1167,7 +1168,7 @@ const Home = () => {
           <MessageFill fontSize={32} />
         </FloatingBubble>
       </div >
-      <div className="swap-container" style={{zIndex: -1}}>
+      <div className="swap-container" style={{zIndex: 0}}>
         <Bonuses />
       </div>
     </div>
