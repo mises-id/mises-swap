@@ -28,6 +28,7 @@ const Bonuses: FC = () => {
   }
   const [isLogin, setisLogin] = useState(!!localStorage.getItem('token'))
   const fetchUser = (accounts: string[]) => {
+    console.log(isLogin)
     if(accounts.length) {
       setpenddingCount(1)
     }else {
@@ -56,7 +57,7 @@ const Bonuses: FC = () => {
   
   return (
     <div className='flex p-10'>
-      <p className='text-[16px] font-200 text-gray-500 leading-6'>After logging into the Mises wallet to obtain the Mises ID, you will be eligible to earn rewards points by making swap transactions. {isLogin ? null : <span onClick={connect} style={{color: 'var(--adm-color-primary)'}}>Connect Mises ID</span>}</p>
+      <p className='text-[16px] font-200 text-gray-500 leading-6'>After logging into the Mises wallet to obtain the Mises ID, you will be eligible to earn rewards points by making swap transactions.</p> 
     </div>
   )
 }

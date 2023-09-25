@@ -907,13 +907,17 @@ const Home = () => {
     const tokens = swapContext!.tokens || tokenList
     if (chain && address && tokens ) { 
       
-      const balance = await getBalance(tokenAddress as address, address, chain);
-      if(balance){
-        const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
-        if(tokens[tokenIndex]) {
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          swapContext!.settokens([...tokens])
+      try {
+        const balance = await getBalance(tokenAddress as address, address, chain);
+        if(balance){
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
+          if(tokens[tokenIndex]) {
+            tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+            swapContext!.settokens([...tokens])
+          }
         }
+      } catch (error) {
+        console.log(error, "errorerrorerrorerror")
       }
     }
   }

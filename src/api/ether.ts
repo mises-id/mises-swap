@@ -46,7 +46,7 @@ export interface BalanceMap {
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
   if (tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
-    const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
+    const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address, 'latest'] as any})
     if(getWalletBalance) {
       return {
         value: new BigNumber(parseInt(getWalletBalance))
