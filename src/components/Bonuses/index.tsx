@@ -20,20 +20,20 @@ const Bonuses: FC = () => {
       const auth = `${sigMsg}&sig=${personalSignMsg}`
       const data = await signin(auth);
       localStorage.setItem('token', data.token);
-      setisLogin(true);
+      // setisLogin(true);
       setpenddingCount(0)
     } else {
       Toast.show('Please use Mises browser');
     }
   }
-  const [isLogin, setisLogin] = useState(!!localStorage.getItem('token'))
+  // const [isLogin, setisLogin] = useState(!!localStorage.getItem('token'))
   const fetchUser = (accounts: string[]) => {
-    console.log(isLogin)
+    // console.log(isLogin)
     if(accounts.length) {
       setpenddingCount(1)
     }else {
-      setisLogin(false);
-      localStorage.removeItem('token');
+      // setisLogin(false);
+      // localStorage.removeItem('token');
     }
   }
   useMount(() => {
@@ -44,6 +44,7 @@ const Bonuses: FC = () => {
       });
       provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         fetchUser(accounts)
+        console.log(accounts)
       });
     }
   });
