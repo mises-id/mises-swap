@@ -46,6 +46,15 @@ const Bonuses: FC = () => {
         fetchUser(accounts)
         console.log(accounts)
       });
+
+      provider.getCachedAuth?.().then((res: {auth: string}) => {
+        console.log('getCachedAuth')
+        signin(res.auth).then(data => {
+          localStorage.setItem('token', data.token);
+        });
+      }).catch(() => {
+        localStorage.removeItem('token');
+      })
     }
   });
   const documentVisibility = useDocumentVisibility();
