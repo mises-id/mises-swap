@@ -15,6 +15,7 @@ import './locales'
 import * as Sentry from "@sentry/react";
 import VConsole from 'vconsole';
 import { isIOS } from './utils';
+import 'animate.css';
 
 Sentry.init({
   enabled: process.env.NODE_ENV==='production',

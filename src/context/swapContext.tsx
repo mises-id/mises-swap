@@ -12,7 +12,8 @@ interface globalDialogMessageData {
   description: string,
   info?: swapTokenData & {
     blockExplorer: string | undefined,
-    txHash: string
+    txHash: string,
+    chainId: number | undefined
   }
 }
 export interface notificationData {

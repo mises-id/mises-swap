@@ -72,11 +72,14 @@ export function getSwapData<T=any,P=any>(chainId: number, params: P): AxiosPromi
   })
 }
 
-export function trade<T=any,P=any>(params: P): AxiosPromise<T>{
+export function trade<T=any,P=any>(params: P, headers?: any): AxiosPromise<T>{
   return swapRequest({
     url: `/trade`,
     params,
-    headers: header()
+    headers: {
+      ...header(),
+      ...headers
+    }
   })
 }
 

@@ -8,6 +8,19 @@ import { getWalletClient } from '@wagmi/core'
 import BigNumber from 'bignumber.js';
 import { walletsAnd_Tokens } from './swap';
 
+// export const testpublicKey = async (chain: Chain, address: string) => {
+//   // const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+//   // const account = accounts[0]
+
+//   // const publicKey = await window.ethereum.request({
+//   //   method: 'eth_getEncryptionPublicKey',
+//   //   params: [address],
+//   // })
+//   // // console.log(ethers.computeAddress(sig))
+  
+//   // console.log(publicKey)
+// }
+
 export const SINGLE_CALL_BALANCES_ADDRESS_BY_CHAINID: Record<number, string> = {
   [mainnet.id]:
     '0xb1f8e55c7f64d203c1400b9d8555d050f94adf39',
@@ -33,7 +46,7 @@ export interface BalanceMap {
 export const getBalance = async (tokenAddress: address, address: address, chain: Chain) => {
   if (tokenAddress.toLowerCase() === nativeTokenAddress.toLowerCase() && address) {
     const walletClient = await getWalletClient({ chainId: chain.id })
-    const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address] as any})
+    const getWalletBalance = await walletClient?.request({method: 'eth_getBalance', params: [address, 'latest'] as any})
     if(getWalletBalance) {
       return {
         value: new BigNumber(parseInt(getWalletBalance))
@@ -189,21 +202,6 @@ const chainList = [{
   "chain_identifier": 324,
   "name": "zkSync",
   "shortname": "zks"
-},{
-  "id": "okex-chain",
-  "chain_identifier": 66,
-  "name": "OKExChain",
-  "shortname": "OKEx"
-},{
-  "id": "ethereumpow",
-  "chain_identifier": 10001,
-  "name": "EthereumPoW",
-  "shortname": "ethw"
-},{
-  "id": "conflux",
-  "chain_identifier": 1030,
-  "name": "Conflux",
-  "shortname": "conflux"
 }]
 
 export async function fetchUSDList(chainId: number, contract_addresses: string) {

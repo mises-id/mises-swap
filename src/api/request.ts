@@ -26,3 +26,21 @@ export function formatUSDList(params: {
     },
   })
 }
+
+const getBaseUrl = () =>{
+  return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://api.mises.site' : 'https://api.test.mises.site'
+}
+
+export async function signin(auth: string): Promise<{
+  token: string,
+  is_created: boolean
+}> {
+  const { data } = await request({
+    url: `${getBaseUrl()}/api/v1/signin`,
+    method: 'POST',
+    data: {
+      user_authz: { auth }
+    }
+  })
+  return data.data
+}

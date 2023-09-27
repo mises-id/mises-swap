@@ -25,6 +25,7 @@ import ConnectWallet from "@/components/ConnectWallet";
 import { chainList } from "@/App";
 import { useNavigate } from "react-router-dom";
 import PriceImpact from "@/components/PriceImpact";
+import Bonuses from "@/components/Bonuses";
 type allowanceParams = Record<'token_address' | 'wallet_address', string>
 type transactionParams = Record<'token_address', string>
 // Obtain token balance separately for the following chains
@@ -552,7 +553,14 @@ const Home = () => {
     }
   }
 
-  const getSwapTradeWithRetry = retryRequest(trade,{retryCount:5})
+  
+  const getSwapTradeWithRetry = retryRequest(async (params) =>{
+    const token = localStorage.getItem('token');
+    console.log(token)
+    return await trade(params, token ? {
+      Authorization: `Bearer ${token}`
+    } : {})
+  },{retryCount:5})
 
   const submitSwap = async () => {
     const walletClient = await getWalletClient({ chainId })
@@ -607,7 +615,7 @@ const Home = () => {
         aggregator_address: aggregatorAddress
       }
 
-      const result = await getSwapTradeWithRetry<{ data: swapData }, quoteParams>(tradeParams)
+      const result = await getSwapTradeWithRetry(tradeParams)
 
       const firstTrade = result.data.data
 
@@ -661,6 +669,7 @@ const Home = () => {
         info: {
           txHash: hash,
           blockExplorer: chain?.blockExplorers?.default.url,
+          chainId: chain?.id,
           ...swapContext!.swapToData
         }
       })
@@ -792,7 +801,13 @@ const Home = () => {
     networkChangeRun()
 
     console.log("watchNetwork", isConnected, chain?.id, address)
+
   }, [chainId])
+
+  // useEffect(() => {
+  //   chain && address && testpublicKey(chain, address)
+  // }, [chain, address])
+  
 
   useUpdateEffect(() => {
     // const isNotFirstConnected = sessionStorage.getItem('isFirstConnected')
@@ -892,13 +907,17 @@ const Home = () => {
     const tokens = swapContext!.tokens || tokenList
     if (chain && address && tokens ) { 
       
-      const balance = await getBalance(tokenAddress as address, address, chain);
-      if(balance){
-        const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
-        if(tokens[tokenIndex]) {
-          tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
-          swapContext!.settokens([...tokens])
+      try {
+        const balance = await getBalance(tokenAddress as address, address, chain);
+        if(balance){
+          const tokenIndex = tokens.findIndex(val => val.address.toLowerCase() === tokenAddress.toLowerCase())
+          if(tokens[tokenIndex]) {
+            tokens[tokenIndex].balance = formatAmount(balance?.value.toString(), tokens[tokenIndex].decimals)
+            swapContext!.settokens([...tokens])
+          }
         }
+      } catch (error) {
+        console.log(error, "errorerrorerrorerror")
       }
     }
   }
@@ -1126,38 +1145,9 @@ const Home = () => {
 
         <PriceImpact tokens={swapContext!.tokens} verifyShow />
 
+
         <SwapButton onClick={onClickSwap} loading={swapLoading} />
 
-        <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container down-dialog-style" onClose={() => setshowConfirmDialog(false)}>
-          <div className="dialog-content p-20">
-            <p className="confirm-title">Confirm Swap</p>
-            <div>
-              <TokenInput
-                type="from"
-                tokens={swapContext!.tokens}
-                status="ready"
-                tokenAddress={swapContext?.swapFromData.tokenAddress}
-                placeholder='0'
-                value={swapContext?.fromAmount} />
-
-              <div className="switch-token flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-              </div>
-
-              <TokenInput
-                type="to"
-                status="ready"
-                tokens={swapContext!.tokens}
-                value={swapContext?.toAmount}
-                tokenAddress={swapContext?.swapToData.tokenAddress}
-              />
-            </div>
-            <Quote data={swapContext?.quoteData} tokens={swapContext!.tokens} loading={swapLoading} status="ready" />
-            <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
-          </div>
-        </CenterPopup>
-
-        <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />
 
         <Setting visible={openSetting} onClose={() => setopenSetting(false)} />
         {/* <Button onClick={()=>{
@@ -1182,8 +1172,40 @@ const Home = () => {
           <MessageFill fontSize={32} />
         </FloatingBubble>
       </div >
-      <Notification />
+      <div className="swap-container animate__animated animate__zoomIn" style={{zIndex: 0}}>
+        <Bonuses />
+      </div>
     </div>
+    <Notification />
+    <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />
+    <CenterPopup showCloseButton visible={showConfirmDialog} className="dialog-container down-dialog-style" onClose={() => setshowConfirmDialog(false)}>
+      <div className="dialog-content p-20">
+        <p className="confirm-title">Confirm Swap</p>
+        <div>
+          <TokenInput
+            type="from"
+            tokens={swapContext!.tokens}
+            status="ready"
+            tokenAddress={swapContext?.swapFromData.tokenAddress}
+            placeholder='0'
+            value={swapContext?.fromAmount} />
+
+          <div className="switch-token flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          </div>
+
+          <TokenInput
+            type="to"
+            status="ready"
+            tokens={swapContext!.tokens}
+            value={swapContext?.toAmount}
+            tokenAddress={swapContext?.swapToData.tokenAddress}
+          />
+        </div>
+        <Quote data={swapContext?.quoteData} tokens={swapContext!.tokens} loading={swapLoading} status="ready" />
+        <Button block color="primary" className="confirm-swap-btn" loading={approveLoading} onClick={confirmSwap}>Confirm Swap</Button>
+      </div>
+    </CenterPopup>
   </div>
 };
 export default Home;

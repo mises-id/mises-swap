@@ -375,6 +375,10 @@
   line-height:22px;
 }
 
+.text-\[16px\]{
+  font-size:16px;
+}
+
 .text-lg{
   font-size:16px;
   line-height:18px;
@@ -392,6 +396,10 @@
 
 .font-bold{
   font-weight:700;
+}
+
+.leading-6{
+  line-height:24px;
 }
 
 .text-blue-600{

@@ -22,6 +22,13 @@ const StatusDialog: FC<Iprops> = (props) => {
       })
     }
 
+    if(swapContext?.globalDialogMessage?.type === 'success' && swapContext?.globalDialogMessage?.info) {
+      const info = swapContext?.globalDialogMessage?.info;
+      logEvent(analytics, 'swap_success_record', {
+        error_message: `chainId:${info.chainId}, tx_hash:${info.txHash}`
+      })
+    }
+
     return !!swapContext?.globalDialogMessage?.type
 
     // eslint-disable-next-line
