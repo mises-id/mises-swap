@@ -1172,9 +1172,7 @@ const Home = () => {
           <MessageFill fontSize={32} />
         </FloatingBubble>
       </div >
-      <div className="swap-container animate__animated animate__zoomIn" style={{zIndex: 0}}>
-        <Bonuses />
-      </div>
+      <Bonuses />
     </div>
     <Notification />
     <StatusDialog successClose={resetInputData} dismissClose={dismissClose} />

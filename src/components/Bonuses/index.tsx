@@ -64,10 +64,15 @@ const Bonuses: FC = () => {
     }
   }, [penddingCount, documentVisibility])
   
+  if(!(window as any).misesEthereum) {
+    return null;
+  }
   
   return (
-    <div className='flex p-10'>
-      <p className='text-[16px] font-200 text-gray-500 leading-6'>After logging into the Mises wallet to obtain the Mises ID, you will be eligible to earn rewards points by making swap transactions.</p> 
+    <div className="swap-container animate__animated animate__zoomIn" style={{zIndex: 0}}>
+      <div className='flex p-10'>
+        <p className='text-[16px] font-200 text-gray-500 leading-6'>After logging into the Mises wallet to obtain the Mises ID, you will be eligible to earn rewards points by making swap transactions.</p> 
+      </div>
     </div>
   )
 }
