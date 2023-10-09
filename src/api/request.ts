@@ -28,7 +28,7 @@ export function formatUSDList(params: {
 }
 
 const getBaseUrl = () =>{
-  return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://api.mises.site' : 'https://api.test.mises.site'
+  return process.env.REACT_APP_NODE_ENV === 'production' ? 'https://api.alb.mises.site' : 'https://api.test.mises.site'
 }
 
 export async function signin(auth: string): Promise<{
