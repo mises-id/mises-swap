@@ -6,7 +6,7 @@ import { DownFill, DownOutline, EditSOutline } from 'antd-mobile-icons';
 import { SwapContext, defaultSlippageValue, quoteData } from '@/context/swapContext';
 import { CenterPopup, ErrorBlock, Image, ProgressCircle, TextArea } from 'antd-mobile';
 import { ethers } from 'ethers';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { chainList } from '@/App';
 import FallBackImage from '../Fallback';
 import PriceImpact from '../PriceImpact';
@@ -94,7 +94,7 @@ const Quote: FC<Iprops> = (props) => {
     return 0
   }, [props.data, props.tokens, swapContext?.swapToData])
 
-  const [gasPrice, setgasPrice] = useState('0')
+  // const [gasPrice, setgasPrice] = useState('0')
 
 
   const nativeCurrency = useMemo(() => {
@@ -105,21 +105,25 @@ const Quote: FC<Iprops> = (props) => {
     // eslint-disable-next-line
   }, [swapContext?.chainId])
 
-  const walletClient = useWalletClient()
+  // const walletClient = useWalletClient()
 
   useEffect(() => {
-    if (props.data) {
-      walletClient.data?.request({
-        method: 'eth_gasPrice',
-        params: [] as never
-      }).then(res => {
-        const gasPriceNumber = parseInt(res)
-        setgasPrice(gasPriceNumber.toString())
-      })
-    }
+    // if (props.data && document.visibilityState === 'visible') {
+    //   walletClient.data?.request({
+    //     method: 'eth_gasPrice',
+    //     params: [] as never
+    //   }).then(res => {
+    //     const gasPriceNumber = parseInt(res)
+    //     setgasPrice(gasPriceNumber.toString())
+    //   })
+    // }
     if (!props.data) setisOpen(false)
     // eslint-disable-next-line 
   }, [props.data])
+
+  const gasPrice = useMemo(() => {
+    return swapContext?.gasPrice || '0'
+  }, [swapContext?.gasPrice])
 
   const networkFee = useMemo(() => {
     if (props.data) {

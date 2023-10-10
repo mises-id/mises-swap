@@ -1,5 +1,6 @@
 import { Timeout } from "ahooks/lib/useRequest/src/types";
-import { Dispatch, FC, ReactNode, SetStateAction, createContext, useState } from "react";
+import { Dispatch, FC, ReactNode, SetStateAction, createContext, useEffect, useState } from "react";
+import { useWalletClient } from "wagmi";
 // type swapType = 'to' | 'from'
 interface swapTokenData {
   tokenAddress: string,
@@ -63,6 +64,7 @@ export type SwapContextType = {
   setcurrentSwitchType: Dispatch<SetStateAction<'from' | 'to'>>,
   tokens: token[] | undefined, 
   settokens: Dispatch<SetStateAction<token[] | undefined>>,
+  gasPrice: string
 };
 interface Iprops {
   children?: ReactNode
@@ -105,6 +107,8 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
 
   const [tokens, settokens] = useState<token[] | undefined>(undefined)
 
+  const [gasPrice, setgasPrice] = useState('0')
+
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
     settimeout(timeoutFn)
@@ -124,6 +128,21 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
       settimeout(undefined)
     }
   }
+
+  const walletClient = useWalletClient()
+
+  useEffect(() => {
+    if (quoteData && document.visibilityState === 'visible') {
+      walletClient.data?.request({
+        method: 'eth_gasPrice',
+        params: [] as never
+      }).then(res => {
+        const gasPriceNumber = parseInt(res)
+        setgasPrice(gasPriceNumber.toString())
+      })
+    }
+    // eslint-disable-next-line 
+  }, [quoteData])
 
   return <SwapContext.Provider value={{
     swapToData,
@@ -155,7 +174,8 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     currentSwitchType, 
     setcurrentSwitchType,
     tokens, 
-    settokens
+    settokens,
+    gasPrice
   }}>{children}</SwapContext.Provider>;
 };
 
