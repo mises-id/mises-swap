@@ -173,11 +173,11 @@ function App() {
   const { isShowLayout, isMaxRetryStatus, getProvider } = useShowLayout()
   useEffect(() => {
     // setTimeout(() => {
-      // console.log('loading....')
-      // getProvider()
+    // console.log('loading....')
+    // getProvider()
     // }, 1000);
     // getProvider()
-    const load = () =>{
+    const load = () => {
       console.log('getProvider loading')
       getProvider()
     }
@@ -192,7 +192,7 @@ function App() {
       window.addEventListener('load', load);
       return () => window.removeEventListener('load', load);
     }
-    
+
     // eslint-disable-next-line
   }, [])
   if (isMaxRetryStatus) {
@@ -202,7 +202,7 @@ function App() {
   if (!isShowLayout) {
     return <div></div>
   }
-  
+
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     chainList,
     [
@@ -236,7 +236,7 @@ function App() {
       ],
     }
   ]);
-  
+
   const wagmiClient = createConfig({
     autoConnect: true,
     connectors,
@@ -246,19 +246,19 @@ function App() {
 
   return (
     <div className="App">
-      <SwapProvider>
-        <WagmiConfig config={wagmiClient}>
-          <RainbowKitProvider chains={chains}>
-            {/* <RecoilRoot> */}
-            <ConfigProvider locale={enUS}>
+      <WagmiConfig config={wagmiClient}>
+        <RainbowKitProvider chains={chains}>
+          {/* <RecoilRoot> */}
+          <ConfigProvider locale={enUS}>
+            <SwapProvider>
               <BrowserRouter>
                 <Routes />
               </BrowserRouter>
-            </ConfigProvider>
-            {/* </RecoilRoot> */}
-          </RainbowKitProvider>
-        </WagmiConfig>
-      </SwapProvider>
+            </SwapProvider>
+          </ConfigProvider>
+          {/* </RecoilRoot> */}
+        </RainbowKitProvider>
+      </WagmiConfig>
     </div >
   );
 }
