@@ -22,6 +22,7 @@
     "@types/react-dom": "^18.0.5",
     "@types/react-virtualized": "^9.21.21",
     "ahooks": "^3.4.0",
+    "animate.css": "^4.1.1",
     "antd-mobile": "^5.12.6",
     "antd-mobile-icons": "^0.3.0",
     "axios": "^0.27.2",
@@ -53,13 +54,12 @@
     "viem": "^0.3.37",
     "wagmi": "^1.0.8",
     "web-vitals": "^2.1.4",
-    "web3": "^1.7.3",
-    "animate.css": "^4.1.1"
+    "web3": "^1.7.3"
   },
   "scripts": {
-    "start": "PORT=2333 REACT_APP_NODE_ENV=development craco start",
-    "build": "REACT_APP_NODE_ENV=production craco build",
-    "build:test": "REACT_APP_NODE_ENV=test craco build",
+    "start": "cross-env PORT=2333 REACT_APP_NODE_ENV=development craco start",
+    "build": "cross-env REACT_APP_NODE_ENV=production craco build",
+    "build:test": "cross-env REACT_APP_NODE_ENV=test craco build",
     "test": "craco test",
     "eject": "craco eject",
     "css": "npx tailwindcss -i ./src/styles/tailwindcss.css -o ./src/styles/global.css --watch",

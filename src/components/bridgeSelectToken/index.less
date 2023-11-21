@@ -1,0 +1,145 @@
+@media (prefers-color-scheme: dark) {
+
+  .search-input{
+    input{
+      border: 1px solid rgba(152, 161, 192, 0.24);
+      color: white;
+      background-color: rgb(19, 26, 42);
+      &:focus{
+        border: 1px solid rgba(76, 130, 251, 0.24);
+        background-color: black
+      }
+    }
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .search-input{
+    input{
+      border: 1px solid rgb(210, 217, 238);
+      color: rgb(13, 17, 28);
+      background-color: rgb(245, 246, 252);
+      &:focus{
+        border: 1px solid rgba(76, 130, 251, 0.24);
+        background-color: rgb(255, 255, 255)
+      }
+    }
+  }
+}
+.token-item{
+  align-items: center;
+  background-color: var(--widget-bg-color);
+  opacity: 1;
+  box-shadow: none;
+  cursor: pointer;
+  height: unset;
+  border-radius: 16px;
+  outline: none;
+  user-select: none;
+  border: none;
+  font-size: 24px;
+  font-weight: 400;
+  width: initial;
+  padding: 4px 8px 4px 4px;
+  gap: 8px;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  margin-left: 12px;
+  visibility: visible;
+  color: var(--theme-text-color)
+}
+.symbol{
+  margin-left:10px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.downOutline{
+  font-size: 14px;
+  color:var(--icon-color)
+}
+.un-select-token-item{
+  background: var(--adm-color-primary);
+  align-items: center;
+  opacity: 1;
+  box-shadow: rgba(0, 0, 0, 0.075) 0px 6px 10px;
+  cursor: pointer;
+  color: white;
+  height: unset;
+  border-radius: 16px;
+  outline: none;
+  user-select: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  width: initial;
+  padding: 9px 6px 9px 8px;
+  gap: 8px;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  margin-left: 12px;
+  visibility: visible;
+}
+
+// dialog styles
+.dialog-title{
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--theme-text-color)
+}
+.dialog-header-container{
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.token-balance{
+  padding-right: 20px;
+  font-size: 14px;
+  color: var(--theme-text-color)
+}
+.token-name{
+  font-size: 16px;
+  padding-bottom: 5px;
+  display: block;
+  color: var(--theme-text-color)
+}
+.search-input-container{
+  position: relative;
+  .search-icon{
+    position: absolute;
+    left: 11px;
+    top: 11px;
+    font-size: 18px;
+    color: #d2d9ee
+  }
+}
+.search-input{
+  margin-top: 16px;
+  input{
+    display: flex;
+    padding: 16px 16px 16px 40px;
+    height: 40px;
+    align-items: center;
+    width: 100%;
+    white-space: nowrap;
+    outline: none;
+    border-radius: 12px;
+    appearance: none;
+    font-size: 16px;
+    transition: border 100ms ease 0s;
+  }
+}
+.selected-icon{
+  color: var(--adm-color-primary);
+  margin-left: 10px;
+}
+.selected-item{
+  opacity: 0.4;
+}
+.unselect-downOutline{
+  color: white;
+}
+.disabled{
+  opacity: 0.6;
+}
+.import-token{
+  margin-right: 12px;
+}
