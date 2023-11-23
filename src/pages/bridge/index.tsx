@@ -1,5 +1,5 @@
 import "./index.less";
-import { useContext, useEffect} from "react";
+import { useContext, useEffect, useState} from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { SwapContext } from "@/context/swapContext";
@@ -9,7 +9,7 @@ import StatusDialog from "@/components/StatusDialog";
 import BridgeNotification from "@/components/BridgeNotification";
 import { useNavigate } from "react-router-dom";
 import { findBridgeToken, retryRequest } from "@/utils";
-import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount } from "@/api/bridge";
+import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
 import {useRequest} from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
 import { useLocation } from 'react-router-dom';
@@ -51,19 +51,108 @@ interface getBridgeTokenExchangeAmountResult {
   fee: string
 }
 
+interface getBridgeFixRateForAmountParams {
+  from: string,
+  to: string,
+  amountFrom: string
+}
+
+interface getBridgeFixRateForAmountResult {
+  from: string,
+  to: string,
+  networkFee: string,
+  amountFrom: string,
+  amountTo	: string,
+  max: string,
+  maxFrom: string,
+  maxTo: string,
+  min: string,
+  minFrom: string,
+  minTo: string,
+  visibleAmount: string,
+  rate: string,
+  fee: string
+}
+
+interface createBridgeTransactionParams {
+  from: string,
+  to: string,
+  address: string,
+  extraId?:string,
+  amountFrom:string,
+  refundAddress?: string,
+  refundExtraId?: string
+}
+
+interface createBridgeTransactionResult {
+  id: string,
+  trackUrl: string,
+  type: string,
+  payinAddress: string,
+  payinExtraId: string,
+  payoutAddress: string,
+  payoutExtraId: string,
+  refundAddress: string,
+  refundExtraId: string,
+  amountExpectedFrom: string,
+  amountExpectedTo: string,
+  status: string,
+  currencyTo: string,
+  currencyFrom: string,
+  createdAt: number
+}
+
+interface createFixBridgeTransactionParams {
+  from: string,
+  to: string,
+  rateId: string,
+  address: string,
+  extraId?: string,
+  amountFrom?: string,
+  amountTo	?: string,
+  refundAddress: string,
+  refundExtraId?: string
+}
+
+interface createFixBridgeTransactionResult {
+  id: string,
+  trackUrl: string,
+  type: string,
+  payinAddress: string,
+  payinExtraId: string,
+  payoutAddress: string,
+  payoutExtraId: string,
+  refundAddress: string,
+  refundExtraId: string,
+  amountExpectedFrom: string,
+  amountExpectedTo: string,
+  status: string,
+  payTill: string,
+  currencyTo: string,
+  currencyFrom: string,
+  createdAt: number
+}
+
 const Bridge = () => {
   // hooks
   const analytics = useAnalytics()
   const swapContext = useContext(SwapContext)
-  const location = useLocation();
+  const location = useLocation()
   const navigate = useNavigate()
+  const [showMainForm, setShowMainForm] = useState<boolean>(true)
+  const [nextStepButton, setNextStepButton] = useState<boolean>(false)
+  const [recipientAddress, setRecipientAddress] = useState<string>("")
+  const [recipientExtraId, setRecipientExtraId] = useState<string>("")
+  const [refundAddress, setRefundAddress] = useState<string>("")
+  const [refundExtraId, setRefundExtraId] = useState<string>("")
+  const [fixRateId, setFixRateId] = useState<string>("")
 
   // init
   useEffect(() => {
     init()
   }, []);
 
-  const init = async () =>{
+  const init = async () => {
     logEvent(analytics, 'open_bridge_page')
     const isPageReLoad = sessionStorage.getItem('isPageReLoad')
     if(isPageReLoad) {
@@ -84,7 +173,7 @@ const Bridge = () => {
         tokenList = JSON.parse(cacheTokens)
       }
       if(tokenList.length === 0) {
-        const res = await getTokensWithRetry<{ "data": token[] }>()
+        const res = await getTokensWithRetry<{ data: token[] }>()
         if (res) {
           tokenList = res.data.data || []
           sessionStorage.setItem('bridgeTokenList', JSON.stringify(tokenList))
@@ -94,10 +183,10 @@ const Bridge = () => {
       }
       swapContext!.setBridgeTokens([...tokenList])
     } catch (error: any) {
-      swapContext?.setGlobalDialogMessage({
-        type: 'error',
-        description: "Network Error: Failed to obtain Currencies"
-      })
+      // swapContext?.setGlobalDialogMessage({
+      //   type: 'error',
+      //   description: "Network Error: Failed to obtain Currencies"
+      // })
     }
   }
 
@@ -116,6 +205,178 @@ const Bridge = () => {
       <div><span className="beta-tag">BETA</span></div> 
       
     </div>
+  }
+
+  const UserClause = () => {
+    const goToConfirm = () => {
+      setShowMainForm(false)
+    }
+    return (
+      <div className="bridge-swap-container">
+        <div>
+            This is a message for the user.
+        </div>
+        <div className="flex">
+            <input type="checkbox" />
+            <div>This is a text passage block. The user should agree to these terms.</div>
+        </div>
+        <Button
+          onClick={goToConfirm}
+          disabled={nextStepButton}
+          block
+          color="primary"
+          className='exchange-button'>Next step</Button>
+      </div>
+    )
+  }
+
+  const TransactionDetails = () => {
+    const createTransaction = async () => {
+      try{
+        let transactionId = ""
+        if(swapContext?.bridgeFloatMode){
+          // todo:check params
+
+          // float
+          const params:createBridgeTransactionParams = {
+            from: swapContext.bridgeFromData.symbol,
+            to: swapContext.bridgeToData.symbol,
+            address: recipientAddress,
+            extraId: recipientExtraId,
+            amountFrom: swapContext.bridgeFromAmount,
+            refundAddress: refundAddress,
+            refundExtraId: refundExtraId
+          }
+          const ret = await createBridgeTransaction<{data: createBridgeTransactionResult}, createBridgeTransactionParams>(params)
+          if(ret.data.data.id){
+            transactionId = ret.data.data.id
+          } else {
+            throw new Error("empty transaction id")
+          }
+        } else {
+          // todo:check params
+
+          // fix
+          const params:createFixBridgeTransactionParams = {
+            from: swapContext!.bridgeFromData.symbol,
+            to: swapContext!.bridgeToData.symbol,
+            rateId: fixRateId,
+            address: recipientAddress,
+            extraId: recipientExtraId,
+            amountFrom: swapContext!.bridgeFromAmount,
+            refundAddress: refundAddress,
+            refundExtraId: refundExtraId
+          }
+          const ret = await createFixBridgeTransaction<{data:createFixBridgeTransactionResult}, createFixBridgeTransactionParams>(params)
+          if(ret.data.data.id){
+            transactionId = ret.data.data.id
+          } else {
+            throw new Error("empty transaction id")
+          }
+        }
+
+        // jump 
+        navigate(`/bridge/transaction/${transactionId}`)
+
+      } catch (err) {
+        swapContext?.setGlobalDialogMessage({
+          type: 'error',
+          description: "Network Error: Failed to create transaction."
+        })
+      }
+    }
+
+    return (
+      <div className='flex-1 flex flex-col overflow-hidden relative'>
+      <div className="bridge-swap-container">
+        <div className="flex justify-between items-center swap-header">
+          <p className="unselected-title" onClick={() => navigate('/')}>Swap</p><p className="selected-title">Bridge</p>
+          <div className="flex items-center"></div>
+        </div>
+        <div>
+            <div className="flex justify-between items-center">
+              <h3>Checkout</h3>
+              <Button
+                onClick={() => {setShowMainForm(true)}}
+                color="primary"
+                className='bridge-back-button'>Back</Button>
+            </div>
+            { swapContext?.bridgeFloatMode ?
+            <>
+            <div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">You send</div>
+                <div className="bridge-transaction-detail-content">0.1 BTC</div>
+                <div className="bridge-transaction-detail-tip">blockchain: bitcoin</div>
+              </div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">You get</div>
+                <div className="bridge-transaction-detail-content">~ 1.8139941 ETH</div>
+                <div className="bridge-transaction-detail-tip">blockchain: ethereum</div>
+              </div>
+            </div>
+            <div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Exchange fee</div>
+                <div className="bridge-transaction-detail-content">0.00455041 ETH</div>
+                <div className="bridge-transaction-detail-tip">The exchange fee is already included in the displayed amount you’ll get</div>
+              </div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Network fee</div>
+                <div className="bridge-transaction-detail-content">0.001617 ETH</div>
+                <div className="bridge-transaction-detail-tip">The network fee is already included in the displayed amount you’ll get</div>
+              </div>
+            </div>
+            <div className="bridge-transaction-detail-block">
+              <div className="bridge-transaction-detail-title">Recipient address</div>
+              <div className="bridge-transaction-detail-content">0x466FB3bc86Cc0Ab4430F71bA8E6C4Fd750593C96</div>
+            </div>
+            <div className="bridge-transaction-detail-block">
+              <div className="bridge-transaction-detail-title">Exchange rate</div>
+              <div className="bridge-transaction-detail-content">1 BTC ~ 18.20161503 ETH</div>
+            </div>
+            </>
+            :
+            <>
+              <div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">You send</div>
+                <div className="bridge-transaction-detail-content">0.1 BTC</div>
+                <div className="bridge-transaction-detail-tip">blockchain: bitcoin</div>
+              </div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">You get</div>
+                <div className="bridge-transaction-detail-content">~ 1.8139941 ETH</div>
+                <div className="bridge-transaction-detail-tip">blockchain: ethereum</div>
+              </div>
+            </div>
+            <div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Guaranteed rate</div>
+                <div className="bridge-transaction-detail-content">1 BTC = 17.90606837 ETH</div>
+              </div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Recipient address</div>
+                <div className="bridge-transaction-detail-content">0x466FB3bc86Cc0Ab4430F71bA8E6C4Fd750593C96</div>
+              </div>
+            </div>
+            <div className="bridge-transaction-detail-block">
+              <div className="bridge-transaction-detail-title">Refund address</div>
+              <div className="bridge-transaction-detail-content">bc1pfn3echcckf290r35x6kcrfhf6j8zedu5w8qvke76lmlyqm2s8wdqzaetnn</div>
+            </div>
+            </>
+            }
+        </div>
+        <div>
+        <Button
+          onClick={createTransaction}
+          block
+          color="primary"
+          className='exchange-button'>Confirm &amp; make payment</Button>
+        </div>
+      </div>
+    </div>
+    )
   }
 
   // switchToken
@@ -222,6 +483,7 @@ const Bridge = () => {
 
   // generateOutputAmount
   const getBridgeTokenExchangeAmountRetry = retryRequest(getBridgeTokenExchangeAmount)
+  const getBridgeFixRateForAmountRetry = retryRequest(getBridgeFixRateForAmount)
   const generateOutputAmount = async (from: string | undefined, to: string | undefined, amountFrom: string | undefined) => {
     if(!from){
       console.error("generateOutputAmount:", "from token error")
@@ -236,24 +498,38 @@ const Bridge = () => {
       return false
     }
 
-    try{
-      const ret = await getBridgeTokenExchangeAmountRetry<{"data": getBridgeTokenExchangeAmountResult}, getBridgeTokenExchangeAmountParams>({from, to, amountFrom})
-      if(!ret.data.data && Object.keys(ret.data.data).length == 0){
-        throw new Error("result is empty")
-      }
-      const amountTo = parseFloat(ret.data.data.amountTo)
-      const networkFee = parseFloat(ret.data.data.networkFee)
-      if(isNaN(amountTo) || isNaN(networkFee)){
-        throw new Error("amountTo or networkFee NaN")
-      }
-      if(amountTo <= networkFee){
-        throw new Error("amountTo error")
-      }
-      swapContext?.setBridgeToAmount(swapContext?.bridgeFloatMode ? `~ ${amountTo - networkFee}` : `${amountTo - networkFee}`)
-    } catch (err) {
-      console.error("generateOutputAmount:", err)
-      return false
-    }
+    getBridgeTokenExchangeAmountRetry<{data: getBridgeTokenExchangeAmountResult}, getBridgeTokenExchangeAmountParams>({from, to, amountFrom})
+      .then((ret) => {
+        if(!ret.data.data && Object.keys(ret.data.data).length == 0){
+          throw new Error("result is empty")
+        }
+        const amountTo = parseFloat(ret.data.data.amountTo)
+        if(isNaN(amountTo)){
+          throw new Error("amountTo or networkFee NaN")
+        }
+        swapContext?.setBridgeToAmount(`~ ${amountTo}`)
+        swapContext?.setBridgeFloatOutputAmount(`~ ${amountTo}`)
+      })
+      .catch((err) => {
+        console.error("getBridgeTokenExchangeAmountRetry:", err)
+      })
+
+    getBridgeFixRateForAmountRetry<{data: getBridgeFixRateForAmountResult}, getBridgeFixRateForAmountParams>({from, to, amountFrom})
+      .then((ret) => {
+        if(!ret.data.data && Object.keys(ret.data.data).length == 0){
+          throw new Error("result is empty")
+        }
+        const amountTo = parseFloat(ret.data.data.amountTo)
+        if(isNaN(amountTo)){
+          throw new Error("amountTo or networkFee NaN")
+        }
+        swapContext?.setBridgeToAmount(`${amountTo}`)
+        swapContext?.setBridgeFixedOutputAmount(`${amountTo}`)
+      })
+      .catch((err) => {
+        console.error("getBridgeFixRateForAmountRetry:", err)
+      })
+    
     return true
   }
 
@@ -347,10 +623,12 @@ const Bridge = () => {
     <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
       <Logo />
     </div>
+    {showMainForm &&
     <div className='flex-1 flex flex-col overflow-hidden relative'>
-      <div className="swap-container">
+      <div className="bridge-swap-container">
         <div className="flex justify-between items-center swap-header">
-          <p className="title" onClick={() => navigate('/')}>Swap</p><p className="selected-title">Bridge</p>
+          <p className="unselected-title" onClick={() => navigate('/')}>Swap</p><p className="selected-title">Bridge</p>
+          <div className="flex items-center"></div>
         </div>
         <div>
           <BridgeTokenInput
@@ -362,33 +640,32 @@ const Bridge = () => {
             //maxLength={swapContext?.swapFromData.decimals}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
-            value={swapContext?.bridgeFromAmount} />
-
+            value={swapContext?.bridgeFromAmount || "0.1"} />
           <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
-
           <BridgeTokenInput
             type="to"
             tokens={swapContext!.bridgeTokens}
-            value={swapContext?.bridgeToAmount}
+            value={swapContext?.bridgeToAmount || "..."}
             //maxLength={swapContext?.swapToData.decimals}
             placeholder='0'
             onTokenChange={onToTokenChange}
           />
         </div>
-
-        <Button
+        {location.pathname === '/bridge' && <Button
           onClick={() => navigate('/bridge/process')}
           block
           color="primary"
-          className='swap-button'>Exchange Now</Button>
+          className='exchange-button'>Exchange Now</Button>}
       </div >
-
-      <BridgeNotification />
-
       {location.pathname === '/bridge/process' && <BridgeMode />}
+      {location.pathname === '/bridge/process' && <UserClause />}
     </div>
+    }
+
+    {!showMainForm && <TransactionDetails/>}
+    <BridgeNotification />
     <StatusDialog />
   </div>
 };

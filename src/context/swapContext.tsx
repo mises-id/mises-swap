@@ -97,6 +97,10 @@ export type SwapContextType = {
   setBridgeFloatNotAvailableMsg: Dispatch<SetStateAction<string>>,
   bridgeFixedNotAvailableMsg: string,
   setBridgeFixedNotAvailableMsg: Dispatch<SetStateAction<string>>,
+  bridgeFloatOutputAmount: string,
+  setBridgeFloatOutputAmount: Dispatch<SetStateAction<string>>,
+  bridgeFixedOutputAmount: string,
+  setBridgeFixedOutputAmount: Dispatch<SetStateAction<string>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -157,6 +161,8 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [bridgeFixedAvailable, setBridgeFixedAvailable] = useState(true)
   const [bridgeFloatNotAvailableMsg, setBridgeFloatNotAvailableMsg] = useState('')
   const [bridgeFixedNotAvailableMsg, setBridgeFixedNotAvailableMsg] = useState('')
+  const [bridgeFloatOutputAmount, setBridgeFloatOutputAmount] = useState('...')
+  const [bridgeFixedOutputAmount, setBridgeFixedOutputAmount] = useState('...')
 
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
@@ -246,7 +252,11 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     bridgeFloatNotAvailableMsg,
     setBridgeFloatNotAvailableMsg,
     bridgeFixedNotAvailableMsg,
-    setBridgeFixedNotAvailableMsg
+    setBridgeFixedNotAvailableMsg,
+    bridgeFloatOutputAmount,
+    setBridgeFloatOutputAmount,
+    bridgeFixedOutputAmount,
+    setBridgeFixedOutputAmount,
   }}>{children}</SwapContext.Provider>;
 };
 

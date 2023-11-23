@@ -10,6 +10,7 @@ interface token {
   'price'?: string,
   'cacheTime'?: number,
   'isImport'?: boolean,
+  "extraIdName"?: string
 }
 
 interface quoteParams {
