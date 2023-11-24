@@ -190,23 +190,6 @@ const Bridge = () => {
     }
   }
 
-  // Logo
-  const Logo = () => {
-    const swapContext = useContext(SwapContext)
-    const resetData = () => {
-      swapContext?.setFromAmount('')
-      swapContext?.setToAmount('')
-      swapContext?.setquoteData(undefined)
-      swapContext?.setPageStatus('reset')
-    }
-    return <div className="relative flex" onClick={resetData}>
-       <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
-      {/* <Image width={47} height={30} placeholder="" onClick={resetData} src='/Mises_symbol.png' />*/}
-      <div><span className="beta-tag">BETA</span></div> 
-      
-    </div>
-  }
-
   const UserClause = () => {
     const goToConfirm = () => {
       setShowMainForm(false)
@@ -284,6 +267,10 @@ const Bridge = () => {
           description: "Network Error: Failed to create transaction."
         })
       }
+
+      // test
+      navigate(`/bridge/transaction/hem83gulyeispdmw`)
+
     }
 
     return (
@@ -620,8 +607,11 @@ const Bridge = () => {
 
   // return
   return <div className="flex flex-col flex-1">
-    <div className='flex justify-between items-center px-10 py-10'  style={{height: 40}}>
-      <Logo />
+    <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
+      <div className="relative flex">
+        <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
+        <div><span className="beta-tag">BETA</span></div>
+      </div>
     </div>
     {showMainForm &&
     <div className='flex-1 flex flex-col overflow-hidden relative'>
@@ -665,7 +655,7 @@ const Bridge = () => {
     }
 
     {!showMainForm && <TransactionDetails/>}
-    <BridgeNotification />
+    {/* <BridgeNotification /> */}
     <StatusDialog />
   </div>
 };
