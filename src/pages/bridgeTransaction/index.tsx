@@ -132,7 +132,7 @@ const BridgeTransaction = () => {
                         </div>
                         <div className="flex justify-between items-center">
                             <Button color="primary" onClick={() => window.location.reload()}>Refresh</Button>
-                            <Button color="primary">Back to main page</Button>
+                            <Button color="primary" onClick={() => {navigate("/bridge")}}>Back to main page</Button>
                         </div>
                     </div>
                 </div>
