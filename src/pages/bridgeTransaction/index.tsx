@@ -10,7 +10,9 @@ interface getBridgeTransactionInfoResult {
     id: string,
     trackUrl: string,
     createdAt: number,
-    expireTime: number, // todo
+    expireHour: number,
+    expireMinute: number,
+    expireSecond: number,
     type: string,
     moneyReceived: number,
     moneySent: number,
@@ -60,7 +62,10 @@ const TransactionStatusMap = new Map([
 
 const BridgeTransaction = () => {
     const navigate = useNavigate()
-    const [status, setStatus] = useState("error")
+    const [status, setStatus] = useState("")
+    const [expireHour, setExpireHour] = useState<number>(0)
+    const [expireMinute, setExpireMinute] = useState<number>(0)
+    const [expireSecond, setExpireSecond] = useState<number>(0)
     const [currencyFromTicker, setCurrencyFromTicker] = useState("")
     const [currencyToTicker, setCurrencyToTicker] = useState("")
     const [amountExpectedFrom, setAmountExpectedFrom] = useState("")
@@ -69,6 +74,8 @@ const BridgeTransaction = () => {
     const [payinExtraIdName, setPayinExtraIdName] = useState("")
     const [payinExtraId, setPayinExtraId] = useState("")
     const [payoutAddress, setPayoutAddress] = useState("")
+    const [payoutExtraId, setPayoutExtraId] = useState("")
+    const [payoutExtraIdName, setPayoutExtraIdName] = useState("")
     const [refundAddress, setRefundAddress] = useState("")
     const [networkFee, setNetworkFee] = useState("")
     const [totalFee, setTotalFee] = useState("")
@@ -99,6 +106,11 @@ const BridgeTransaction = () => {
                 setRefundAddress(ret.data.data.refundAddress)
                 setNetworkFee(ret.data.data.networkFee)
                 setTotalFee(ret.data.data.totalFee)
+                setExpireHour(ret.data.data.expireHour)
+                setExpireMinute(ret.data.data.expireMinute)
+                setExpireSecond(ret.data.data.expireSecond)
+                setPayinExtraIdName(ret.data.data.payinExtraIdName)
+                setPayinExtraId(ret.data.data.payinExtraId)
             } catch (err) {
                 if(status == ""){
                     setStatus("error")
@@ -173,6 +185,12 @@ const BridgeTransaction = () => {
                             <div className="bridge-transaction-detail-title">Recipient address</div>
                             <div className="bridge-transaction-detail-content">{payoutAddress}</div>
                         </div>
+                        { payoutExtraId && 
+                        <div className="bridge-transaction-detail-block">
+                            <div className="bridge-transaction-detail-title">{payoutExtraIdName}</div>
+                            <div className="bridge-transaction-detail-content">{payoutExtraId}</div>
+                        </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -245,6 +263,12 @@ const BridgeTransaction = () => {
                             <div className="bridge-transaction-detail-title">Recipient address</div>
                             <div className="bridge-transaction-detail-content">{payoutAddress}</div>
                         </div>
+                        { payoutExtraId && 
+                        <div className="bridge-transaction-detail-block">
+                            <div className="bridge-transaction-detail-title">{payoutExtraIdName}</div>
+                            <div className="bridge-transaction-detail-content">{payoutExtraId}</div>
+                        </div>
+                        }
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Network fee</div>
                             <div className="bridge-transaction-detail-content">{networkFee}</div>
@@ -323,7 +347,7 @@ const BridgeTransaction = () => {
         <div className="bridge-swap-container">
             <div className="bridge-transaction-detail-block">
                 <div className="bridge-transaction-detail-content">
-                    <Countdown initialHours={3} initialMinutes={0} initialSeconds={0} />
+                    <Countdown initialHours={expireHour} initialMinutes={expireMinute} initialSeconds={expireSecond} />
                 </div>
                 <div className="bridge-transaction-detail-title">Time left to send {amountExpectedFrom} {currencyFromTicker}</div>
                 {(status == "expired" || status == "overdue") &&
