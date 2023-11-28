@@ -62,6 +62,7 @@ const TransactionStatusMap = new Map([
 
 const BridgeTransaction = () => {
     const navigate = useNavigate()
+    const {transId} = useParams<string>()
     const [status, setStatus] = useState("")
     const [expireHour, setExpireHour] = useState<number>(0)
     const [expireMinute, setExpireMinute] = useState<number>(0)
@@ -79,7 +80,6 @@ const BridgeTransaction = () => {
     const [refundAddress, setRefundAddress] = useState("")
     const [networkFee, setNetworkFee] = useState("")
     const [totalFee, setTotalFee] = useState("")
-    const {transId} = useParams<string>()
 
     // init
     const getBridgeTransactionInfoWithRetry = retryRequest(getBridgeTransactionInfo)

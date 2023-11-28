@@ -1,18 +1,23 @@
 import "./index.less";
-import { useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState, useMemo} from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { hooks, metaMask } from '@/components/Web3Provider/metamask';
+import { useWeb3React } from '@web3-react/core';
 import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
-import { Button } from "antd-mobile";
+import { Button, Toast, CenterPopup } from "antd-mobile";
 import StatusDialog from "@/components/StatusDialog";
 import BridgeNotification from "@/components/BridgeNotification";
 import { useNavigate } from "react-router-dom";
 import { findBridgeToken, retryRequest } from "@/utils";
 import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
+import {signin} from "@/api/request";
 import {useRequest} from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
 import { useLocation } from 'react-router-dom';
+
+const { useAccounts, useIsActivating } = hooks
 
 interface getPairInfoParams {
   from: string,
@@ -147,6 +152,43 @@ const Bridge = () => {
   const [refundExtraId, setRefundExtraId] = useState<string>("")
   const [fixRateId, setFixRateId] = useState<string>("")
 
+  // form status
+  const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
+
+  const [authAccount, setauthAccount] = useState('')
+  const [loading, setloading] = useState(true)
+
+  const [downloadPop, setDownloadPop] = useState(false)
+
+  const [showConnectWalletPopup, setShowConnectWalletPopup] = useState(false)
+
+  const accounts = useAccounts()
+  const isActivating = useIsActivating()
+
+  const { connector } = useWeb3React();
+
+  const getCurrentAccount = () => {
+    let currentAccount: string
+    if (accounts?.length) {
+      currentAccount = accounts[0]
+      console.log("currentAccount:accounts?.length")
+    }else{
+      const connectAddress = localStorage.getItem('ethAccount')
+      currentAccount = connectAddress || authAccount || ''
+      console.log("currentAccount:connectAddress || authAccount")
+    }
+    if(!currentAccount){
+      console.log("currentAccount:1")
+      setShowConnectWalletPopup(true)
+    }else{
+      console.log("currentAccount:"+currentAccount)
+      setShowConnectWalletPopup(false)
+    }
+    return currentAccount
+  }
+
+  const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
+
   // init
   useEffect(() => {
     init()
@@ -162,6 +204,14 @@ const Bridge = () => {
     }
     getBridgeTokenList()
   }
+
+  // attempt to connect eagerly on mount
+  useEffect(() => {
+    metaMask.connectEagerly().catch(() => {
+      console.debug('Failed to connect eagerly to metamask')
+    })
+    setloading(false)
+  }, [])
 
   // getBridgeTokenList
   const getTokensWithRetry = retryRequest(getBridgeTokens)
@@ -181,6 +231,7 @@ const Bridge = () => {
           tokenList = []
         }
       }
+
       swapContext!.setBridgeTokens([...tokenList])
     } catch (error: any) {
       // swapContext?.setGlobalDialogMessage({
@@ -520,6 +571,96 @@ const Bridge = () => {
     return true
   }
 
+  const buttonText = useMemo(() => {
+    if (isActivating) {
+      return 'Connect Wallet...'
+    }
+
+    return 'Connect Mises ID'
+    //
+  }, [isActivating])
+
+  const loginMisesAccount = async (params: {
+    auth: string,
+    misesId: string
+  }) => {
+    console.log("connectWallet:4")
+    try {
+      localStorage.setItem('ethAccount', params.misesId)
+      setauthAccount(params.misesId)
+      const res = await signin(params.auth)
+      setloading(false)
+    } catch (error) {
+      setloading(false)
+    }
+  }
+
+  const signMsg = async () => {
+    console.log("connectWallet:3")
+    try {
+      const timestamp = new Date().getTime();
+      console.log(accounts, 'accounts')
+      if (accounts && accounts.length) {
+        const address = accounts[0]
+        const nonce = `${timestamp}`;
+        const sigMsg = `address=${address}&nonce=${timestamp}`
+        const data = await window.misesEthereum?.signMessageForAuth(address, nonce)
+        if (data?.sig) {
+          const auth = `${sigMsg}&sig=${data?.sig}`
+          return auth
+        }
+        return Promise.reject({
+          code: 9998,
+          message: 'Not found personal sign message'
+        })
+      }
+      // setsignLoadingFalse()
+      return Promise.reject({
+        code: 9998,
+        message: 'Invalid address'
+      })
+    } catch (error) {
+      // setsignLoadingFalse()
+      return Promise.reject(error)
+    }
+  }
+
+  const loginMises = () => {
+    console.log("connectWallet:2")
+    const oldConnectAddress = localStorage.getItem('ethAccount')
+    if (accounts && accounts.length && oldConnectAddress !== accounts[0]) {
+      // removeToken('token')
+      // localStorage.removeItem('ethAccount')
+      signMsg().then(auth => {
+        loginMisesAccount({
+          auth,
+          misesId: accounts[0]
+        })
+      }).catch(error => {
+        console.log(error, 'error')
+        if(error && error.message) {
+          Toast.show(error.message)
+        }
+      })
+    }
+  }
+
+  const connectWallet = async () => {
+    try {
+      await connector.activate()
+      console.log("connectWallet:1")
+      loginMises()
+    } catch (error: any) {
+      if(error && error.message === 'Please download the latest version of Mises Browser.') {
+        setDownloadPop(true)
+        return
+      }
+      if(error && error.code !== 1) {
+        Toast.show(error.message)
+      }
+    }
+  }
+
   // refresh
   const refresh = async () => {
     try{
@@ -649,14 +790,27 @@ const Bridge = () => {
           color="primary"
           className='exchange-button'>Exchange Now</Button>}
       </div >
-      {location.pathname === '/bridge/process' && <BridgeMode />}
+      {location.pathname === '/bridge/process' && <BridgeMode setBridgeModeStatus={setBridgeModeStatus} />}
       {location.pathname === '/bridge/process' && <UserClause />}
     </div>
     }
 
     {!showMainForm && <TransactionDetails/>}
     {/* <BridgeNotification /> */}
+    {<CenterPopup
+        style={{ '--min-width': '90vw' }}
+        showCloseButton
+        onClose={() => {setShowConnectWalletPopup(false)}}
+        visible={showConnectWalletPopup}>
+        <div className='bg-white px-15 pb-30'>
+          <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
+          <Button block shape='rounded' onClick={connectWallet} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
+            <span className='text-white block text-18'>{buttonText}</span>
+          </Button>
+        </div>
+      </CenterPopup>
+    }
     <StatusDialog />
   </div>
-};
+}
 export default Bridge;

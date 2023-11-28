@@ -101,6 +101,13 @@ export type SwapContextType = {
   setBridgeFloatOutputAmount: Dispatch<SetStateAction<string>>,
   bridgeFixedOutputAmount: string,
   setBridgeFixedOutputAmount: Dispatch<SetStateAction<string>>,
+
+  bridgeFloatRecipentAddress: string,
+  setBridgeFloatRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRecipentAddress: string,
+  setBridgeFixedRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRefundAddress: string,
+  setBridgeFixedRefundAddress: Dispatch<SetStateAction<string>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -163,6 +170,10 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [bridgeFixedNotAvailableMsg, setBridgeFixedNotAvailableMsg] = useState('')
   const [bridgeFloatOutputAmount, setBridgeFloatOutputAmount] = useState('...')
   const [bridgeFixedOutputAmount, setBridgeFixedOutputAmount] = useState('...')
+
+  const [bridgeFloatRecipentAddress, setBridgeFloatRecipentAddress] = useState('')
+  const [bridgeFixedRecipentAddress, setBridgeFixedRecipentAddress] = useState('')
+  const [bridgeFixedRefundAddress, setBridgeFixedRefundAddress] = useState('')
 
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
@@ -257,6 +268,12 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     setBridgeFloatOutputAmount,
     bridgeFixedOutputAmount,
     setBridgeFixedOutputAmount,
+    bridgeFloatRecipentAddress,
+    setBridgeFloatRecipentAddress,
+    bridgeFixedRecipentAddress,
+    setBridgeFixedRecipentAddress,
+    bridgeFixedRefundAddress,
+    setBridgeFixedRefundAddress
   }}>{children}</SwapContext.Provider>;
 };
 

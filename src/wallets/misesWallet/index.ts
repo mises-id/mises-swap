@@ -42,7 +42,7 @@ export const misesWallet = ({
       const connector = new InjectedConnector({
             chains,
             options: {
-              // @ts-expect-error
+              //// @ts-expect-error
               getProvider: () => window.misesEthereum,
               ...options,
             },
