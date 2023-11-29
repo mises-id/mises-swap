@@ -69,8 +69,10 @@ const BridgeTransaction = () => {
     const [expireSecond, setExpireSecond] = useState<number>(0)
     const [currencyFromTicker, setCurrencyFromTicker] = useState("")
     const [currencyToTicker, setCurrencyToTicker] = useState("")
+    const [amountFrom, setAmountFrom] = useState("")
+    const [amountTo, setAmountTo] = useState("")
     const [amountExpectedFrom, setAmountExpectedFrom] = useState("")
-    const [amountExpectedTo, setAmountExpectedTo] = useState("")
+    //const [amountExpectedTo, setAmountExpectedTo] = useState("")
     const [payinAddress, setPayinAddress] = useState("")
     const [payinExtraIdName, setPayinExtraIdName] = useState("")
     const [payinExtraId, setPayinExtraId] = useState("")
@@ -79,7 +81,7 @@ const BridgeTransaction = () => {
     const [payoutExtraIdName, setPayoutExtraIdName] = useState("")
     const [refundAddress, setRefundAddress] = useState("")
     const [networkFee, setNetworkFee] = useState("")
-    const [totalFee, setTotalFee] = useState("")
+    //const [totalFee, setTotalFee] = useState("")
 
     // init
     const getBridgeTransactionInfoWithRetry = retryRequest(getBridgeTransactionInfo)
@@ -96,21 +98,24 @@ const BridgeTransaction = () => {
                     throw new Error("transaction info error")
                 }
                 // update states
-                setStatus(status)
+                setStatus(ret.data.data.status)
                 setCurrencyFromTicker(ret.data.data.currencyFrom)
                 setCurrencyToTicker(ret.data.data.currencyTo)
                 setAmountExpectedFrom(ret.data.data.amountExpectedFrom)
-                setAmountExpectedTo(ret.data.data.amountExpectedTo)
+                setAmountFrom(ret.data.data.amountFrom)
+                setAmountTo(ret.data.data.amountTo)
                 setPayinAddress(ret.data.data.payinAddress)
                 setPayoutAddress(ret.data.data.payoutAddress)
                 setRefundAddress(ret.data.data.refundAddress)
                 setNetworkFee(ret.data.data.networkFee)
-                setTotalFee(ret.data.data.totalFee)
+                // setTotalFee(ret.data.data.totalFee)
                 setExpireHour(ret.data.data.expireHour)
                 setExpireMinute(ret.data.data.expireMinute)
                 setExpireSecond(ret.data.data.expireSecond)
                 setPayinExtraIdName(ret.data.data.payinExtraIdName)
                 setPayinExtraId(ret.data.data.payinExtraId)
+                setPayoutExtraIdName(ret.data.data.payoutExtraIdName)
+                setPayoutExtraId(ret.data.data.payoutExtraId)
             } catch (err) {
                 if(status == ""){
                     setStatus("error")
@@ -175,11 +180,11 @@ const BridgeTransaction = () => {
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">You send</div>
-                            <div className="bridge-transaction-detail-content">{amountExpectedFrom} {currencyFromTicker}</div>
+                            <div className="bridge-transaction-detail-content">{amountFrom} {currencyFromTicker}</div>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">You'll get</div>
-                            <div className="bridge-transaction-detail-content">{amountExpectedTo} {currencyToTicker}</div>
+                            <div className="bridge-transaction-detail-content">{amountTo} {currencyToTicker}</div>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Recipient address</div>
@@ -253,11 +258,11 @@ const BridgeTransaction = () => {
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">You send</div>
-                            <div className="bridge-transaction-detail-content">{amountExpectedFrom} {currencyFromTicker}</div>
+                            <div className="bridge-transaction-detail-content">{amountFrom} {currencyFromTicker}</div>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">You get</div>
-                            <div className="bridge-transaction-detail-content">{amountExpectedTo} {currencyToTicker}</div>
+                            <div className="bridge-transaction-detail-content">{amountTo} {currencyToTicker}</div>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Recipient address</div>
@@ -272,10 +277,6 @@ const BridgeTransaction = () => {
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Network fee</div>
                             <div className="bridge-transaction-detail-content">{networkFee}</div>
-                        </div>
-                        <div className="bridge-transaction-detail-block">
-                            <div className="bridge-transaction-detail-title">Exchange fee</div>
-                            <div className="bridge-transaction-detail-content">{totalFee}</div>
                         </div>
                     </div>
                 </div>

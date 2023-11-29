@@ -47,7 +47,7 @@ const Routes = () => {
       ),
     },
     {
-      path: '/bridge/transaction/:id',
+      path: '/bridge/transaction/:transId',
       element: SuspenseWrapper(
         () => <BridgeTransaction/>
       ),

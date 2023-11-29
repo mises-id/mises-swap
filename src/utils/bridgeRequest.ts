@@ -10,7 +10,8 @@ const headers:{[key: string]: string} = {
 
 const request = axios.create({
   headers,
-  baseURL: process.env.REACT_APP_NODE_ENV !== 'production' ? 'https://api.test.mises.site/api/v1/bridge' : 'https://api.swap.mises.site/api/v1/bridge',
+  //baseURL: process.env.REACT_APP_NODE_ENV !== 'production' ? 'https://api.test.mises.site/api/v1/bridge' : 'https://api.swap.mises.site/api/v1/bridge',
+  baseURL: process.env.REACT_APP_NODE_ENV !== 'production' ? 'http://localhost:8080/api/v1/bridge' : 'https://api.swap.mises.site/api/v1/bridge',
   timeout: 5000,
 });
 

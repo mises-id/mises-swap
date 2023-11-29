@@ -202,6 +202,7 @@ const Bridge = () => {
       sessionStorage.removeItem('isPageReLoad')
       console.log('isPageReLoad analytics')
     }
+    swapContext?.setBridgeFromAmount("0.1")
     getBridgeTokenList()
   }
 
@@ -218,9 +219,9 @@ const Bridge = () => {
   const getBridgeTokenList = async () => {
     try {
       const cacheTokens = sessionStorage.getItem('bridgeTokenList')
-      let tokenList: token[] = []
-      if (cacheTokens && cacheTokens!=='undefined') {
-        tokenList = JSON.parse(cacheTokens)
+       let tokenList: token[] = []
+       if (cacheTokens && cacheTokens!=='undefined') {
+         tokenList = JSON.parse(cacheTokens)
       }
       if(tokenList.length === 0) {
         const res = await getTokensWithRetry<{ data: token[] }>()
@@ -275,7 +276,7 @@ const Bridge = () => {
           const params:createBridgeTransactionParams = {
             from: swapContext.bridgeFromData.symbol,
             to: swapContext.bridgeToData.symbol,
-            address: recipientAddress,
+            address: swapContext.bridgeFloatRecipentAddress,
             extraId: recipientExtraId,
             amountFrom: swapContext.bridgeFromAmount,
             refundAddress: refundAddress,
@@ -320,7 +321,7 @@ const Bridge = () => {
       }
 
       // test
-      navigate(`/bridge/transaction/hem83gulyeispdmw`)
+      //navigate(`/bridge/transaction/hem83gulyeispdmw`)
 
     }
 
@@ -419,6 +420,7 @@ const Bridge = () => {
 
   // switchToken
   const switchToken = () => {
+    cancelRefresh()
     const tokens = swapContext!.bridgeTokens
     if (swapContext) {
       const fromToken = tokens?.length && findBridgeToken(tokens, swapContext.bridgeFromData.symbol)
@@ -446,19 +448,23 @@ const Bridge = () => {
   // checkPairInfo
   const getBridgeTokenPairInfoWithRetry = retryRequest(getBridgeTokenPairInfo)
   const checkPairInfo = async (fromVal: string | undefined, toVal: string | undefined): Promise<boolean> => {
+    swapContext!.setBridgeAmountCheckMsg("")
     if(!fromVal){
       console.error("checkPairInfo:", "from token error")
+      swapContext?.setBridgeToAmount("")
       return false
     }
     if(!toVal){
+      swapContext?.setBridgeToAmount("")
       console.error("checkPairInfo:", "to token error")
       return false
     }
 
     try{
-      const ret = await getBridgeTokenPairInfoWithRetry<{data: getPairInfoResult}, getPairInfoParams>({from: fromVal, to: toVal})
+      const ret = await getBridgeTokenPairInfoWithRetry<{data: getPairInfoResult}, {pairs:getPairInfoParams}>({pairs: {from: fromVal, to: toVal}})
       if(!ret.data.data || Object.keys(ret.data.data).length == 0){
         console.error("getBridgeTokenPairInfoWithRetry:empty data", ret.data.data)
+        swapContext?.setBridgeToAmount("")
         return false
       }
 
@@ -469,6 +475,7 @@ const Bridge = () => {
 
       if(isNaN(minAmountFloat) || isNaN(maxAmountFloat) || isNaN(minAmountFixed) || isNaN(maxAmountFixed)){
         console.error("getBridgeTokenPairInfoWithRetry:isNaN", ret.data.data)
+        swapContext?.setBridgeToAmount("")
         return false
       }
 
@@ -506,14 +513,17 @@ const Bridge = () => {
       }
       if(!fromAmount || fromAmount < minAmount) {
         swapContext!.setBridgeAmountCheckMsg(`Minimum amount: ${minAmount} ${fromVal}`)
+        swapContext?.setBridgeToAmount("")
         return false
       }
       if(fromAmount > maxAmount){
         swapContext!.setBridgeAmountCheckMsg(`Maximum allowed: ${maxAmount} ${fromVal}`)
+        swapContext?.setBridgeToAmount("")
         return false
       }
     }catch(err){
       console.error("getBridgeTokenPairInfoWithRetry:api error", err)
+      swapContext?.setBridgeToAmount("")
       return false
     }
     return true
@@ -523,6 +533,7 @@ const Bridge = () => {
   const getBridgeTokenExchangeAmountRetry = retryRequest(getBridgeTokenExchangeAmount)
   const getBridgeFixRateForAmountRetry = retryRequest(getBridgeFixRateForAmount)
   const generateOutputAmount = async (from: string | undefined, to: string | undefined, amountFrom: string | undefined) => {
+    swapContext?.setBridgeToAmount("...")
     if(!from){
       console.error("generateOutputAmount:", "from token error")
       return false
@@ -536,7 +547,7 @@ const Bridge = () => {
       return false
     }
 
-    getBridgeTokenExchangeAmountRetry<{data: getBridgeTokenExchangeAmountResult}, getBridgeTokenExchangeAmountParams>({from, to, amountFrom})
+    getBridgeTokenExchangeAmountRetry<{data: getBridgeTokenExchangeAmountResult}, {pairs:getBridgeTokenExchangeAmountParams}>({pairs: {from, to, amountFrom}})
       .then((ret) => {
         if(!ret.data.data && Object.keys(ret.data.data).length == 0){
           throw new Error("result is empty")
@@ -545,14 +556,16 @@ const Bridge = () => {
         if(isNaN(amountTo)){
           throw new Error("amountTo or networkFee NaN")
         }
-        swapContext?.setBridgeToAmount(`~ ${amountTo}`)
+        if(swapContext?.bridgeFloatMode){
+          swapContext?.setBridgeToAmount(`~ ${amountTo}`)
+        }
         swapContext?.setBridgeFloatOutputAmount(`~ ${amountTo}`)
       })
       .catch((err) => {
         console.error("getBridgeTokenExchangeAmountRetry:", err)
       })
 
-    getBridgeFixRateForAmountRetry<{data: getBridgeFixRateForAmountResult}, getBridgeFixRateForAmountParams>({from, to, amountFrom})
+    getBridgeFixRateForAmountRetry<{data: getBridgeFixRateForAmountResult}, {params:getBridgeFixRateForAmountParams}>({params:{from, to, amountFrom}})
       .then((ret) => {
         if(!ret.data.data && Object.keys(ret.data.data).length == 0){
           throw new Error("result is empty")
@@ -561,7 +574,9 @@ const Bridge = () => {
         if(isNaN(amountTo)){
           throw new Error("amountTo or networkFee NaN")
         }
-        swapContext?.setBridgeToAmount(`${amountTo}`)
+        if(!swapContext?.bridgeFloatMode){
+          swapContext?.setBridgeToAmount(`${amountTo}`)
+        }
         swapContext?.setBridgeFixedOutputAmount(`${amountTo}`)
       })
       .catch((err) => {
@@ -665,7 +680,7 @@ const Bridge = () => {
   const refresh = async () => {
     try{
       if (await checkPairInfo(swapContext?.bridgeFromData.symbol, swapContext?.bridgeToData.symbol)){
-        generateOutputAmount(swapContext?.bridgeFromData.symbol, swapContext?.bridgeToData.symbol, swapContext?.bridgeFromAmount)
+        await generateOutputAmount(swapContext?.bridgeFromData.symbol, swapContext?.bridgeToData.symbol, swapContext?.bridgeFromAmount)
       }
     } catch(err){
       console.error("onInputChange:", err)
@@ -676,7 +691,7 @@ const Bridge = () => {
 
   // runRefresh: wrapper of refresh
   const { run: runRefresh, cancel: cancelRefresh, loading: refreshLoading } = useRequest(refresh, {
-    debounceWait: 550,
+    debounceWait: 1000,
     manual: true,
     pollingInterval: 30000,
     pollingWhenHidden: false,
@@ -684,6 +699,7 @@ const Bridge = () => {
 
   // event handler: onInputChange
   const onInputChange = async (val: string) => {
+    cancelRefresh()
     if(isNaN(Number(val))){
       console.error("input error:", val)
       return false
@@ -694,6 +710,7 @@ const Bridge = () => {
 
   // event handler: onFromTokenChange
   const onFromTokenChange = async (val : string) => {
+    cancelRefresh()
     if(!val) {
       console.error("onFromTokenChange:", "empty val")
       return false
@@ -721,6 +738,7 @@ const Bridge = () => {
 
   // event handler: onToTokenChange
   const onToTokenChange = async (val : string) => {
+    cancelRefresh()
     if(!val) {
       console.error("onToTokenChange:", "empty val")
       return false
@@ -765,20 +783,22 @@ const Bridge = () => {
           <BridgeTokenInput
             type="from"
             tokens={swapContext!.bridgeTokens}
+            tokenSymbol={swapContext!.bridgeFromData.symbol}
             onInputChange={onInputChange}
             onTokenChange={onFromTokenChange}
             placeholder='0'
             //maxLength={swapContext?.swapFromData.decimals}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
-            value={swapContext?.bridgeFromAmount || "0.1"} />
+            value={swapContext?.bridgeFromAmount} />
           <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
           <BridgeTokenInput
             type="to"
             tokens={swapContext!.bridgeTokens}
-            value={swapContext?.bridgeToAmount || "..."}
+            tokenSymbol={swapContext!.bridgeToData.symbol}
+            value={refreshLoading ? "..." : swapContext?.bridgeToAmount}
             //maxLength={swapContext?.swapToData.decimals}
             placeholder='0'
             onTokenChange={onToTokenChange}

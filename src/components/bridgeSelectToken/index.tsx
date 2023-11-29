@@ -13,7 +13,7 @@ import {
 } from 'react-virtualized';
 import { useBoolean, useRequest } from 'ahooks';
 import { SwapContext } from '@/context/swapContext';
-import SelectedToken from '../SelectedToken';
+import SelectedBridgeToken from '../SelectedBridgeToken';
 import { substringAmount } from '@/utils';
 import FallBackImage from '../Fallback';
 import { useAccount } from 'wagmi';
@@ -27,7 +27,7 @@ export const InfiniteLoader = _InfiniteLoader as unknown as FC<InfiniteLoaderPro
 
 interface Iprops {
   tokens?: token[],
-  selectTokenAddress?: string,
+  selectTokenSymbol?: string,
   onChange?: (value: string) => void,
   type: 'from' | 'to',
   status: 'ready' | undefined,
@@ -35,7 +35,7 @@ interface Iprops {
 
 const BridgeSelectTokens: FC<Iprops> = (props) => {
   const swapContext = useContext(SwapContext)
-  const [tokenAddress, setTokenAddress] = useState(props.selectTokenAddress)
+  const [tokenSymbol, setTokenSymbol] = useState(props.selectTokenSymbol)
 
   useEffect(() => {
     // sort
@@ -44,23 +44,21 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
   }, [props.tokens])
   
   useEffect(() => {
-    setTokenAddress(props.selectTokenAddress)
-  }, [props.selectTokenAddress])
+    setTokenSymbol(props.selectTokenSymbol)
+  }, [props.selectTokenSymbol])
 
-  const [toTokenAddress, setToTkenAddress] = useState(swapContext?.bridgeToData.tokenAddress)
-
-  useEffect(() => {
-    setToTkenAddress(swapContext?.bridgeToData.tokenAddress)
-  }, [swapContext?.bridgeToData.tokenAddress])
-
-  const [fromTokenAddress, setFromTokenAddress] = useState(swapContext?.bridgeFromData.tokenAddress)
+  const [toTokenSymbol, setToTokenSymbol] = useState(swapContext?.bridgeToData.symbol)
 
   useEffect(() => {
-    setFromTokenAddress(swapContext?.bridgeFromData.tokenAddress)
-  }, [swapContext?.bridgeFromData.tokenAddress])
+    setToTokenSymbol(swapContext?.bridgeToData.symbol)
+  }, [swapContext?.bridgeToData.symbol])
+
+  const [fromTokenSymbol, setFromTokenSymbol] = useState(swapContext?.bridgeFromData.symbol)
+
+  useEffect(() => {
+    setFromTokenSymbol(swapContext?.bridgeFromData.symbol)
+  }, [swapContext?.bridgeFromData.symbol])
   
-  const [importFetchLoading, { setTrue: setFetchTrue, setFalse: setFetchFalse }] = useBoolean(false)
-
   const filterTokenList= async (searchValue?: string): Promise<token[]>  => {
     const searchQuery = searchValue?.toLowerCase()
     if (props.tokens) {
@@ -68,8 +66,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
         if (searchQuery && val) {
           const isSymbol = val.symbol?.toLowerCase().indexOf(searchQuery) > -1
           const isName = val.name?.toLowerCase().indexOf(searchQuery) > -1
-          const isAddress = val.address?.toLowerCase() === searchQuery
-          return isSymbol || isName || isAddress
+          return isSymbol || isName
         }
         return val
       })
@@ -122,7 +119,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
       <List.Item
         key={key}
         style={style}
-        className={toTokenAddress?.toLowerCase() === item?.address.toLowerCase() || fromTokenAddress?.toLowerCase() === item?.address.toLowerCase() ? 'selected-item' : ''}
+        className={toTokenSymbol === item?.symbol || fromTokenSymbol === item?.symbol ? 'selected-item' : ''}
         arrow={false}
         onClick={() => {
           if(!item.isImport) selectToken(item)
@@ -147,7 +144,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
             setTrue()
           }}>Import</Button> : <div className='token-balance'>
           <span>{substringAmount(item.balance) || 0}</span>
-          {tokenAddress?.toLowerCase() === item?.address.toLowerCase() && <CheckOutline className='selected-icon' />}
+          {tokenSymbol === item?.symbol && <CheckOutline className='selected-icon' />}
         </div>
         }
       >
@@ -167,14 +164,14 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
   });
 
   const selectToken = (token?: token) => {
-    if (swapContext && token && token.address.toLowerCase() !== toTokenAddress?.toLowerCase() && token.address.toLowerCase() !== fromTokenAddress?.toLowerCase()) {
-      props.onChange?.(token.address)
+    if (swapContext && token && token.symbol !== toTokenSymbol && token.symbol !== fromTokenSymbol) {
+      props.onChange?.(token.symbol)
       setopen(false)
-      setTokenAddress(token.address)
+      setTokenSymbol(token.symbol)
     }
   }
   return <div onClick={showTokenList}>
-    {tokenAddress && props.tokens?.length ? <SelectedToken tokenAddress={tokenAddress} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
+    {tokenSymbol && props.tokens?.length ? <SelectedBridgeToken tokenSymbol={tokenSymbol} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
     <CenterPopup
       visible={open}
       closeOnMaskClick
@@ -188,16 +185,16 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
         <p className='dialog-title'>Select a token</p>
         <div className='search-input-container'>
           <SearchOutline className='search-icon' />
-          <Input className='search-input' placeholder='Search name or paste address' onChange={run}></Input>
+          <Input className='search-input' placeholder='Search the name ..' onChange={run}></Input>
         </div>
       </div>
-      {(!props.tokens || importFetchLoading) && <div className='flex justify-center py-10' style={{height: window.innerHeight / 2}}><DotLoading color='primary' /></div>}
+      {!props.tokens && <div className='flex justify-center py-10' style={{height: window.innerHeight / 2}}><DotLoading color='primary' /></div>}
       <List className='token-list-container'
         style={{
           '--border-inner': 'none',
         }}>
         {tokenList?.length === 0 && <div className='text-center pt-20'>No results found.</div>}
-        {!importFetchLoading && <AutoSizer disableHeight>
+        <AutoSizer disableHeight>
           {({ width }: { width: number }) => (
             <VirtualizedList
               rowCount={tokenList!.length}
@@ -208,7 +205,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
               overscanRowCount={9}
             />
           )}
-        </AutoSizer>}
+        </AutoSizer>
       </List>
     </CenterPopup>
   </div>

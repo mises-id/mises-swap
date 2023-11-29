@@ -1,5 +1,6 @@
 type address = `0x${string}`
 interface token {
+  // swap
   "symbol": string,
   "name": string,
   "address": address,
@@ -10,7 +11,23 @@ interface token {
   'price'?: string,
   'cacheTime'?: number,
   'isImport'?: boolean,
-  "extraIdName"?: string
+
+  // bridge
+  "bridgeEnabled"?: boolean,
+  "bridgeFixRateEnabled"?: boolean,
+  "bridgeEnabledFrom"?: boolean,
+  "bridgeEnabledTo"?: boolean,
+  "bridgePayinConfirmations"?: number,
+  "bridgeExtraIdName"?: string,
+  "bridgeFixedTime"?: number,
+  "bridgeProtocol"?: string,
+  "bridgeBlockchain"?: string,
+  "bridgeNotifications"?: BridgeNotifications
+}
+
+interface BridgeNotifications {
+	payin: string
+	payout: string
 }
 
 interface quoteParams {

@@ -11,7 +11,7 @@ export interface BridgeTokenInputRef {
 interface Iprops extends InputProps {
   tokens?: token[],
   type: 'from' | 'to',
-  tokenAddress?: string,
+  tokenSymbol?: string,
   onTokenChange?: (val: string) => void
   onInputChange?: (val: string) => void
   status?: 'ready' | undefined,
@@ -34,7 +34,7 @@ const BridgeTokenInput = (props: Iprops, ref: Ref<BridgeTokenInputRef>) => {
         type={props.type}
         tokens={props.tokens}
         status={props.status}
-        selectTokenAddress={props.tokenAddress} />
+        selectTokenSymbol={props.tokenSymbol} />
     </div>
     {props.type == "from" && <div>{swapContext!.bridgeAmountCheckMsg}</div>}
   </div>
