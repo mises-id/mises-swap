@@ -17,7 +17,7 @@ import {useRequest} from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
 import { useLocation } from 'react-router-dom';
 
-const { useAccounts, useIsActivating } = hooks
+const { useAccounts } = hooks
 
 interface getPairInfoParams {
   from: string,
@@ -152,6 +152,8 @@ const Bridge = () => {
   const [refundExtraId, setRefundExtraId] = useState<string>("")
   const [fixRateId, setFixRateId] = useState<string>("")
 
+  const [disableExchangeButton, setDisableExchangeButton] = useState(false)
+
   // form status
   const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
 
@@ -163,7 +165,6 @@ const Bridge = () => {
   const [showConnectWalletPopup, setShowConnectWalletPopup] = useState(false)
 
   const accounts = useAccounts()
-  const isActivating = useIsActivating()
 
   const { connector } = useWeb3React();
 
@@ -202,7 +203,10 @@ const Bridge = () => {
       sessionStorage.removeItem('isPageReLoad')
       console.log('isPageReLoad analytics')
     }
-    swapContext?.setBridgeFromAmount("0.1")
+    if(!swapContext?.bridgeFromAmount){
+      swapContext!.bridgeFromAmount = "0.1"
+      swapContext?.setBridgeFromAmount("0.1")
+    }
     getBridgeTokenList()
   }
 
@@ -234,6 +238,38 @@ const Bridge = () => {
       }
 
       swapContext!.setBridgeTokens([...tokenList])
+
+      console.log(`findBridgeToken:bridgeFromData:${swapContext?.bridgeFromData.symbol}`)
+      console.log(`findBridgeToken:bridgeToData:${swapContext?.bridgeToData.symbol}`)
+
+      if(!swapContext?.bridgeFromData.symbol){
+        const fromToken = findBridgeToken(tokenList, "btc")
+        console.log(`findBridgeToken:fromToken:${fromToken?.symbol}`)
+        if(fromToken) {
+          swapContext!.bridgeFromData = {
+            ...fromToken
+          }
+          swapContext?.setBridgeFromData({
+            ...swapContext.bridgeFromData
+          })
+        }
+      }
+
+      if(!swapContext?.bridgeToData.symbol){
+        const toToken = findBridgeToken(tokenList, "eth")
+        console.log(`findBridgeToken:toToken:${toToken?.symbol}`)
+        if(toToken) {
+          swapContext!.bridgeToData = {
+            ...toToken
+          }
+          swapContext?.setBridgeToData({
+            ...swapContext.bridgeToData
+          })
+        }
+      }
+
+      runRefresh()
+
     } catch (error: any) {
       // swapContext?.setGlobalDialogMessage({
       //   type: 'error',
@@ -247,7 +283,7 @@ const Bridge = () => {
       setShowMainForm(false)
     }
     return (
-      <div className="bridge-swap-container">
+      <div className="bridge-swap-container auto-z-index">
         <div>
             This is a message for the user.
         </div>
@@ -260,7 +296,7 @@ const Bridge = () => {
           disabled={nextStepButton}
           block
           color="primary"
-          className='exchange-button'>Next step</Button>
+          className='exchange-button auto-z-index'>Next step</Button>
       </div>
     )
   }
@@ -445,17 +481,36 @@ const Bridge = () => {
     }
   }
 
+  let floatAvailable = true;
+  let fixAvailable = true;
+
   // checkPairInfo
   const getBridgeTokenPairInfoWithRetry = retryRequest(getBridgeTokenPairInfo)
   const checkPairInfo = async (fromVal: string | undefined, toVal: string | undefined): Promise<boolean> => {
     swapContext!.setBridgeAmountCheckMsg("")
+    swapContext!.setBridgeFloatAvailable(true)
+    swapContext!.setBridgeFixedAvailable(true)
+    swapContext?.setBridgeFloatNotAvailableMsg("")
+    swapContext?.setBridgeFixedNotAvailableMsg("")
+    floatAvailable = true
+    fixAvailable = true
+    setDisableExchangeButton(false)
+
     if(!fromVal){
       console.error("checkPairInfo:", "from token error")
       swapContext?.setBridgeToAmount("")
+      swapContext!.setBridgeFloatAvailable(false)
+      swapContext!.setBridgeFixedAvailable(false)
+      floatAvailable = false
+      fixAvailable = false
       return false
     }
     if(!toVal){
       swapContext?.setBridgeToAmount("")
+      swapContext!.setBridgeFloatAvailable(false)
+      swapContext!.setBridgeFixedAvailable(false)
+      floatAvailable = false
+      fixAvailable = false
       console.error("checkPairInfo:", "to token error")
       return false
     }
@@ -473,30 +528,49 @@ const Bridge = () => {
       const minAmountFixed = parseFloat(ret.data.data.minAmountFixed)
       const maxAmountFixed = parseFloat(ret.data.data.maxAmountFixed)
 
-      if(isNaN(minAmountFloat) || isNaN(maxAmountFloat) || isNaN(minAmountFixed) || isNaN(maxAmountFixed)){
-        console.error("getBridgeTokenPairInfoWithRetry:isNaN", ret.data.data)
+      if(isNaN(minAmountFloat) && isNaN(maxAmountFloat)){
+        swapContext?.setBridgeFloatAvailable(false)
+        floatAvailable = false
+      }
+
+      if(isNaN(minAmountFixed) && isNaN(maxAmountFixed)){
+        swapContext?.setBridgeFixedAvailable(false)
+        fixAvailable = false
+      }
+
+      if(!floatAvailable && !fixAvailable){
         swapContext?.setBridgeToAmount("")
+        swapContext!.setBridgeAmountCheckMsg("Unsupported exchange pair")
+        setDisableExchangeButton(true)
         return false
       }
 
       const fromAmount = parseFloat(swapContext!.bridgeFromAmount)
+
       if(!fromAmount){
         swapContext?.setBridgeFloatAvailable(false)
         swapContext?.setBridgeFixedAvailable(false)
+        floatAvailable = false
+        fixAvailable = false
       } else {
-        if (fromAmount < minAmountFloat) {
+        if (!isNaN(minAmountFloat) && fromAmount < minAmountFloat) {
+          floatAvailable = false
           swapContext?.setBridgeFloatAvailable(false)
           swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be less than ${minAmountFloat}`)
         }
-        if (fromAmount > maxAmountFloat) {
+        if (!isNaN(maxAmountFloat) && fromAmount > maxAmountFloat) {
+          floatAvailable = false
           swapContext?.setBridgeFloatAvailable(false)
           swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be more than ${maxAmountFloat}`)
         }
-        if (fromAmount < minAmountFixed) {
+        if (!isNaN(minAmountFixed) && fromAmount < minAmountFixed) {
+          fixAvailable = false
           swapContext?.setBridgeFixedAvailable(false)
           swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be less than ${minAmountFixed}`)
         }
-        if (fromAmount > maxAmountFixed) {
+        if (!isNaN(maxAmountFixed) && fromAmount > maxAmountFixed) {
+          fixAvailable = false
+          console.log(`fixAvailable:${fixAvailable}`)
           swapContext?.setBridgeFixedAvailable(false)
           swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be more than ${maxAmountFixed}`)
         }
@@ -514,16 +588,20 @@ const Bridge = () => {
       if(!fromAmount || fromAmount < minAmount) {
         swapContext!.setBridgeAmountCheckMsg(`Minimum amount: ${minAmount} ${fromVal}`)
         swapContext?.setBridgeToAmount("")
+        setDisableExchangeButton(true)
         return false
       }
       if(fromAmount > maxAmount){
         swapContext!.setBridgeAmountCheckMsg(`Maximum allowed: ${maxAmount} ${fromVal}`)
         swapContext?.setBridgeToAmount("")
+        setDisableExchangeButton(true)
         return false
       }
     }catch(err){
       console.error("getBridgeTokenPairInfoWithRetry:api error", err)
+      swapContext!.setBridgeAmountCheckMsg("Unsupported exchange pair")
       swapContext?.setBridgeToAmount("")
+      setDisableExchangeButton(true)
       return false
     }
     return true
@@ -534,6 +612,9 @@ const Bridge = () => {
   const getBridgeFixRateForAmountRetry = retryRequest(getBridgeFixRateForAmount)
   const generateOutputAmount = async (from: string | undefined, to: string | undefined, amountFrom: string | undefined) => {
     swapContext?.setBridgeToAmount("...")
+    swapContext?.setBridgeFloatOutputAmount("...")
+    swapContext?.setBridgeFixedOutputAmount("...")
+
     if(!from){
       console.error("generateOutputAmount:", "from token error")
       return false
@@ -547,6 +628,7 @@ const Bridge = () => {
       return false
     }
 
+    if(floatAvailable){
     getBridgeTokenExchangeAmountRetry<{data: getBridgeTokenExchangeAmountResult}, {pairs:getBridgeTokenExchangeAmountParams}>({pairs: {from, to, amountFrom}})
       .then((ret) => {
         if(!ret.data.data && Object.keys(ret.data.data).length == 0){
@@ -564,7 +646,9 @@ const Bridge = () => {
       .catch((err) => {
         console.error("getBridgeTokenExchangeAmountRetry:", err)
       })
+    }
 
+    if(fixAvailable){
     getBridgeFixRateForAmountRetry<{data: getBridgeFixRateForAmountResult}, {params:getBridgeFixRateForAmountParams}>({params:{from, to, amountFrom}})
       .then((ret) => {
         if(!ret.data.data && Object.keys(ret.data.data).length == 0){
@@ -582,18 +666,10 @@ const Bridge = () => {
       .catch((err) => {
         console.error("getBridgeFixRateForAmountRetry:", err)
       })
-    
-    return true
-  }
-
-  const buttonText = useMemo(() => {
-    if (isActivating) {
-      return 'Connect Wallet...'
     }
 
-    return 'Connect Mises ID'
-    //
-  }, [isActivating])
+    return true
+  }
 
   const loginMisesAccount = async (params: {
     auth: string,
@@ -790,7 +866,8 @@ const Bridge = () => {
             //maxLength={swapContext?.swapFromData.decimals}
             pattern='^[0-9]*[.,]?[0-9]*$'
             inputMode='decimal'
-            value={swapContext?.bridgeFromAmount} />
+            value={swapContext?.bridgeFromAmount} 
+          />
           <div className="switch-token flex items-center justify-center cursor-pointer" onClick={switchToken}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#98A1C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
           </div>
@@ -805,6 +882,7 @@ const Bridge = () => {
           />
         </div>
         {location.pathname === '/bridge' && <Button
+          disabled={disableExchangeButton}
           onClick={() => navigate('/bridge/process')}
           block
           color="primary"
@@ -825,7 +903,7 @@ const Bridge = () => {
         <div className='bg-white px-15 pb-30'>
           <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
           <Button block shape='rounded' onClick={connectWallet} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
-            <span className='text-white block text-18'>{buttonText}</span>
+            <span className='text-white block text-18'>Connect Mises ID</span>
           </Button>
         </div>
       </CenterPopup>

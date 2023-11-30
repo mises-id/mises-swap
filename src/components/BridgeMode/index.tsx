@@ -1,7 +1,7 @@
 import "./index.less"
-import { FC, useContext, useState, Dispatch, SetStateAction } from 'react'
+import { FC, useContext, useState, useEffect, Dispatch, SetStateAction, useRef } from 'react'
 import { SwapContext } from '@/context/swapContext'
-import { Input, InputProps } from 'antd-mobile'
+import { Input } from 'antd-mobile'
 import { useRequest } from "ahooks"
 import { retryRequest } from "@/utils"
 import { validateBridgeAddress } from "@/api/bridge"
@@ -24,16 +24,19 @@ const BridgeMode: FC<Iprops> = (props) => {
     const swapContext = useContext(SwapContext)
     const [fixRecipientStatus, setFixRecipientStatus] = useState(false)
     const [fixRefundStatus, setFixRefundStatus] = useState(false)
+    const [floatRecipientStatus, setFloatRecipientStatus] = useState(false)
 
     const handleBridgeModeChange = (floatMode: boolean) => {
         if(swapContext!.bridgeFloatMode !== floatMode){
-            if(swapContext!.bridgeFloatMode){
+            if(swapContext!.bridgeFloatMode && swapContext?.bridgeFixedAvailable){
                 swapContext?.setBridgeToAmount(swapContext.bridgeFixedOutputAmount)
-            } else {
+                swapContext?.setBridgeFloatMode(floatMode)
+                swapContext?.setBridgeAmountCheckMsg("")
+            } else if(!swapContext!.bridgeFloatMode && swapContext?.bridgeFloatAvailable) {
                 swapContext?.setBridgeToAmount(swapContext.bridgeFloatOutputAmount)
+                swapContext?.setBridgeFloatMode(floatMode)
+                swapContext?.setBridgeAmountCheckMsg("")
             }
-            swapContext?.setBridgeFloatMode(floatMode)
-
         }
     }
 
@@ -64,13 +67,18 @@ const BridgeMode: FC<Iprops> = (props) => {
 
     const handleAddressChange = (type: string) => {
         if(type === "floatRecipient"){
-            return async (val: string): Promise<void> => {
+            return async (val: string | undefined): Promise<void> => {
+                if(val === undefined){
+                    return
+                }
                 props.setBridgeModeStatus(false)
+                setFloatRecipientStatus(false)
                 if(swapContext?.bridgeToData.symbol){
                     try{
                         if(await runCheckInputAddress(swapContext.bridgeToData.symbol, val)){
                             swapContext?.setBridgeFloatRecipentAddress(val)
                             props.setBridgeModeStatus(true)
+                            setFloatRecipientStatus(true)
                         }
                     } catch(err) {
                         console.error("floatRecipient:", err)
@@ -78,7 +86,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 }
             }
         } else if(type === "fixRecipient") {
-            return async (val: string): Promise<void> => {
+            return async (val: string | undefined): Promise<void> => {
+                if(val === undefined){
+                    return
+                }
                 props.setBridgeModeStatus(false)
                 setFixRecipientStatus(false)
                 if(swapContext?.bridgeToData.symbol){
@@ -96,7 +107,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 }
             }
         } else if(type === "fixRefund"){
-            return async (val: string): Promise<void> => {
+            return async (val: string | undefined): Promise<void> => {
+                if(val === undefined){
+                    return
+                }
                 props.setBridgeModeStatus(false)
                 setFixRefundStatus(false)
                 if(swapContext?.bridgeFromData.symbol){
@@ -122,46 +136,49 @@ const BridgeMode: FC<Iprops> = (props) => {
     return (
     <div className='bridge-swap-container auto-z-index margin-0'>
         <div className='token-container'>
-            <div onClick={() => handleBridgeModeChange(true)} className={`flex justify-between items-center ${swapContext.bridgeFloatMode ? "border-selected" : ""} ${!swapContext.bridgeFloatAvailable ? "cursor-not-allowed" : "rate-item"}`}>
+            <div onClick={() => handleBridgeModeChange(true)} className={`bridge-mode-container flex justify-between items-center ${swapContext.bridgeFloatMode ? "border-selected" : ""} ${!swapContext.bridgeFloatAvailable ? "cursor-not-allowed" : "rate-item"}`}>
                 <div>Floating rate</div>
                 <div>{swapContext.bridgeFloatOutputAmount}</div>
             </div>
-            {swapContext.bridgeFloatNotAvailableMsg ? <span>{swapContext.bridgeFloatNotAvailableMsg}</span> : null}
-            <div onClick={() => handleBridgeModeChange(false)} className={`flex justify-between items-center ${!swapContext.bridgeFloatMode ? "border-selected" : ""} ${!swapContext.bridgeFixedAvailable ? "cursor-not-allowed" : "rate-item"}`}>
+            {swapContext.bridgeFloatMode && swapContext.bridgeFloatNotAvailableMsg ? <span className="bridgeAmountCheckMsg">{swapContext.bridgeFloatNotAvailableMsg}</span> : null}
+            <div onClick={() => handleBridgeModeChange(false)} className={`bridge-mode-container flex justify-between items-center ${!swapContext.bridgeFloatMode ? "border-selected" : ""} ${!swapContext.bridgeFixedAvailable ? "cursor-not-allowed" : "rate-item"}`}>
                 <div>Fixed rate</div>
                 <div>{swapContext.bridgeFixedOutputAmount}</div>
             </div>
-            {swapContext.bridgeFixedNotAvailableMsg ? <span>{swapContext.bridgeFixedNotAvailableMsg}</span> : null}
+            {!swapContext.bridgeFloatMode && swapContext.bridgeFixedNotAvailableMsg ? <span className="bridgeAmountCheckMsg">{swapContext.bridgeFixedNotAvailableMsg}</span> : null}
         </div>
-        {swapContext.bridgeFloatMode ? <div>
+        {swapContext.bridgeFloatMode ? <div className="bridge-mode-tip">
         The floating rate can change at any point due to market conditions, so you might receive more or less crypto than expected.
-        </div> : <div>
+        </div> : <div className="bridge-mode-tip">
         With the fixed rate, you will receive the exact amount of crypto you see on this screen.
         </div>}
         {swapContext.bridgeFloatMode ? 
         <div className='token-container'>
             <div>
-                <div>Recipient wallet address</div>
+                <div className="bridge-mode-title">Recipient wallet address</div>
                 <Input 
                     className="bridge-mode-address-input"
                     onChange={handleAddressChange("floatRecipient")}
                 />
+                {swapContext.bridgeFloatMode && !floatRecipientStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
         </div> :
         <div className='token-container'>
-            <div>
-                <div>Recipient wallet address</div>
+            <div className="margin-10">
+                <div className="bridge-mode-title">Recipient wallet address</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRecipient")}
                 />
+                {!swapContext.bridgeFloatMode && !fixRecipientStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
             <div>
-                <div>Refund wallet address</div>
+                <div className="bridge-mode-title">Refund wallet address</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRefund")}
                 />
+                {!swapContext.bridgeFloatMode && !fixRefundStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
         </div>    
         }    

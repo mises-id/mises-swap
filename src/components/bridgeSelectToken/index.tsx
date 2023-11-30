@@ -153,9 +153,11 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
     )
   }
 
-  const search = async (value: string) => {
-    tokenListRun(value)
-    
+  //let searchVal = ""
+
+  const search = async (val: string) => {
+    tokenListRun(val)
+    setSearchDefaultVal(val)
   }
 
   const { run } = useRequest(search, {
@@ -170,6 +172,9 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
       setTokenSymbol(token.symbol)
     }
   }
+
+  const [searchDefaultVal, setSearchDefaultVal] = useState("")
+
   return <div onClick={showTokenList}>
     {tokenSymbol && props.tokens?.length ? <SelectedBridgeToken tokenSymbol={tokenSymbol} status={props.status} tokens={props.tokens}/> : <UnSelectedToken />}
     <CenterPopup
@@ -178,6 +183,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
       destroyOnClose
       showCloseButton
       onClose={() => {
+        
         setopen(false)
       }}
       className="dialog-container down-dialog-style">
@@ -185,7 +191,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
         <p className='dialog-title'>Select a token</p>
         <div className='search-input-container'>
           <SearchOutline className='search-icon' />
-          <Input className='search-input' placeholder='Search the name ..' onChange={run}></Input>
+          <Input defaultValue={searchDefaultVal} className='search-input' placeholder='Search the name ..' onChange={run}></Input>
         </div>
       </div>
       {!props.tokens && <div className='flex justify-center py-10' style={{height: window.innerHeight / 2}}><DotLoading color='primary' /></div>}

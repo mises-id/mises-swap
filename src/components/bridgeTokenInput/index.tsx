@@ -36,7 +36,7 @@ const BridgeTokenInput = (props: Iprops, ref: Ref<BridgeTokenInputRef>) => {
         status={props.status}
         selectTokenSymbol={props.tokenSymbol} />
     </div>
-    {props.type == "from" && <div>{swapContext!.bridgeAmountCheckMsg}</div>}
+    {props.type == "from" && <div className='bridgeAmountCheckMsg'>{swapContext!.bridgeAmountCheckMsg}</div>}
   </div>
 }
 export default forwardRef(BridgeTokenInput)
