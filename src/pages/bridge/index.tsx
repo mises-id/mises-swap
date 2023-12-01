@@ -206,7 +206,7 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
   useEffect(() => {
     init()
-  });
+  }, [init]);
 
   // attempt to connect eagerly on mount
   // useEffect(() => {
