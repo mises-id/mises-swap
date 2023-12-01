@@ -16,7 +16,6 @@ import { SwapContext } from '@/context/swapContext';
 import SelectedBridgeToken from '../SelectedBridgeToken';
 import { substringAmount } from '@/utils';
 import FallBackImage from '../Fallback';
-import { useAccount } from 'wagmi';
 
 export const VirtualizedList = _List as unknown as FC<ListProps> & _List;
 // You need this one if you'd want to get the list ref to operate it outside React 👍 
@@ -100,7 +99,7 @@ const BridgeSelectTokens: FC<Iprops> = (props) => {
     setopen(true)
   }
 
-  const [importLoading, { setTrue, setFalse }] = useBoolean(false)
+  const [importLoading, { setTrue }] = useBoolean(false)
 
   const rowRenderer = ({
     index,

@@ -1,5 +1,5 @@
 import "./index.less"
-import { FC, useContext, useState, useEffect, Dispatch, SetStateAction, useRef } from 'react'
+import { FC, useContext, useState, Dispatch, SetStateAction } from 'react'
 import { SwapContext } from '@/context/swapContext'
 import { Input } from 'antd-mobile'
 import { useRequest } from "ahooks"

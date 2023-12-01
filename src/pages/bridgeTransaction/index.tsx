@@ -84,16 +84,16 @@ const BridgeTransaction = () => {
     //const [totalFee, setTotalFee] = useState("")
 
     // init
-    let intervalId: NodeJS.Timer;
+    
     const getBridgeTransactionInfoWithRetry = retryRequest(getBridgeTransactionInfo)
-    const refreshTransactionInfo = async () => {
+    const refreshTransactionInfo = async (intervalId: number) => {
         if(!transId){
             return
         }
         try{
             // get transaction info
             const ret = await getBridgeTransactionInfoWithRetry<{data:getBridgeTransactionInfoResult}, {id: string}>({id: transId})
-            if(!ret.data.data || Object.keys(ret.data.data).length == 0 || !ret.data.data.status){
+            if(!ret.data.data || Object.keys(ret.data.data).length === 0 || !ret.data.data.status){
                 throw new Error("transaction info error")
             }
             // update states
@@ -119,7 +119,7 @@ const BridgeTransaction = () => {
                 clearInterval(intervalId)
             }
         } catch (err) {
-            if(status == ""){
+            if(status === ""){
                 setStatus("error")
             }
             console.error("getBridgeTransactionInfoWithRetry:", err)
@@ -128,15 +128,15 @@ const BridgeTransaction = () => {
     }
     
     useEffect(() => {
-        refreshTransactionInfo()
-        intervalId = setInterval(refreshTransactionInfo, 30000)
+        const intervalId = setInterval(refreshTransactionInfo, 30000)
+        refreshTransactionInfo(intervalId)
         return () => clearInterval(intervalId);
-    }, [])
+    })
 
     // check status
-    if (status == "") {
+    if (status === "") {
         return null
-    } else if(status == "error") {
+    } else if(status === "error") {
         return (
             <div className="flex flex-col flex-1">
                 <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
@@ -158,7 +158,7 @@ const BridgeTransaction = () => {
                 </div>
             </div>
         )
-    } else if(status == "confirming" || status == "exchanging" || status == "sending"){
+    } else if(status === "confirming" || status === "exchanging" || status === "sending"){
         return (
             <div className="flex flex-col flex-1">
                 <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
@@ -203,7 +203,7 @@ const BridgeTransaction = () => {
                 </div>
             </div>
         )
-    } else if(status == "failed" || status == "hold" || status == "refunded") {
+    } else if(status === "failed" || status === "hold" || status === "refunded") {
         return (
             <div className="flex flex-col flex-1">
                 <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
@@ -229,7 +229,7 @@ const BridgeTransaction = () => {
                             <div className="bridge-transaction-detail-title">Message</div>
                             <div className="bridge-transaction-detail-content">{TransactionStatusMap.get(status)}</div>
                         </div>
-                        {status == "refunded" && <div className="bridge-transaction-detail-block">
+                        {status === "refunded" && <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Refund address</div>
                             <div className="bridge-transaction-detail-content">{refundAddress}</div>
                         </div>}
@@ -237,7 +237,7 @@ const BridgeTransaction = () => {
                 </div>
             </div>
         )
-    } else if(status == "finished") {
+    } else if(status === "finished") {
         return (
             <div className="flex flex-col flex-1">
                 <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
@@ -354,7 +354,7 @@ const BridgeTransaction = () => {
                     <Countdown initialHours={expireHour} initialMinutes={expireMinute} initialSeconds={expireSecond} />
                 </div>
                 <div className="bridge-transaction-detail-title">Time left to send {amountExpectedFrom} {currencyFromTicker}</div>
-                {(status == "expired" || status == "overdue") &&
+                {(status === "expired" || status === "overdue") &&
                 <div>
                     <Button
                     onClick={()=>{

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, Dispatch, SetStateAction } from 'react'
+import { FC, useEffect, useState } from 'react'
 
 interface Iprops {
     initialHours: number, 

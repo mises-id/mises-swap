@@ -8,7 +8,7 @@ const header = () => {
     }
 }
 
-export function getBridgeTokens<T=any,P=any>(): AxiosPromise<T>{
+export function getBridgeTokens<T=any>(): AxiosPromise<T>{
     return bridgeRequest({
       url: `/get_currencies`,
       method: 'post',
