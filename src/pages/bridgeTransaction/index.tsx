@@ -131,7 +131,8 @@ const BridgeTransaction = () => {
         const intervalId = setInterval(refreshTransactionInfo, 30000)
         refreshTransactionInfo(intervalId)
         return () => clearInterval(intervalId);
-    }, [refreshTransactionInfo])
+        // eslint-disable-next-line
+    }, [])
 
     // check status
     if (status === "") {
