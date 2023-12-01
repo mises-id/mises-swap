@@ -84,49 +84,52 @@ const BridgeTransaction = () => {
     //const [totalFee, setTotalFee] = useState("")
 
     // init
-    const getBridgeTransactionInfoWithRetry = retryRequest(getBridgeTransactionInfo)
     let intervalId: NodeJS.Timer;
-    useEffect(() => {
+    const getBridgeTransactionInfoWithRetry = retryRequest(getBridgeTransactionInfo)
+    const refreshTransactionInfo = async () => {
         if(!transId){
             return
         }
-        intervalId = setInterval(async () => {
-            try{
-                // get transaction info
-                const ret = await getBridgeTransactionInfoWithRetry<{data:getBridgeTransactionInfoResult}, {id: string}>({id: transId})
-                if(!ret.data.data || Object.keys(ret.data.data).length == 0 || !ret.data.data.status){
-                    throw new Error("transaction info error")
-                }
-                // update states
-                setStatus(ret.data.data.status)
-                setCurrencyFromTicker(ret.data.data.currencyFrom)
-                setCurrencyToTicker(ret.data.data.currencyTo)
-                setAmountExpectedFrom(ret.data.data.amountExpectedFrom)
-                setAmountFrom(ret.data.data.amountFrom)
-                setAmountTo(ret.data.data.amountTo)
-                setPayinAddress(ret.data.data.payinAddress)
-                setPayoutAddress(ret.data.data.payoutAddress)
-                setRefundAddress(ret.data.data.refundAddress)
-                setNetworkFee(ret.data.data.networkFee)
-                // setTotalFee(ret.data.data.totalFee)
-                setExpireHour(ret.data.data.expireHour)
-                setExpireMinute(ret.data.data.expireMinute)
-                setExpireSecond(ret.data.data.expireSecond)
-                setPayinExtraIdName(ret.data.data.payinExtraIdName)
-                setPayinExtraId(ret.data.data.payinExtraId)
-                setPayoutExtraIdName(ret.data.data.payoutExtraIdName)
-                setPayoutExtraId(ret.data.data.payoutExtraId)
-            } catch (err) {
-                if(status == ""){
-                    setStatus("error")
-                }
-                console.error("getBridgeTransactionInfoWithRetry:", err)
-                return
+        try{
+            // get transaction info
+            const ret = await getBridgeTransactionInfoWithRetry<{data:getBridgeTransactionInfoResult}, {id: string}>({id: transId})
+            if(!ret.data.data || Object.keys(ret.data.data).length == 0 || !ret.data.data.status){
+                throw new Error("transaction info error")
             }
-            if(["finished","failed","refunded","overdue","expired"]) {
+            // update states
+            setStatus(ret.data.data.status)
+            setCurrencyFromTicker(ret.data.data.currencyFrom)
+            setCurrencyToTicker(ret.data.data.currencyTo)
+            setAmountExpectedFrom(ret.data.data.amountExpectedFrom)
+            setAmountFrom(ret.data.data.amountFrom)
+            setAmountTo(ret.data.data.amountTo)
+            setPayinAddress(ret.data.data.payinAddress)
+            setPayoutAddress(ret.data.data.payoutAddress)
+            setRefundAddress(ret.data.data.refundAddress)
+            setNetworkFee(ret.data.data.networkFee)
+            // setTotalFee(ret.data.data.totalFee)
+            setExpireHour(ret.data.data.expireHour)
+            setExpireMinute(ret.data.data.expireMinute)
+            setExpireSecond(ret.data.data.expireSecond)
+            setPayinExtraIdName(ret.data.data.payinExtraIdName)
+            setPayinExtraId(ret.data.data.payinExtraId)
+            setPayoutExtraIdName(ret.data.data.payoutExtraIdName)
+            setPayoutExtraId(ret.data.data.payoutExtraId)
+            if(!intervalId && ["finished","failed","refunded","overdue","expired"].includes(ret.data.data.status)) {
                 clearInterval(intervalId)
             }
-        }, 30000)
+        } catch (err) {
+            if(status == ""){
+                setStatus("error")
+            }
+            console.error("getBridgeTransactionInfoWithRetry:", err)
+            return
+        }
+    }
+    
+    useEffect(() => {
+        refreshTransactionInfo()
+        intervalId = setInterval(refreshTransactionInfo, 30000)
         return () => clearInterval(intervalId);
     }, [])
 

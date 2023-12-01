@@ -26,16 +26,29 @@ const BridgeMode: FC<Iprops> = (props) => {
     const [fixRefundStatus, setFixRefundStatus] = useState(false)
     const [floatRecipientStatus, setFloatRecipientStatus] = useState(false)
 
+    const [floatRecipientValue, setFloatRecipientValue] = useState("")
+    const [fixRecipientValue, setFixRecipientValue] = useState("")
+    const [fixRefundValue, setFixRefundValue] = useState("")
+
     const handleBridgeModeChange = (floatMode: boolean) => {
         if(swapContext!.bridgeFloatMode !== floatMode){
             if(swapContext!.bridgeFloatMode && swapContext?.bridgeFixedAvailable){
                 swapContext?.setBridgeToAmount(swapContext.bridgeFixedOutputAmount)
                 swapContext?.setBridgeFloatMode(floatMode)
                 swapContext?.setBridgeAmountCheckMsg("")
+
+                console.log(`handleBridgeModeChange:fixRecipientValue:${fixRecipientValue}`)
+                console.log(`handleBridgeModeChange:fixRefundValue:${fixRefundValue}`)
+
+                handleAddressChange("fixRecipient")?.(fixRecipientValue)
+                handleAddressChange("fixRefund")?.(fixRefundValue)
             } else if(!swapContext!.bridgeFloatMode && swapContext?.bridgeFloatAvailable) {
                 swapContext?.setBridgeToAmount(swapContext.bridgeFloatOutputAmount)
                 swapContext?.setBridgeFloatMode(floatMode)
                 swapContext?.setBridgeAmountCheckMsg("")
+                handleAddressChange("floatRecipient")?.(floatRecipientValue).catch((err) => console.log(err))
+
+                console.log(`handleBridgeModeChange:floatRecipient:${floatRecipientValue}`)
             }
         }
     }
@@ -72,18 +85,20 @@ const BridgeMode: FC<Iprops> = (props) => {
                     return
                 }
                 props.setBridgeModeStatus(false)
-                setFloatRecipientStatus(false)
+                setFloatRecipientValue(val)
                 if(swapContext?.bridgeToData.symbol){
                     try{
                         if(await runCheckInputAddress(swapContext.bridgeToData.symbol, val)){
                             swapContext?.setBridgeFloatRecipentAddress(val)
                             props.setBridgeModeStatus(true)
                             setFloatRecipientStatus(true)
+                            return
                         }
                     } catch(err) {
-                        console.error("floatRecipient:", err)
+                        console.error(`floatRecipient:${err}`)
                     }
                 }
+                setFloatRecipientStatus(false)
             }
         } else if(type === "fixRecipient") {
             return async (val: string | undefined): Promise<void> => {
@@ -91,7 +106,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                     return
                 }
                 props.setBridgeModeStatus(false)
-                setFixRecipientStatus(false)
+                setFixRecipientValue(val)
                 if(swapContext?.bridgeToData.symbol){
                     try{
                         if(await runCheckInputAddress(swapContext.bridgeToData.symbol, val)){
@@ -100,11 +115,13 @@ const BridgeMode: FC<Iprops> = (props) => {
                             if(fixRecipientStatus && fixRefundStatus){
                                 props.setBridgeModeStatus(true)
                             }
+                            return
                         }
                     } catch(err) {
-                        console.error("fixRecipient:", err)
+                        console.error(`fixRecipient:${err}`)
                     }
                 }
+                setFixRecipientStatus(false)
             }
         } else if(type === "fixRefund"){
             return async (val: string | undefined): Promise<void> => {
@@ -112,7 +129,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                     return
                 }
                 props.setBridgeModeStatus(false)
-                setFixRefundStatus(false)
+                setFixRefundValue(val)
                 if(swapContext?.bridgeFromData.symbol){
                     try{
                         if(await runCheckInputAddress(swapContext.bridgeFromData.symbol, val)){
@@ -121,11 +138,13 @@ const BridgeMode: FC<Iprops> = (props) => {
                             if(fixRecipientStatus && fixRefundStatus){
                                 props.setBridgeModeStatus(true)
                             }
+                            return
                         }
                     } catch(err) {
-                        console.error("fixRefund:", err)
+                        console.error(`fixRefund:${err}`)
                     }
                 }
+                setFixRefundStatus(false)
             }
         }
     }
@@ -152,23 +171,27 @@ const BridgeMode: FC<Iprops> = (props) => {
         </div> : <div className="bridge-mode-tip">
         With the fixed rate, you will receive the exact amount of crypto you see on this screen.
         </div>}
-        {swapContext.bridgeFloatMode ? 
+        {swapContext.bridgeFloatMode && 
         <div className='token-container'>
             <div>
                 <div className="bridge-mode-title">Recipient wallet address</div>
                 <Input 
                     className="bridge-mode-address-input"
                     onChange={handleAddressChange("floatRecipient")}
+                    defaultValue={floatRecipientValue}
                 />
                 {swapContext.bridgeFloatMode && !floatRecipientStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
-        </div> :
+        </div> 
+        }
+        {!swapContext.bridgeFloatMode && 
         <div className='token-container'>
             <div className="margin-10">
                 <div className="bridge-mode-title">Recipient wallet address</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRecipient")}
+                    defaultValue={fixRecipientValue}
                 />
                 {!swapContext.bridgeFloatMode && !fixRecipientStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
@@ -177,6 +200,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRefund")}
+                    defaultValue={fixRefundValue}
                 />
                 {!swapContext.bridgeFloatMode && !fixRefundStatus ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
