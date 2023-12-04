@@ -1,5 +1,5 @@
 import "./index.less"
-import { FC, useContext, useState, Dispatch, SetStateAction } from 'react'
+import { FC, useContext, useState, Dispatch, useEffect, SetStateAction } from 'react'
 import { SwapContext } from '@/context/swapContext'
 import { Input } from 'antd-mobile'
 import { useRequest } from "ahooks"
@@ -33,6 +33,21 @@ const BridgeMode: FC<Iprops> = (props) => {
     const [floatRecipientValue, setFloatRecipientValue] = useState("")
     const [fixRecipientValue, setFixRecipientValue] = useState("")
     const [fixRefundValue, setFixRefundValue] = useState("")
+
+    const handleTokenChange = () => {
+        if(!swapContext?.bridgeFloatMode){
+            handleAddressChange("fixRecipient")?.(fixRecipientValue)
+            handleAddressChange("fixRefund")?.(fixRefundValue)
+        } else {
+            handleAddressChange("floatRecipient")?.(floatRecipientValue)
+        }
+    }
+
+    useEffect(
+        handleTokenChange,
+        // eslint-disable-next-line
+        [swapContext?.bridgeFromData, swapContext?.bridgeToData]
+    );
 
     const handleBridgeModeChange = (floatMode: boolean) => {
         if(swapContext!.bridgeFloatMode !== floatMode){
@@ -84,6 +99,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 }
                 props.setBridgeModeStatus(false)
                 setFloatRecipientValue(val)
+                if(val === ""){
+                    setFloatRecipientStatus(false)
+                    return
+                }
                 setFloatRecipientValidating(true)
                 if(swapContext?.bridgeToData.symbol){
                     try{
@@ -108,6 +127,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 }
                 props.setBridgeModeStatus(false)
                 setFixRecipientValue(val)
+                if(val === ""){
+                    setFixRecipientStatus(false)
+                    return
+                }
                 setFixRecipientValidating(true)
                 if(swapContext?.bridgeToData.symbol){
                     try{
@@ -134,6 +157,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 }
                 props.setBridgeModeStatus(false)
                 setFixRefundValue(val)
+                if(val === ""){
+                    setFixRefundStatus(false)
+                    return
+                }
                 setFixRefundValidating(true)
                 if(swapContext?.bridgeFromData.symbol){
                     try{

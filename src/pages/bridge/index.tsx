@@ -290,11 +290,11 @@ const Bridge = () => {
     return (
       <div className="bridge-swap-container auto-z-index user-clause">
         <div className="user-clause-title">
-        I have been informed and agreed
+        I have been informed and agreed that
         </div>
         <div className="flex">
             <input type="checkbox" checked={props.userClauseChecked} onChange={() => setChecked(!props.userClauseChecked)} />
-            <div>The exchange service is provided by changelly.com. If there is any problem, I need to contact the support line of changelly.com directly.</div>
+            <div>The exchange service is provided by Changelly.com. If there is any problem, I need to contact the support line of Changelly.com directly.</div>
         </div>
         <Button
           onClick={goToConfirm}
