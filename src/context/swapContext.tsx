@@ -11,9 +11,13 @@ interface swapTokenData {
 
 interface bridgeTokenData {
   tokenAddress?: string,
-  symbol: string
-  decimals?: number
-  balance?: string
+  symbol: string,
+  decimals?: number,
+  balance?: string,
+  bridgeExtraIdName?: string,
+  bridgeFixedTime?: number,
+  bridgeProtocol?: string,
+  bridgeBlockchain?: string,
 }
 
 interface globalDialogMessageData {
@@ -104,10 +108,21 @@ export type SwapContextType = {
 
   bridgeFloatRecipentAddress: string,
   setBridgeFloatRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFloatRecipentExtraId: string,
+  setBridgeFloatRecipentExtraId: Dispatch<SetStateAction<string>>,
+
   bridgeFixedRecipentAddress: string,
   setBridgeFixedRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRecipentExtraId: string,
+  setBridgeFixedRecipentExtraId: Dispatch<SetStateAction<string>>,
+
   bridgeFixedRefundAddress: string,
   setBridgeFixedRefundAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRefundExtraId: string,
+  setBridgeFixedRefundExtraId: Dispatch<SetStateAction<string>>,
+
+  bridgeFixedRateId: string,
+  setBridgeFixedRateId: Dispatch<SetStateAction<string>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -172,8 +187,15 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [bridgeFixedOutputAmount, setBridgeFixedOutputAmount] = useState('...')
 
   const [bridgeFloatRecipentAddress, setBridgeFloatRecipentAddress] = useState('')
+  const [bridgeFloatRecipentExtraId, setBridgeFloatRecipentExtraId] = useState('')
+
   const [bridgeFixedRecipentAddress, setBridgeFixedRecipentAddress] = useState('')
+  const [bridgeFixedRecipentExtraId, setBridgeFixedRecipentExtraId] = useState('')
+
   const [bridgeFixedRefundAddress, setBridgeFixedRefundAddress] = useState('')
+  const [bridgeFixedRefundExtraId, setBridgeFixedRefundExtraId] = useState('')
+
+  const [bridgeFixedRateId, setBridgeFixedRateId] = useState('')
 
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
@@ -273,7 +295,15 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     bridgeFixedRecipentAddress,
     setBridgeFixedRecipentAddress,
     bridgeFixedRefundAddress,
-    setBridgeFixedRefundAddress
+    setBridgeFixedRefundAddress,
+    bridgeFloatRecipentExtraId,
+    setBridgeFloatRecipentExtraId,
+    bridgeFixedRecipentExtraId,
+    setBridgeFixedRecipentExtraId,
+    bridgeFixedRefundExtraId,
+    setBridgeFixedRefundExtraId,
+    bridgeFixedRateId,
+    setBridgeFixedRateId
   }}>{children}</SwapContext.Provider>;
 };
 

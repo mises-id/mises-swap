@@ -1,14 +1,14 @@
   @media (prefers-color-scheme: dark) {
     .token-container {
       background-color: rgb(19, 26, 42);
-      color: rgb(152, 161, 192);
+      color: var(--theme-color);
     }
   }
   
   @media (prefers-color-scheme: light) {
     .token-container {
       background-color: rgb(245, 246, 252);
-      color: rgb(119, 128, 160);
+      color: var(--theme-color);
     }
   }
   
@@ -16,7 +16,7 @@
     position: relative;
     border-radius: 12px;
     padding: 16px;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 20px;
     font-weight: 500;
   }
@@ -62,23 +62,24 @@
 
   .border-selected {
     border: 2px solid #007aff;
-    border-radius: 5px
+    border-radius: 12px
   }
 
   .bridge-mode-tip {
     padding: 5px 8px 10px 16px;
-    font-size:12px;
+    font-size:14px;
     color:#007aff;
     font-weight: 600;
   }
 
   .bridge-mode-title {
     padding: 5px 5px 5px 0px;
-    font-size:14px;
-    color:#7780a0;
+    font-size:18px;
+    color: var(--theme-color);
     font-weight: 600;
   }
 
   .bridgeAmountCheckMsg{
+    font-size:14px;
     color:rgb(210, 94, 16)
   }

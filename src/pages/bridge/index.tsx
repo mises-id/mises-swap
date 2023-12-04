@@ -1,5 +1,5 @@
 import "./index.less";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, SetStateAction } from "react";
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 //import { hooks } from '@/components/Web3Provider/metamask';
@@ -63,20 +63,20 @@ interface getBridgeFixRateForAmountParams {
 }
 
 interface getBridgeFixRateForAmountResult {
-  from: string,
-  to: string,
-  networkFee: string,
-  amountFrom: string,
-  amountTo	: string,
-  max: string,
-  maxFrom: string,
-  maxTo: string,
-  min: string,
-  minFrom: string,
-  minTo: string,
-  visibleAmount: string,
-  rate: string,
-  fee: string
+  id:string
+  result:string
+  from:string
+  to:string
+  networkFee:string
+  max:string
+  maxFrom:string
+  maxTo:string
+  min:string
+  minFrom:string
+  minTo:string
+  amountFrom:string
+  amountTo	:string
+  expiredAt:number
 }
 
 interface createBridgeTransactionParams {
@@ -146,10 +146,10 @@ const Bridge = () => {
   const navigate = useNavigate()
   const [showMainForm, setShowMainForm] = useState<boolean>(true)
   //const [recipientAddress, setRecipientAddress] = useState<string>("")
-  const [recipientExtraId  /*, setRecipientExtraId*/] = useState<string>("")
+  //const [recipientExtraId  /*, setRecipientExtraId*/] = useState<string>("")
   const [refundAddress /*, setRefundAddress*/] = useState<string>("")
   const [refundExtraId /*, setRefundExtraId*/] = useState<string>("")
-const [fixRateId /*, setFixRateId*/] = useState<string>("")
+  //const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
   const [disableExchangeButton, setDisableExchangeButton] = useState(false)
 
@@ -195,7 +195,6 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
     if(isPageReLoad) {
       logEvent(analytics, 'swap_bridge_reload')
       sessionStorage.removeItem('isPageReLoad')
-      console.log('isPageReLoad analytics')
     }
     if(!swapContext?.bridgeFromAmount){
       swapContext!.bridgeFromAmount = "0.1"
@@ -238,12 +237,8 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
       swapContext!.setBridgeTokens([...tokenList])
 
-      console.log(`findBridgeToken:bridgeFromData:${swapContext?.bridgeFromData.symbol}`)
-      console.log(`findBridgeToken:bridgeToData:${swapContext?.bridgeToData.symbol}`)
-
       if(!swapContext?.bridgeFromData.symbol){
         const fromToken = findBridgeToken(tokenList, "btc")
-        console.log(`findBridgeToken:fromToken:${fromToken?.symbol}`)
         if(fromToken) {
           swapContext!.bridgeFromData = {
             ...fromToken
@@ -256,7 +251,6 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
       if(!swapContext?.bridgeToData.symbol){
         const toToken = findBridgeToken(tokenList, "eth")
-        console.log(`findBridgeToken:toToken:${toToken?.symbol}`)
         if(toToken) {
           swapContext!.bridgeToData = {
             ...toToken
@@ -277,18 +271,17 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
     }
   }
 
-  const UserClause = (props: {bridgeModeStatus:boolean}) => {
-    const [checked, setChecked] = useState(false)
+  const [checked, setChecked] = useState(false)
+  const UserClause = (props: {bridgeModeStatus:boolean, userClauseChecked: boolean, setChecked: (value: SetStateAction<boolean>) => void}) => {
     const [nextStepButton, setNextStepButton] = useState<boolean>(true)
 
     useEffect(() => {
-      console.log(`bridgeModeStatus:${props.bridgeModeStatus}`)
-      if(props.bridgeModeStatus && checked){
+      if(props.bridgeModeStatus && props.userClauseChecked){
         setNextStepButton(false)
       }else{
         setNextStepButton(true)
       }
-    }, [props.bridgeModeStatus, checked])
+    }, [props.bridgeModeStatus, props.userClauseChecked])
 
     const goToConfirm = () => {
       setShowMainForm(false)
@@ -296,12 +289,12 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
     
     return (
       <div className="bridge-swap-container auto-z-index user-clause">
-        <div>
-            This is a message for the user.
+        <div className="user-clause-title">
+        I have been informed and agreed
         </div>
         <div className="flex">
-            <input type="checkbox" checked={checked} onChange={() => setChecked(!checked)} />
-            <div>This is a text passage block. The user should agree to these terms.</div>
+            <input type="checkbox" checked={props.userClauseChecked} onChange={() => setChecked(!props.userClauseChecked)} />
+            <div>The exchange service is provided by changelly.com. If there is any problem, I need to contact the support line of changelly.com directly.</div>
         </div>
         <Button
           onClick={goToConfirm}
@@ -314,7 +307,11 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
   }
 
   const TransactionDetails = () => {
+
+    const [submitButtonLoading, setSubmitButtonLoading] = useState(false)
+
     const createTransaction = async () => {
+      setSubmitButtonLoading(true)
       try{
         let transactionId = ""
         if(swapContext?.bridgeFloatMode){
@@ -325,7 +322,7 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
             from: swapContext.bridgeFromData.symbol,
             to: swapContext.bridgeToData.symbol,
             address: swapContext.bridgeFloatRecipentAddress,
-            extraId: recipientExtraId,
+            extraId: swapContext.bridgeFloatRecipentExtraId,
             amountFrom: swapContext.bridgeFromAmount,
             refundAddress: refundAddress,
             refundExtraId: refundExtraId
@@ -343,12 +340,12 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
           const params:createFixBridgeTransactionParams = {
             from: swapContext!.bridgeFromData.symbol,
             to: swapContext!.bridgeToData.symbol,
-            rateId: fixRateId,
+            rateId: swapContext!.bridgeFixedRateId,
             address: swapContext!.bridgeFixedRecipentAddress,
-            extraId: recipientExtraId,
+            extraId: swapContext?.bridgeFixedRecipentExtraId,
             amountFrom: swapContext!.bridgeFromAmount,
-            refundAddress: swapContext!.bridgeFixedRecipentAddress,
-            refundExtraId: refundExtraId
+            refundAddress: swapContext!.bridgeFixedRefundAddress,
+            refundExtraId: swapContext?.bridgeFixedRefundExtraId
           }
           const ret = await createFixBridgeTransaction<{data:createFixBridgeTransactionResult}, createFixBridgeTransactionParams>(params)
           if(ret.data.data.id){
@@ -360,17 +357,14 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
         // jump 
         navigate(`/bridge/transaction/${transactionId}`)
-
+        return
       } catch (err) {
         swapContext?.setGlobalDialogMessage({
           type: 'error',
           description: "Network Error: Failed to create transaction."
         })
       }
-
-      // test
-      //navigate(`/bridge/transaction/hem83gulyeispdmw`)
-
+      setSubmitButtonLoading(false)
     }
 
     return (
@@ -462,6 +456,8 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
         </div>
         <div>
         <Button
+          loading={submitButtonLoading}
+          loadingText="Processing"
           onClick={createTransaction}
           block
           color="primary"
@@ -588,7 +584,6 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
         }
         if (!isNaN(maxAmountFixed) && fromAmount > maxAmountFixed) {
           fixAvailable = false
-          console.log(`fixAvailable:${fixAvailable}`)
           swapContext?.setBridgeFixedAvailable(false)
           swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be more than ${maxAmountFixed}`)
         }
@@ -680,6 +675,9 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
           swapContext?.setBridgeToAmount(`${amountTo}`)
         }
         swapContext?.setBridgeFixedOutputAmount(`${amountTo}`)
+        if(ret.data.data.id){
+          swapContext?.setBridgeFixedRateId(ret.data.data.id)
+        }
       })
       .catch((err) => {
         console.error("getBridgeFixRateForAmountRetry:", err)
@@ -913,7 +911,7 @@ const [fixRateId /*, setFixRateId*/] = useState<string>("")
           className='exchange-button'>Exchange Now</Button>}
       </div >
       {location.pathname === '/bridge/process' && <BridgeMode setBridgeModeStatus={setBridgeModeStatus} />}
-      {location.pathname === '/bridge/process' && <UserClause bridgeModeStatus={bridgeModeStatus} />}
+      {location.pathname === '/bridge/process' && <UserClause bridgeModeStatus={bridgeModeStatus} userClauseChecked={checked} setChecked={setChecked} />}
     </div>
     }
 

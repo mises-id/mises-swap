@@ -108,9 +108,15 @@ const BridgeTransaction = () => {
             setRefundAddress(ret.data.data.refundAddress)
             setNetworkFee(ret.data.data.networkFee)
             // setTotalFee(ret.data.data.totalFee)
-            setExpireHour(ret.data.data.expireHour)
-            setExpireMinute(ret.data.data.expireMinute)
-            setExpireSecond(ret.data.data.expireSecond)
+            if(ret.data.data.expireHour){
+                setExpireHour(ret.data.data.expireHour)
+            }
+            if(ret.data.data.expireMinute){
+                setExpireMinute(ret.data.data.expireMinute)
+            }
+            if(ret.data.data.expireSecond){
+                setExpireSecond(ret.data.data.expireSecond)
+            }
             setPayinExtraIdName(ret.data.data.payinExtraIdName)
             setPayinExtraId(ret.data.data.payinExtraId)
             setPayoutExtraIdName(ret.data.data.payoutExtraIdName)
