@@ -1,19 +1,20 @@
 import "./index.less";
 import { useContext, useEffect, useState, SetStateAction } from "react";
+import Web3 from 'web3';
+import { signin } from '@/api/request';
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 //import { hooks } from '@/components/Web3Provider/metamask';
 //import { useWeb3React } from '@web3-react/core';
 import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
-import { Button/*, Toast */ } from "antd-mobile";
+import { Button, Toast, CenterPopup } from "antd-mobile";
 import StatusDialog from "@/components/StatusDialog";
 //import BridgeNotification from "@/components/BridgeNotification";
 import { useNavigate } from "react-router-dom";
 import { findBridgeToken, retryRequest } from "@/utils";
 import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
-//import {signin} from "@/api/request";
-import {useRequest} from "ahooks";
+import { useRequest, useMount } from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
 import { useLocation } from 'react-router-dom';
 
@@ -161,7 +162,7 @@ const Bridge = () => {
 
   //const [/*downloadPop, */ setDownloadPop] = useState(false)
 
-  //const [/*showConnectWalletPopup, */ setShowConnectWalletPopup] = useState(false)
+  const [showConnectWalletPopup, setShowConnectWalletPopup] = useState(false)
 
   //const accounts = useAccounts()
 
@@ -769,6 +770,64 @@ const Bridge = () => {
   //   }
   // }
 
+  const login = async () => {
+    const provider = (window as any).misesEthereum;
+    if(provider) {
+      try{
+        const accounts = await provider.request({method: 'eth_requestAccounts', params: []})
+        if(accounts.length > 0 && accounts[0] !== localStorage.getItem("ethAccount")){
+          localStorage.removeItem('token')
+          localStorage.removeItem('ethAccount')
+          const address = Web3.utils.toChecksumAddress(accounts[0])
+          const timestamp = new Date().getTime()
+          const nonce = `${timestamp}`
+          const sigMsg = `address=${address}&nonce=${nonce}`
+          const {sig: personalSignMsg} = await provider.signMessageForAuth(address, nonce)
+          const auth = `${sigMsg}&sig=${personalSignMsg}`
+          const data = await signin(auth)
+          localStorage.setItem('token', data.token)
+          localStorage.setItem('ethAccount', accounts[0])
+          setShowConnectWalletPopup(false)
+        }
+      }catch(err) {
+        setShowConnectWalletPopup(true)
+        Toast.show('Connection error')
+      }
+    } else {
+      Toast.show('Please use Mises browser')
+    }
+  }
+
+  useMount(
+    () => {
+      const provider = (window as any).misesEthereum;
+      if(provider) {
+        provider.on("accountsChanged", async (accounts: string[]) => {
+            if(accounts.length) {
+              login()
+            }else {
+              localStorage.removeItem('token')
+              localStorage.removeItem('ethAccount')
+              setShowConnectWalletPopup(true)
+            }
+          }
+        );
+        provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+          console.log(accounts)
+          if(accounts.length) {
+            login()
+          }else {
+            localStorage.removeItem('token')
+            localStorage.removeItem('ethAccount')
+            setShowConnectWalletPopup(true)
+          }
+        });
+      } else {
+        Toast.show('Please use Mises browser')
+      }
+    }
+  )
+
   // refresh
   const refresh = async () => {
     try{
@@ -917,20 +976,18 @@ const Bridge = () => {
 
     {!showMainForm && <TransactionDetails/>}
     {/* <BridgeNotification /> */}
-    {/*<CenterPopup
-        style={{ '--min-width': '90vw' }}
-        showCloseButton
-        onClose={() => {setShowConnectWalletPopup(false)}}
-        visible={showConnectWalletPopup}>
-        <div className='bg-white px-15 pb-30'>
-          <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
-          <Button block shape='rounded' onClick={connectWallet} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
-            <span className='text-white block text-18'>Connect Mises ID</span>
-          </Button>
-        </div>
-      </CenterPopup>
-      */
-    }
+    <CenterPopup
+      style={{ '--min-width': '90vw' }}
+      showCloseButton
+      onClose={() => {setShowConnectWalletPopup(false)}}
+      visible={showConnectWalletPopup}>
+      <div className='bg-white px-15 pb-30'>
+        <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
+        <Button block shape='rounded' onClick={login} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
+          <span className='text-white block text-18'>Connect Mises ID</span>
+        </Button>
+      </div>
+    </CenterPopup>
     <StatusDialog />
   </div>
 }
