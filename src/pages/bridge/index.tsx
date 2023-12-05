@@ -791,7 +791,7 @@ const Bridge = () => {
         }
       }catch(err) {
         setShowConnectWalletPopup(true)
-        Toast.show('Connection error')
+        console.log(`login error:${err}`)
       }
     } else {
       Toast.show('Please use Mises browser')
