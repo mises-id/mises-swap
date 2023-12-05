@@ -8,7 +8,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 //import { useWeb3React } from '@web3-react/core';
 import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
-import { Button, Toast, CenterPopup } from "antd-mobile";
+import { Button, Toast } from "antd-mobile";
 import StatusDialog from "@/components/StatusDialog";
 //import BridgeNotification from "@/components/BridgeNotification";
 import { useNavigate } from "react-router-dom";
@@ -162,7 +162,7 @@ const Bridge = () => {
 
   //const [/*downloadPop, */ setDownloadPop] = useState(false)
 
-  const [showConnectWalletPopup, setShowConnectWalletPopup] = useState(false)
+  const [showConnectWallet, setShowConnectWallet] = useState(false)
 
   //const accounts = useAccounts()
 
@@ -787,10 +787,10 @@ const Bridge = () => {
           const data = await signin(auth)
           localStorage.setItem('token', data.token)
           localStorage.setItem('ethAccount', accounts[0])
-          setShowConnectWalletPopup(false)
+          setShowConnectWallet(false)
         }
       }catch(err) {
-        setShowConnectWalletPopup(true)
+        setShowConnectWallet(true)
         console.log(`login error:${err}`)
       }
     } else {
@@ -808,7 +808,7 @@ const Bridge = () => {
             }else {
               localStorage.removeItem('token')
               localStorage.removeItem('ethAccount')
-              setShowConnectWalletPopup(true)
+              setShowConnectWallet(true)
             }
           }
         );
@@ -817,9 +817,11 @@ const Bridge = () => {
           if(accounts.length) {
             login()
           }else {
-            localStorage.removeItem('token')
-            localStorage.removeItem('ethAccount')
-            setShowConnectWalletPopup(true)
+            if(!localStorage.getItem('ethAccount')){
+              localStorage.removeItem('token')
+              localStorage.removeItem('ethAccount')
+              setShowConnectWallet(true)
+            }
           }
         });
       } else {
@@ -962,7 +964,12 @@ const Bridge = () => {
             onTokenChange={onToTokenChange}
           />
         </div>
-        {location.pathname === '/bridge' && <Button
+        {location.pathname === '/bridge' && showConnectWallet && <Button
+          onClick={login}
+          block
+          color="primary"
+          className='exchange-button'>Connect Mises ID</Button>}
+        {location.pathname === '/bridge' && !showConnectWallet && <Button
           disabled={disableExchangeButton}
           onClick={() => navigate('/bridge/process')}
           block
@@ -976,11 +983,12 @@ const Bridge = () => {
 
     {!showMainForm && <TransactionDetails/>}
     {/* <BridgeNotification /> */}
+    {/*
     <CenterPopup
       style={{ '--min-width': '90vw' }}
       showCloseButton
-      onClose={() => {setShowConnectWalletPopup(false)}}
-      visible={showConnectWalletPopup}>
+      onClose={() => {setShowConnectWallet(false)}}
+      visible={showConnectWallet}>
       <div className='bg-white px-15 pb-30'>
         <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
         <Button block shape='rounded' onClick={login} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
@@ -988,6 +996,7 @@ const Bridge = () => {
         </Button>
       </div>
     </CenterPopup>
+    */}
     <StatusDialog />
   </div>
 }
