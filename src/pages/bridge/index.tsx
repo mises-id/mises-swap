@@ -153,6 +153,7 @@ const Bridge = () => {
   //const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
   const [disableExchangeButton, setDisableExchangeButton] = useState(false)
+  const [totalDisabled, setTotalDisabled] = useState(false)
 
   // form status
   const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
@@ -794,6 +795,7 @@ const Bridge = () => {
         console.log(`login error:${err}`)
       }
     } else {
+      setTotalDisabled(true)
       Toast.show('Please use Mises browser')
     }
   }
@@ -825,6 +827,7 @@ const Bridge = () => {
           }
         });
       } else {
+        setTotalDisabled(true)
         Toast.show('Please use Mises browser')
       }
     }
@@ -923,6 +926,10 @@ const Bridge = () => {
     runRefresh()
   }
 
+  if((totalDisabled || showConnectWallet) && location.pathname === '/bridge/process'){
+    return null
+  }
+
   // return
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
@@ -970,7 +977,7 @@ const Bridge = () => {
           color="primary"
           className='exchange-button'>Connect Mises ID</Button>}
         {location.pathname === '/bridge' && !showConnectWallet && <Button
-          disabled={disableExchangeButton}
+          disabled={totalDisabled || disableExchangeButton}
           onClick={() => navigate('/bridge/process')}
           block
           color="primary"
