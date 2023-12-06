@@ -18,6 +18,7 @@ import { findBridgeToken, retryRequest } from "@/utils";
 import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
 import { useRequest, useMount } from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
+import BridgeHistoryList from "@/components/BridgeHistoryList";
 import { useLocation } from 'react-router-dom';
 
 const { useAccounts } = hooks
@@ -166,6 +167,7 @@ const Bridge = () => {
   //const [downloadPop,  setDownloadPop] = useState(false)
 
   const [showConnectWallet, setShowConnectWallet] = useState(false)
+  const [apiToken, setApiToken] = useState("")
 
   const accounts = useAccounts()
 
@@ -701,6 +703,7 @@ const Bridge = () => {
       setauthAccount(params.misesId)
       const data = await signin(params.auth)
       localStorage.setItem('token', data.token)
+      setApiToken(data.token)
       setShowConnectWallet(false)
       //setloading(false)
     } catch (error) {
@@ -745,6 +748,7 @@ const Bridge = () => {
     if (accounts && accounts.length && oldConnectAddress !== accounts[0]) {
       localStorage.removeItem('token')
       localStorage.removeItem('ethAccount')
+      setApiToken("")
       signMsg().then(auth => {
         loginMisesAccount({
           auth,
@@ -810,10 +814,15 @@ const Bridge = () => {
 
   useMount(
     () => {
-      if(!localStorage.getItem('ethAccount')){
+      const token = localStorage.getItem('token')
+      const ethAccount = localStorage.getItem('ethAccount')
+      if(!ethAccount || !token){
         localStorage.removeItem('token')
         localStorage.removeItem('ethAccount')
+        setApiToken("")
         setShowConnectWallet(true)
+      } else {
+        setApiToken(token!)
       }
     }
   )
@@ -1003,6 +1012,7 @@ const Bridge = () => {
       </div >
       {location.pathname === '/bridge/process' && <BridgeMode setBridgeModeStatus={setBridgeModeStatus} />}
       {location.pathname === '/bridge/process' && <UserClause bridgeModeStatus={bridgeModeStatus} userClauseChecked={checked} setChecked={setChecked} />}
+      {location.pathname === '/bridge' && <BridgeHistoryList token={apiToken}/>}
     </div>
     }
 
