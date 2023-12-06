@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/react-in-jsx-scope */
 import "./index.less";
-import { useContext, useEffect, useState, SetStateAction } from "react";
-import Web3 from 'web3';
+import { useContext, useEffect, useState, SetStateAction, useMemo } from "react";
+//import Web3 from 'web3';
 import { signin } from '@/api/request';
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
-//import { hooks } from '@/components/Web3Provider/metamask';
-//import { useWeb3React } from '@web3-react/core';
+import { hooks } from '@/components/Web3Provider/mises';
+import { useWeb3React } from '@web3-react/core';
 import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
 import { Button, Toast } from "antd-mobile";
@@ -18,7 +20,7 @@ import { useRequest, useMount } from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
 import { useLocation } from 'react-router-dom';
 
-//const { useAccounts } = hooks
+const { useAccounts } = hooks
 
 interface getPairInfoParams {
   from: string,
@@ -158,38 +160,38 @@ const Bridge = () => {
   // form status
   const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
 
-  // const [authAccount, setauthAccount] = useState('')
+  const [authAccount, setauthAccount] = useState('')
   //const [/*loading, */ setloading] = useState(true)
 
-  //const [/*downloadPop, */ setDownloadPop] = useState(false)
+  //const [downloadPop,  setDownloadPop] = useState(false)
 
   const [showConnectWallet, setShowConnectWallet] = useState(false)
 
-  //const accounts = useAccounts()
+  const accounts = useAccounts()
 
-  //const { connector } = useWeb3React();
+  const { connector } = useWeb3React();
 
-  // const getCurrentAccount = () => {
-  //   let currentAccount: string
-  //   if (accounts?.length) {
-  //     currentAccount = accounts[0]
-  //     console.log("currentAccount:accounts?.length")
-  //   }else{
-  //     const connectAddress = localStorage.getItem('ethAccount')
-  //     currentAccount = connectAddress || authAccount || ''
-  //     console.log("currentAccount:connectAddress || authAccount")
-  //   }
-  //   // if(!currentAccount){
-  //   //   console.log("currentAccount:1")
-  //   //   setShowConnectWalletPopup(true)
-  //   // }else{
-  //   //   console.log("currentAccount:"+currentAccount)
-  //   //   setShowConnectWalletPopup(false)
-  //   // }
-  //   return currentAccount
-  // }
+  const getCurrentAccount = () => {
+    let currentAccount: string
+    if (accounts?.length) {
+      currentAccount = accounts[0]
+      console.log("currentAccount:accounts?.length")
+    }else{
+      const connectAddress = localStorage.getItem('ethAccount')
+      currentAccount = connectAddress || authAccount || ''
+      console.log("currentAccount:connectAddress || authAccount")
+    }
+    // if(!currentAccount){
+    //   console.log("currentAccount:1")
+    //   setShowConnectWalletPopup(true)
+    // }else{
+    //   console.log("currentAccount:"+currentAccount)
+    //   setShowConnectWalletPopup(false)
+    // }
+    return currentAccount
+  }
 
-  //const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
+  const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
 
   const init = async () => {
     logEvent(analytics, 'open_bridge_page')
@@ -689,149 +691,165 @@ const Bridge = () => {
     return true
   }
 
-  // const loginMisesAccount = async (params: {
-  //   auth: string,
-  //   misesId: string
-  // }) => {
-  //   console.log("connectWallet:4")
-  //   try {
-  //     localStorage.setItem('ethAccount', params.misesId)
-  //     setauthAccount(params.misesId)
-  //     //const res = await signin(params.auth)
-  //     await signin(params.auth)
-  //     //setloading(false)
-  //   } catch (error) {
-  //     //setloading(false)
-  //   }
-  // }
-
-  // const signMsg = async () => {
-  //   console.log("connectWallet:3")
-  //   try {
-  //     const timestamp = new Date().getTime();
-  //     console.log(accounts, 'accounts')
-  //     if (accounts && accounts.length) {
-  //       const address = accounts[0]
-  //       const nonce = `${timestamp}`;
-  //       const sigMsg = `address=${address}&nonce=${timestamp}`
-  //       const data = await window.misesEthereum?.signMessageForAuth(address, nonce)
-  //       if (data?.sig) {
-  //         const auth = `${sigMsg}&sig=${data?.sig}`
-  //         return auth
-  //       }
-  //       return Promise.reject({
-  //         code: 9998,
-  //         message: 'Not found personal sign message'
-  //       })
-  //     }
-  //     // setsignLoadingFalse()
-  //     return Promise.reject({
-  //       code: 9998,
-  //       message: 'Invalid address'
-  //     })
-  //   } catch (error) {
-  //     // setsignLoadingFalse()
-  //     return Promise.reject(error)
-  //   }
-  // }
-
-  // const loginMises = () => {
-  //   console.log("connectWallet:2")
-  //   const oldConnectAddress = localStorage.getItem('ethAccount')
-  //   if (accounts && accounts.length && oldConnectAddress !== accounts[0]) {
-  //     // removeToken('token')
-  //     // localStorage.removeItem('ethAccount')
-  //     signMsg().then(auth => {
-  //       loginMisesAccount({
-  //         auth,
-  //         misesId: accounts[0]
-  //       })
-  //     }).catch(error => {
-  //       console.log(error, 'error')
-  //       if(error && error.message) {
-  //         Toast.show(error.message)
-  //       }
-  //     })
-  //   }
-  // }
-
-  // const connectWallet = async () => {
-  //   try {
-  //     await connector.activate()
-  //     console.log("connectWallet:1")
-  //     loginMises()
-  //   } catch (error: any) {
-  //     if(error && error.message === 'Please download the latest version of Mises Browser.') {
-  //       setDownloadPop(true)
-  //       return
-  //     }
-  //     if(error && error.code !== 1) {
-  //       Toast.show(error.message)
-  //     }
-  //   }
-  // }
-
-  const login = async () => {
-    const provider = (window as any).misesEthereum;
-    if(provider) {
-      try{
-        const accounts = await provider.request({method: 'eth_requestAccounts', params: []})
-        if(accounts.length > 0 && accounts[0] !== localStorage.getItem("ethAccount")){
-          localStorage.removeItem('token')
-          localStorage.removeItem('ethAccount')
-          const address = Web3.utils.toChecksumAddress(accounts[0])
-          const timestamp = new Date().getTime()
-          const nonce = `${timestamp}`
-          const sigMsg = `address=${address}&nonce=${nonce}`
-          const {sig: personalSignMsg} = await provider.signMessageForAuth(address, nonce)
-          const auth = `${sigMsg}&sig=${personalSignMsg}`
-          const data = await signin(auth)
-          localStorage.setItem('token', data.token)
-          localStorage.setItem('ethAccount', accounts[0])
-          setShowConnectWallet(false)
-        }
-      }catch(err) {
-        setShowConnectWallet(true)
-        console.log(`login error:${err}`)
-      }
-    } else {
-      setTotalDisabled(true)
-      Toast.show('Please use Mises browser')
+  const loginMisesAccount = async (params: {
+    auth: string,
+    misesId: string
+  }) => {
+    console.log("connectWallet:4")
+    try {
+      localStorage.setItem('ethAccount', params.misesId)
+      setauthAccount(params.misesId)
+      const data = await signin(params.auth)
+      localStorage.setItem('token', data.token)
+      setShowConnectWallet(false)
+      //setloading(false)
+    } catch (error) {
+      //setloading(false)
+      setShowConnectWallet(true)
     }
   }
 
+  const signMsg = async () => {
+    console.log("connectWallet:3")
+    try {
+      const timestamp = new Date().getTime();
+      console.log(accounts, 'accounts')
+      if (accounts && accounts.length) {
+        const address = accounts[0]
+        const nonce = `${timestamp}`;
+        const sigMsg = `address=${address}&nonce=${timestamp}`
+        const data = await window.misesEthereum?.signMessageForAuth(address, nonce)
+        if (data?.sig) {
+          const auth = `${sigMsg}&sig=${data?.sig}`
+          return auth
+        }
+        return Promise.reject({
+          code: 9998,
+          message: 'Not found personal sign message'
+        })
+      }
+      // setsignLoadingFalse()
+      return Promise.reject({
+        code: 9998,
+        message: 'Invalid address'
+      })
+    } catch (error) {
+      // setsignLoadingFalse()
+      return Promise.reject(error)
+    }
+  }
+
+  const loginMises = () => {
+    console.log("connectWallet:2")
+    const oldConnectAddress = localStorage.getItem('ethAccount')
+    if (accounts && accounts.length && oldConnectAddress !== accounts[0]) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('ethAccount')
+      signMsg().then(auth => {
+        loginMisesAccount({
+          auth,
+          misesId: accounts[0]
+        })
+      }).catch(error => {
+        console.log(error, 'error')
+        if(error && error.message) {
+          Toast.show(error.message)
+        }
+      })
+    }
+  }
+
+  const connectWallet = async () => {
+    try {
+      console.log("connectWallet:0")
+      await connector.activate()
+      console.log("connectWallet:1")
+      loginMises()
+    } catch (error: any) {
+      console.log("connectWallet:error", error)
+      if(error && error.name === 'NoMetaMaskError') {
+        //setDownloadPop(true)
+        setTotalDisabled(true)
+        Toast.show(error.message)
+        return
+      }
+      if(error && error.code !== 1) {
+        Toast.show(error.message)
+      }
+    }
+  }
+
+  // const login = async () => {
+  //   const provider = (window as any).misesEthereum;
+  //   if(provider) {
+  //     try{
+  //       const accounts = await provider.request({method: 'eth_requestAccounts', params: []})
+  //       if(accounts.length > 0 && accounts[0] !== localStorage.getItem("ethAccount")){
+  //         localStorage.removeItem('token')
+  //         localStorage.removeItem('ethAccount')
+  //         const address = Web3.utils.toChecksumAddress(accounts[0])
+  //         const timestamp = new Date().getTime()
+  //         const nonce = `${timestamp}`
+  //         const sigMsg = `address=${address}&nonce=${nonce}`
+  //         const {sig: personalSignMsg} = await provider.signMessageForAuth(address, nonce)
+  //         const auth = `${sigMsg}&sig=${personalSignMsg}`
+  //         const data = await signin(auth)
+  //         localStorage.setItem('token', data.token)
+  //         localStorage.setItem('ethAccount', accounts[0])
+  //         setShowConnectWallet(false)
+  //       }
+  //     }catch(err) {
+  //       setShowConnectWallet(true)
+  //       console.log(`login error:${err}`)
+  //     }
+  //   } else {
+  //     setTotalDisabled(true)
+  //     Toast.show('Please use Mises browser')
+  //   }
+  // }
+
   useMount(
     () => {
-      const provider = (window as any).misesEthereum;
-      if(provider) {
-        provider.on("accountsChanged", async (accounts: string[]) => {
-            if(accounts.length) {
-              login()
-            }else {
-              localStorage.removeItem('token')
-              localStorage.removeItem('ethAccount')
-              setShowConnectWallet(true)
-            }
-          }
-        );
-        provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-          console.log(accounts)
-          if(accounts.length) {
-            login()
-          }else {
-            if(!localStorage.getItem('ethAccount')){
-              localStorage.removeItem('token')
-              localStorage.removeItem('ethAccount')
-              setShowConnectWallet(true)
-            }
-          }
-        });
-      } else {
-        setTotalDisabled(true)
-        Toast.show('Please use Mises browser')
+      if(!localStorage.getItem('ethAccount')){
+        localStorage.removeItem('token')
+        localStorage.removeItem('ethAccount')
+        setShowConnectWallet(true)
       }
     }
   )
+
+  // useMount(
+  //   () => {
+  //     const provider = (window as any).misesEthereum;
+  //     if(provider) {
+  //       provider.on("accountsChanged", async (accounts: string[]) => {
+  //           if(accounts.length) {
+  //             login()
+  //           }else {
+  //             localStorage.removeItem('token')
+  //             localStorage.removeItem('ethAccount')
+  //             setShowConnectWallet(true)
+  //           }
+  //         }
+  //       );
+  //       provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+  //         console.log(accounts)
+  //         if(accounts.length) {
+  //           login()
+  //         }else {
+  //           if(!localStorage.getItem('ethAccount')){
+  //             localStorage.removeItem('token')
+  //             localStorage.removeItem('ethAccount')
+  //             setShowConnectWallet(true)
+  //           }
+  //         }
+  //       });
+  //     } else {
+  //       setTotalDisabled(true)
+  //       Toast.show('Please use Mises browser')
+  //     }
+  //   }
+  // )
 
   // refresh
   const refresh = async () => {
@@ -972,7 +990,7 @@ const Bridge = () => {
           />
         </div>
         {location.pathname === '/bridge' && showConnectWallet && <Button
-          onClick={login}
+          onClick={connectWallet}
           block
           color="primary"
           className='exchange-button'>Connect Mises ID</Button>}
