@@ -201,14 +201,14 @@ const BridgeMode: FC<Iprops> = (props) => {
             {!swapContext.bridgeFloatMode && swapContext.bridgeFixedNotAvailableMsg ? <span className="bridgeAmountCheckMsg">{swapContext.bridgeFixedNotAvailableMsg}</span> : null}
         </div>
         {swapContext.bridgeFloatMode ? <div className="bridge-mode-tip">
-        The floating rate can change at any point due to market conditions, so you might receive more or less crypto than expected.
+        ✔&nbsp;The floating rate can change at any point due to market conditions, so you might receive more or less crypto than expected.
         </div> : <div className="bridge-mode-tip">
-        With the fixed rate, you will receive the exact amount of crypto you see on this screen.
+        ✔&nbsp;With the fixed rate, you will receive the exact amount of crypto you see on this screen.
         </div>}
         {swapContext.bridgeFloatMode && 
-        <div className='token-container'>
+        <div className='token-container padding-10'>
             <div>
-                <div className="bridge-mode-title">Recipient wallet address</div>
+                <div className="bridge-mode-title">Recipient Wallet Address</div>
                 <Input 
                     className="bridge-mode-address-input"
                     onChange={handleAddressChange("floatRecipient")}
@@ -217,7 +217,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                 {swapContext.bridgeFloatMode && !floatRecipientStatus && floatRecipientValue !== "" && !floatRecipientValidating ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
             { swapContext.bridgeToData.bridgeExtraIdName && 
-            <div>
+            <div className="margin-top-10">
                 <div className="bridge-mode-title">{swapContext.bridgeToData.bridgeExtraIdName} (if needed)</div>
                 <Input 
                     className="bridge-mode-address-input"
@@ -229,9 +229,9 @@ const BridgeMode: FC<Iprops> = (props) => {
         }
         {!swapContext.bridgeFloatMode && 
         <>
-        <div className='token-container margin-10'>
+        <div className='token-container margin-10 padding-10'>
             <div className="margin-10">
-                <div className="bridge-mode-title">Recipient wallet address</div>
+                <div className="bridge-mode-title">Recipient Wallet Address</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRecipient")}
@@ -240,7 +240,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                 {!swapContext.bridgeFloatMode && !fixRecipientStatus && fixRecipientValue !== "" && !fixRecipientValidating ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
             { swapContext.bridgeToData.bridgeExtraIdName && 
-            <div>
+            <div className="margin-top-10">
                 <div className="bridge-mode-title">{swapContext.bridgeToData.bridgeExtraIdName} (if needed)</div>
                 <Input 
                     className="bridge-mode-address-input"
@@ -249,9 +249,9 @@ const BridgeMode: FC<Iprops> = (props) => {
             </div>
             }
         </div>
-        <div className='token-container'>
+        <div className='token-container padding-10'>
             <div>
-                <div className="bridge-mode-title">Refund wallet address</div>
+                <div className="bridge-mode-title">Refund Wallet Address</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRefund")}
@@ -260,7 +260,7 @@ const BridgeMode: FC<Iprops> = (props) => {
                 {!swapContext.bridgeFloatMode && !fixRefundStatus && fixRefundValue !== "" && !fixRefundValidating ? <span className="bridgeAmountCheckMsg">invalid address</span> : null}
             </div>
             { swapContext.bridgeFromData.bridgeExtraIdName && 
-            <div>
+            <div className="margin-top-10">
                 <div className="bridge-mode-title">{swapContext.bridgeFromData.bridgeExtraIdName} (if needed)</div>
                 <Input 
                     className="bridge-mode-address-input"
