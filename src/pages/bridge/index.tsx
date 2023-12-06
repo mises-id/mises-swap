@@ -16,6 +16,7 @@ import { findBridgeToken, retryRequest } from "@/utils";
 import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
 import { useRequest, useMount } from "ahooks";
 import BridgeMode from "@/components/BridgeMode";
+import BridgeHistoryList from "@/components/BridgeHistoryList";
 import { useLocation } from 'react-router-dom';
 
 //const { useAccounts } = hooks
@@ -164,6 +165,8 @@ const Bridge = () => {
   //const [/*downloadPop, */ setDownloadPop] = useState(false)
 
   const [showConnectWallet, setShowConnectWallet] = useState(false)
+
+  const [apiToken, setApiToken] = useState("")
 
   //const accounts = useAccounts()
 
@@ -779,6 +782,7 @@ const Bridge = () => {
         if(accounts.length > 0 && accounts[0] !== localStorage.getItem("ethAccount")){
           localStorage.removeItem('token')
           localStorage.removeItem('ethAccount')
+          setApiToken("")
           const address = Web3.utils.toChecksumAddress(accounts[0])
           const timestamp = new Date().getTime()
           const nonce = `${timestamp}`
@@ -788,6 +792,7 @@ const Bridge = () => {
           const data = await signin(auth)
           localStorage.setItem('token', data.token)
           localStorage.setItem('ethAccount', accounts[0])
+          setApiToken(data.token)
           setShowConnectWallet(false)
         }
       }catch(err) {
@@ -810,6 +815,7 @@ const Bridge = () => {
             }else {
               localStorage.removeItem('token')
               localStorage.removeItem('ethAccount')
+              setApiToken("")
               setShowConnectWallet(true)
             }
           }
@@ -822,6 +828,7 @@ const Bridge = () => {
             if(!localStorage.getItem('ethAccount')){
               localStorage.removeItem('token')
               localStorage.removeItem('ethAccount')
+              setApiToken("")
               setShowConnectWallet(true)
             }
           }
@@ -985,6 +992,7 @@ const Bridge = () => {
       </div >
       {location.pathname === '/bridge/process' && <BridgeMode setBridgeModeStatus={setBridgeModeStatus} />}
       {location.pathname === '/bridge/process' && <UserClause bridgeModeStatus={bridgeModeStatus} userClauseChecked={checked} setChecked={setChecked} />}
+      {location.pathname === '/bridge' && <BridgeHistoryList token={apiToken}/>}
     </div>
     }
 
