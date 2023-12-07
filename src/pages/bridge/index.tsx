@@ -261,7 +261,7 @@ const Bridge = () => {
     return (
       <div className="bridge-swap-container auto-z-index user-clause">
         <div className="user-clause-title">
-        ✔&nbsp;I have been informed and agreed that
+        ✔&nbsp;I have been informed and agreed
         </div>
         <div className="flex">
             <input type="checkbox" checked={props.userClauseChecked} onChange={() => setChecked(!props.userClauseChecked)} />
