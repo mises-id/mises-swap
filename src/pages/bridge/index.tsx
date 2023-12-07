@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/react-in-jsx-scope */
 import "./index.less";
-import { useContext, useEffect, useState, SetStateAction, useMemo } from "react";
+import { useContext, useEffect, useState, SetStateAction } from "react";
 //import Web3 from 'web3';
 import { signin } from '@/api/request';
 import { logEvent } from "firebase/analytics";
@@ -171,7 +171,7 @@ const Bridge = () => {
 
   const accounts = useAccounts()
 
-  const { connector } = useWeb3React();
+  const { connector } = useWeb3React()
 
   const getCurrentAccount = () => {
     let currentAccount: string
@@ -183,17 +183,18 @@ const Bridge = () => {
       currentAccount = connectAddress || authAccount || ''
       console.log("currentAccount:connectAddress || authAccount")
     }
-    // if(!currentAccount){
-    //   console.log("currentAccount:1")
-    //   setShowConnectWalletPopup(true)
-    // }else{
-    //   console.log("currentAccount:"+currentAccount)
-    //   setShowConnectWalletPopup(false)
-    // }
-    return currentAccount
+    if(!currentAccount){
+      console.log("currentAccount:1")
+      setShowConnectWallet(true)
+    }else{
+      console.log("currentAccount:"+currentAccount)
+      setShowConnectWallet(false)
+    }
+    //return currentAccount
   }
 
-  const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
+  //const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
+  useEffect(getCurrentAccount, [accounts, authAccount])
 
   const init = async () => {
     logEvent(analytics, 'open_bridge_page')
