@@ -63,7 +63,7 @@ const BridgeHistoryList = (props:Iprops) => {
     }
     
     return (
-        <div className="bridge-swap-container">
+        <div className="bridge-swap-container auto-z-index">
             <table>
                 <thead>
                     <tr>
