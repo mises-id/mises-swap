@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/react-in-jsx-scope */
 import "./index.less";
-import { useContext, useEffect, useState, SetStateAction, useMemo } from "react";
-//import Web3 from 'web3';
+import { useContext, useEffect, useState, SetStateAction } from "react";
 import { signin } from '@/api/request';
 import { logEvent } from "firebase/analytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -12,7 +11,6 @@ import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
 import { Button, Toast } from "antd-mobile";
 import StatusDialog from "@/components/StatusDialog";
-//import BridgeNotification from "@/components/BridgeNotification";
 import { useNavigate } from "react-router-dom";
 import { findBridgeToken, retryRequest } from "@/utils";
 import { getBridgeTokens, getBridgeTokenPairInfo, getBridgeTokenExchangeAmount, getBridgeFixRateForAmount, createBridgeTransaction, createFixBridgeTransaction } from "@/api/bridge";
@@ -149,22 +147,14 @@ const Bridge = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [showMainForm, setShowMainForm] = useState<boolean>(true)
-  //const [recipientAddress, setRecipientAddress] = useState<string>("")
-  //const [recipientExtraId  /*, setRecipientExtraId*/] = useState<string>("")
   const [refundAddress /*, setRefundAddress*/] = useState<string>("")
   const [refundExtraId /*, setRefundExtraId*/] = useState<string>("")
-  //const [fixRateId /*, setFixRateId*/] = useState<string>("")
 
   const [disableExchangeButton, setDisableExchangeButton] = useState(false)
   const [totalDisabled, setTotalDisabled] = useState(false)
 
   // form status
   const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
-
-  //const [authAccount, setauthAccount] = useState('')
-  //const [/*loading, */ setloading] = useState(true)
-
-  //const [downloadPop,  setDownloadPop] = useState(false)
 
   const [showConnectWallet, setShowConnectWallet] = useState(false)
   const [apiToken, setApiToken] = useState("")
@@ -192,14 +182,6 @@ const Bridge = () => {
     init()
     // eslint-disable-next-line
   }, []);
-
-  // attempt to connect eagerly on mount
-  // useEffect(() => {
-  //   metaMask.connectEagerly().catch(() => {
-  //     console.debug('Failed to connect eagerly to metamask')
-  //   })
-  //   setloading(false)
-  // }, [])
 
   // getBridgeTokenList
   const getTokensWithRetry = retryRequest(getBridgeTokens)
@@ -249,10 +231,10 @@ const Bridge = () => {
       runRefresh()
 
     } catch (error: any) {
-      // swapContext?.setGlobalDialogMessage({
-      //   type: 'error',
-      //   description: "Network Error: Failed to obtain Currencies"
-      // })
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: "Network Error: Failed to obtain Currencies"
+      })
     }
   }
 
@@ -683,9 +665,7 @@ const Bridge = () => {
       localStorage.setItem('token', data.token)
       setApiToken(data.token)
       setShowConnectWallet(false)
-      //setloading(false)
     } catch (error) {
-      //setloading(false)
       setShowConnectWallet(true)
     }
   }
@@ -708,13 +688,11 @@ const Bridge = () => {
           message: 'Not found personal sign message'
         })
       }
-      // setsignLoadingFalse()
       return Promise.reject({
         code: 9998,
         message: 'Invalid address'
       })
     } catch (error) {
-      // setsignLoadingFalse()
       return Promise.reject(error)
     }
   }
@@ -737,7 +715,6 @@ const Bridge = () => {
     }
   }
 
-
   const updateCurrentAccount = () => {
     let currentAccount: string
     if (accounts?.length) {
@@ -750,17 +727,10 @@ const Bridge = () => {
       currentAccount = connectAddress || ''
       console.log("currentAccount:connectAddress", currentAccount)
     }
-    // if(!currentAccount){
-    //   console.log("currentAccount:1")
-    //   setShowConnectWalletPopup(true)
-    // }else{
-    //   console.log("currentAccount:"+currentAccount)
-    //   setShowConnectWalletPopup(false)
-    // }
-    return currentAccount
   }
 
-  const currentAccount = useMemo(updateCurrentAccount, [accounts])
+  // eslint-disable-next-line
+  useEffect(updateCurrentAccount, [accounts])
 
   const connectWallet = async () => {
     try {
@@ -780,7 +750,6 @@ const Bridge = () => {
     }
   }
 
-
   useMount(
     () => {
       const token = localStorage.getItem('token')
@@ -796,7 +765,6 @@ const Bridge = () => {
       }
     }
   )
-
 
   // refresh
   const refresh = async () => {
@@ -955,21 +923,6 @@ const Bridge = () => {
     }
 
     {!showMainForm && <TransactionDetails/>}
-    {/* <BridgeNotification /> */}
-    {/*
-    <CenterPopup
-      style={{ '--min-width': '90vw' }}
-      showCloseButton
-      onClose={() => {setShowConnectWallet(false)}}
-      visible={showConnectWallet}>
-      <div className='bg-white px-15 pb-30'>
-        <p className='text-14 leading-6 text-[#333333] py-20 mb-20'>To access your transaction records, please provide your Mises ID.</p>
-        <Button block shape='rounded' onClick={login} style={{ "--background-color": "#5d61ff", "--border-color": "#5d61ff", 'padding': '12px 0' }}>
-          <span className='text-white block text-18'>Connect Mises ID</span>
-        </Button>
-      </div>
-    </CenterPopup>
-    */}
     <StatusDialog />
   </div>
 }
