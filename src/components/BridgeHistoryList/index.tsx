@@ -25,15 +25,12 @@ interface Iprops {
     token: string
 }
 
-//const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJldGhfYWRkcmVzcyI6IjB4MzgzNmY2OThkNGU3ZDcyNDljY2MzMjkxZDljY2Q2MDhlZTcxODk4OCIsImV4cCI6MTcwMjQ1MjU3NCwibWlzZXNpZCI6ImRpZDptaXNlczptaXNlczE3a2RxeGZ6cDc1NHcwMDNhaGZqbDU0eXdwajU1amM5M3l1NjNzZiIsInVpZCI6NTAxNzA4LCJ1c2VybmFtZSI6IiJ9.QnzJZHfGnH5xek4ALjYY6SYUkAJ_4zCBFOOkkyFYEDQ"
-
 const BridgeHistoryList = (props:Iprops) => {
     const [historyList, setHistoryList] = useState<getBridgeHistoryListResult[]>([])
 
     const getHistoryListRetry = retryRequest(getHistoryList)
     const getBridgeHistoryList = async () => {
         if(props.token === ""){
-            //localStorage.setItem("token", testToken)
             setHistoryList([])
             return
         }
