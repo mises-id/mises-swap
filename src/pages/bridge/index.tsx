@@ -161,7 +161,7 @@ const Bridge = () => {
   // form status
   const [bridgeModeStatus, setBridgeModeStatus] = useState(false)
 
-  const [authAccount, setauthAccount] = useState('')
+  //const [authAccount, setauthAccount] = useState('')
   //const [/*loading, */ setloading] = useState(true)
 
   //const [downloadPop,  setDownloadPop] = useState(false)
@@ -173,27 +173,6 @@ const Bridge = () => {
 
   const { connector } = useWeb3React();
 
-  const getCurrentAccount = () => {
-    let currentAccount: string
-    if (accounts?.length) {
-      currentAccount = accounts[0]
-      console.log("currentAccount:accounts?.length")
-    }else{
-      const connectAddress = localStorage.getItem('ethAccount')
-      currentAccount = connectAddress || authAccount || ''
-      console.log("currentAccount:connectAddress || authAccount")
-    }
-    // if(!currentAccount){
-    //   console.log("currentAccount:1")
-    //   setShowConnectWalletPopup(true)
-    // }else{
-    //   console.log("currentAccount:"+currentAccount)
-    //   setShowConnectWalletPopup(false)
-    // }
-    return currentAccount
-  }
-
-  const currentAccount = useMemo(getCurrentAccount, [accounts, authAccount])
 
   const init = async () => {
     logEvent(analytics, 'open_bridge_page')
@@ -699,9 +678,8 @@ const Bridge = () => {
   }) => {
     console.log("connectWallet:4")
     try {
-      localStorage.setItem('ethAccount', params.misesId)
-      setauthAccount(params.misesId)
       const data = await signin(params.auth)
+      localStorage.setItem('ethAccount', params.misesId)
       localStorage.setItem('token', data.token)
       setApiToken(data.token)
       setShowConnectWallet(false)
@@ -712,13 +690,12 @@ const Bridge = () => {
     }
   }
 
-  const signMsg = async () => {
-    console.log("connectWallet:3")
+  const signMsg = async (newAccount:string) => {
+    console.log("connectWallet:3", newAccount)
     try {
       const timestamp = new Date().getTime();
-      console.log(accounts, 'accounts')
-      if (accounts && accounts.length) {
-        const address = accounts[0]
+      if (newAccount) {
+        const address = newAccount
         const nonce = `${timestamp}`;
         const sigMsg = `address=${address}&nonce=${timestamp}`
         const data = await window.misesEthereum?.signMessageForAuth(address, nonce)
@@ -742,17 +719,14 @@ const Bridge = () => {
     }
   }
 
-  const loginMises = () => {
-    console.log("connectWallet:2")
+  const loginMises = (newAccount:string) => {
+    console.log("connectWallet:2", newAccount)
     const oldConnectAddress = localStorage.getItem('ethAccount')
-    if (accounts && accounts.length && oldConnectAddress !== accounts[0]) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('ethAccount')
-      setApiToken("")
-      signMsg().then(auth => {
+    if (newAccount && oldConnectAddress !== newAccount) {
+      signMsg(newAccount).then(auth => {
         loginMisesAccount({
           auth,
-          misesId: accounts[0]
+          misesId: newAccount
         })
       }).catch(error => {
         console.log(error, 'error')
@@ -763,12 +737,35 @@ const Bridge = () => {
     }
   }
 
+
+  const updateCurrentAccount = () => {
+    let currentAccount: string
+    if (accounts?.length) {
+      currentAccount = accounts[0]
+      console.log("currentAccount:accounts", currentAccount)
+
+      loginMises(currentAccount)
+    }else{
+      const connectAddress = localStorage.getItem('ethAccount')
+      currentAccount = connectAddress || ''
+      console.log("currentAccount:connectAddress", currentAccount)
+    }
+    // if(!currentAccount){
+    //   console.log("currentAccount:1")
+    //   setShowConnectWalletPopup(true)
+    // }else{
+    //   console.log("currentAccount:"+currentAccount)
+    //   setShowConnectWalletPopup(false)
+    // }
+    return currentAccount
+  }
+
+  const currentAccount = useMemo(updateCurrentAccount, [accounts])
+
   const connectWallet = async () => {
     try {
       console.log("connectWallet:0")
       await connector.activate()
-      console.log("connectWallet:1")
-      loginMises()
     } catch (error: any) {
       console.log("connectWallet:error", error)
       if(error && error.name === 'NoMetaMaskError') {
@@ -783,40 +780,13 @@ const Bridge = () => {
     }
   }
 
-  // const login = async () => {
-  //   const provider = (window as any).misesEthereum;
-  //   if(provider) {
-  //     try{
-  //       const accounts = await provider.request({method: 'eth_requestAccounts', params: []})
-  //       if(accounts.length > 0 && accounts[0] !== localStorage.getItem("ethAccount")){
-  //         localStorage.removeItem('token')
-  //         localStorage.removeItem('ethAccount')
-  //         const address = Web3.utils.toChecksumAddress(accounts[0])
-  //         const timestamp = new Date().getTime()
-  //         const nonce = `${timestamp}`
-  //         const sigMsg = `address=${address}&nonce=${nonce}`
-  //         const {sig: personalSignMsg} = await provider.signMessageForAuth(address, nonce)
-  //         const auth = `${sigMsg}&sig=${personalSignMsg}`
-  //         const data = await signin(auth)
-  //         localStorage.setItem('token', data.token)
-  //         localStorage.setItem('ethAccount', accounts[0])
-  //         setShowConnectWallet(false)
-  //       }
-  //     }catch(err) {
-  //       setShowConnectWallet(true)
-  //       console.log(`login error:${err}`)
-  //     }
-  //   } else {
-  //     setTotalDisabled(true)
-  //     Toast.show('Please use Mises browser')
-  //   }
-  // }
 
   useMount(
     () => {
       const token = localStorage.getItem('token')
       const ethAccount = localStorage.getItem('ethAccount')
       if(!ethAccount || !token){
+        console.log("reset login status")
         localStorage.removeItem('token')
         localStorage.removeItem('ethAccount')
         setApiToken("")
@@ -827,38 +797,6 @@ const Bridge = () => {
     }
   )
 
-  // useMount(
-  //   () => {
-  //     const provider = (window as any).misesEthereum;
-  //     if(provider) {
-  //       provider.on("accountsChanged", async (accounts: string[]) => {
-  //           if(accounts.length) {
-  //             login()
-  //           }else {
-  //             localStorage.removeItem('token')
-  //             localStorage.removeItem('ethAccount')
-  //             setShowConnectWallet(true)
-  //           }
-  //         }
-  //       );
-  //       provider.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-  //         console.log(accounts)
-  //         if(accounts.length) {
-  //           login()
-  //         }else {
-  //           if(!localStorage.getItem('ethAccount')){
-  //             localStorage.removeItem('token')
-  //             localStorage.removeItem('ethAccount')
-  //             setShowConnectWallet(true)
-  //           }
-  //         }
-  //       });
-  //     } else {
-  //       setTotalDisabled(true)
-  //       Toast.show('Please use Mises browser')
-  //     }
-  //   }
-  // )
 
   // refresh
   const refresh = async () => {
