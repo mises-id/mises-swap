@@ -874,7 +874,7 @@ const Bridge = () => {
   // return
   return <div className="flex flex-col flex-1">
     <div className='flex justify-between items-center px-10 py-10' style={{height: 40}}>
-      <div className="relative flex">
+      <div className="relative flex" onClick={() => navigate('/bridge')}>
         <p className='swap-title'><span className='mises-title'>Mises</span> <span>Swap</span></p>
         <div><span className="beta-tag">BETA</span></div>
       </div>
