@@ -83,7 +83,9 @@ interface getBridgeFixRateForAmountResult {
 
 interface createBridgeTransactionParams {
   from: string,
+  fromChain: string,
   to: string,
+  toChain: string,
   address: string,
   extraId?:string,
   amountFrom:string,
@@ -111,7 +113,9 @@ interface createBridgeTransactionResult {
 
 interface createFixBridgeTransactionParams {
   from: string,
+  fromChain: string,
   to: string,
+  toChain: string,
   rateId: string,
   address: string,
   extraId?: string,
@@ -287,7 +291,9 @@ const Bridge = () => {
           // float
           const params:createBridgeTransactionParams = {
             from: swapContext.bridgeFromData.symbol,
+            fromChain: swapContext.bridgeFromData.bridgeBlockchain || "",
             to: swapContext.bridgeToData.symbol,
+            toChain: swapContext.bridgeToData.bridgeBlockchain || "",
             address: swapContext.bridgeFloatRecipentAddress,
             extraId: swapContext.bridgeFloatRecipentExtraId,
             amountFrom: swapContext.bridgeFromAmount,
@@ -306,7 +312,9 @@ const Bridge = () => {
           // fix
           const params:createFixBridgeTransactionParams = {
             from: swapContext!.bridgeFromData.symbol,
+            fromChain: swapContext?.bridgeFromData.bridgeBlockchain || "",
             to: swapContext!.bridgeToData.symbol,
+            toChain: swapContext?.bridgeToData.bridgeBlockchain || "",
             rateId: swapContext!.bridgeFixedRateId,
             address: swapContext!.bridgeFixedRecipentAddress,
             extraId: swapContext?.bridgeFixedRecipentExtraId,

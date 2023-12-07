@@ -43,7 +43,9 @@ interface getBridgeTransactionInfoResult {
     apiExtraFee: string,
     totalFee: string,
     canPush: boolean,
-    canRefund: boolean
+    canRefund: boolean,
+    fromChain: string,
+    toChain: string,
 }
 
 const TransactionStatusMap = new Map([
@@ -82,6 +84,7 @@ const BridgeTransaction = () => {
     const [refundAddress, setRefundAddress] = useState("")
     const [networkFee, setNetworkFee] = useState("")
     //const [totalFee, setTotalFee] = useState("")
+    const [fromChain, setFromChain] = useState("")
 
     // init
     
@@ -108,6 +111,7 @@ const BridgeTransaction = () => {
             setRefundAddress(ret.data.data.refundAddress)
             setNetworkFee(ret.data.data.networkFee)
             // setTotalFee(ret.data.data.totalFee)
+            setFromChain(ret.data.data.fromChain)
             if(ret.data.data.expireHour){
                 setExpireHour(ret.data.data.expireHour)
             }
@@ -312,6 +316,10 @@ const BridgeTransaction = () => {
               <div className="bridge-transaction-detail-block">
                 <div className="bridge-transaction-detail-title">Amount</div>
                 <div className="bridge-transaction-detail-content">{amountExpectedFrom} {currencyFromTicker}</div>
+              </div>
+              <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Chain</div>
+                <div className="bridge-transaction-detail-content">{fromChain}</div>
               </div>
               <div className="bridge-transaction-detail-block">
                 <div className="bridge-transaction-detail-title">Changelly Address ({currencyFromTicker})</div>
