@@ -1,5 +1,6 @@
 import "./index.less";
 import { useParams, useNavigate } from 'react-router-dom';
+import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useEffect, useState } from 'react';
 import { Button, Toast } from "antd-mobile";
 import Countdown from "@/components/Countdown";
@@ -55,9 +56,9 @@ const TransactionStatusMap = new Map([
     ['exchanging', 'Payment was confirmed and is being exchanged.'],
     ['sending', 'Coins are being sent to the recipient address.'],
     ['finished', 'Coins were successfully sent to the recipient address.'],
-    ['failed', 'Transaction has failed. Please contact support and provide a transaction ID.'],
+    ['failed', 'Transaction has failed. Please contact support of Changelly.com and provide a transaction ID.'],
     ['refunded', 'Exchange failed and coins were refunded to your wallet.'],
-    ['hold', 'Due to AML/KYC procedure, exchange may be delayed. Please contact support and provide a transaction ID.'],
+    ['hold', 'Due to AML/KYC procedure, exchange may be delayed. Please contact the security team of Changelly.com at security@changelly.com and provide a transaction ID.'],
     ['overdue', 'Payin for floating rate transaction was not sent within the indicated timeframe.'],
     ['expired', 'Payin for fixed rate transaction was not sent within the indicated timeframe.']
 ]);
@@ -157,9 +158,17 @@ const BridgeTransaction = () => {
                     </div>
                 </div>
                 <div className='flex-1 flex flex-col overflow-hidden relative'>
-                    <div className="bridge-swap-container">
-                        <div className="flex justify-center items-center">
-                            <h2>Failed to get transaction information, please refresh the page to try again.</h2>
+                    <div className="bridge-transaction-container">
+                        <div className="flex justify-center items-center bridge-with-underline">
+                            <h2>error</h2>
+                        </div>
+                        <div className="bridge-transaction-detail-block">
+                                <div className="bridge-transaction-detail-title">Message</div>
+                                <div className="bridge-transaction-detail-content">Failed to get transaction information, please refresh the page to try again.</div>
+                        </div>
+                        <div className="bridge-transaction-detail-block">
+                                <div className="bridge-transaction-detail-title">Support</div>
+                                <div className="bridge-transaction-detail-content"><a href="https://support.changelly.com/en/support/home" target="_blank" rel="noreferrer">Provided by Changelly.com</a></div>
                         </div>
                         <div className="flex justify-between items-center">
                             <Button color="primary" onClick={() => window.location.reload()}>Refresh</Button>
@@ -179,9 +188,9 @@ const BridgeTransaction = () => {
                     </div>
                 </div>
                 <div className='flex-1 flex flex-col overflow-hidden relative'>
-                    <div className="bridge-swap-container">
-                        <div className="flex justify-center items-center">
-                            <h2 className="bridge-with-underline">{status}</h2>
+                    <div className="bridge-transaction-container">
+                        <div className="flex justify-center items-center bridge-with-underline">
+                            <h2>{status}</h2>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Transaction ID</div>
@@ -224,9 +233,9 @@ const BridgeTransaction = () => {
                     </div>
                 </div>
                 <div className='flex-1 flex flex-col overflow-hidden relative'>
-                    <div className="bridge-swap-container">
-                        <div className="flex justify-center items-center">
-                            <h2 className="bridge-with-underline">{status}</h2>
+                    <div className="bridge-transaction-container">
+                        <div className="flex justify-center items-center bridge-with-underline">
+                            <h2>{status}</h2>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Transaction ID</div>
@@ -244,6 +253,10 @@ const BridgeTransaction = () => {
                             <div className="bridge-transaction-detail-title">Refund address</div>
                             <div className="bridge-transaction-detail-content">{refundAddress}</div>
                         </div>}
+                        <div className="bridge-transaction-detail-block">
+                            <div className="bridge-transaction-detail-title">Support</div>
+                            <div className="bridge-transaction-detail-content"><a href="https://support.changelly.com/en/support/home" target="_blank" rel="noreferrer">Provided by Changelly.com</a></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -258,9 +271,9 @@ const BridgeTransaction = () => {
                     </div>
                 </div>
                 <div className='flex-1 flex flex-col overflow-hidden relative'>
-                    <div className="bridge-swap-container">
-                        <div className="flex justify-center items-center">
-                            <h2 className="bridge-with-underline">{status}</h2>
+                    <div className="bridge-transaction-container">
+                        <div className="flex justify-center items-center bridge-with-underline">
+                            <h2>{status}</h2>
                         </div>
                         <div className="bridge-transaction-detail-block">
                             <div className="bridge-transaction-detail-title">Transaction ID</div>
@@ -307,10 +320,9 @@ const BridgeTransaction = () => {
         </div>
     </div>
         <div className='flex-1 flex flex-col overflow-hidden relative'>
-      <div className="bridge-swap-container">
-        <div>
-            <div className="flex justify-center items-center">
-              <h2 className="bridge-with-underline">Send funds to the address below</h2>
+      <div className="bridge-transaction-container">
+            <div className="flex justify-center items-center bridge-with-underline">
+              <h2>Send funds to the address below</h2>
             </div>
             <div>
               <div className="bridge-transaction-detail-block">
@@ -324,19 +336,12 @@ const BridgeTransaction = () => {
               <div className="bridge-transaction-detail-block">
                 <div className="bridge-transaction-detail-title">Changelly Address ({currencyFromTicker})</div>
                 <div className="bridge-transaction-detail-content">{payinAddress}</div>
-                <Button
-                onClick={() => {
-                    navigator.clipboard.writeText(payinAddress)
-                        .then(() => {
-                            Toast.show('Copied to clipboard!')
-                        })
-                        .catch((err) => {
-                            Toast.show(err)
-                        })
-                }}
-                block
-                color="primary"
-                className='bridge-copy-button'>Copy Changelly Address</Button>
+                <CopyToClipboard text={payinAddress} onCopy={() => {Toast.show('Copied to clipboard!')}}>
+                    <Button
+                    block
+                    color="primary"
+                    className='bridge-copy-button'>Copy Changelly Address</Button>
+                </CopyToClipboard>
               </div>
             </div>
             {   payinExtraId && 
@@ -344,26 +349,18 @@ const BridgeTransaction = () => {
                 <div className="bridge-transaction-detail-block">
                     <div className="bridge-transaction-detail-title">{payinExtraIdName}</div>
                     <div className="bridge-transaction-detail-content">{payinExtraId}</div>
-                    <Button
-                    onClick={async () => {
-                        navigator.clipboard.writeText(payinExtraId)
-                            .then(() => {
-                                Toast.show('Copied to clipboard!')
-                            })
-                            .catch((err) => {
-                                Toast.show(err)
-                            })
-                    }}
-                    block
-                    color="primary"
-                    className='bridge-copy-button'>Copy {payinExtraIdName}</Button>
+                    <CopyToClipboard text={payinExtraId} onCopy={() => {Toast.show('Copied to clipboard!')}}>
+                        <Button
+                        block
+                        color="primary"
+                        className='bridge-copy-button'>Copy {payinExtraIdName}</Button>
+                    </CopyToClipboard>
                 </div>
                 </div>
             }
-        </div>
       </div>
 
-        <div className="bridge-swap-container">
+        <div className="bridge-transaction-container">
             <div className="bridge-transaction-detail-block">
                 <div className="bridge-transaction-detail-content">
                     <Countdown initialHours={expireHour} initialMinutes={expireMinute} initialSeconds={expireSecond} />

@@ -5,7 +5,7 @@
   flex: 1
 }
 @media (prefers-color-scheme: dark) { 
-  .bridge-swap-container{
+  .bridge-transaction-container{
     background: #0d111c;
     box-shadow: rgba(240, 185, 11, 0.16) 0px 40px 120px 0px;
   }
@@ -15,7 +15,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .bridge-swap-container{
+  .bridge-transaction-container{
     background: white;
     box-shadow: rgba(240, 185, 11, 0.16) 0px 40px 120px 0px;
   }
@@ -23,10 +23,10 @@
     border: 4px solid rgb(255, 255, 255);
   }
 }
-.bridge-swap-container{
+.bridge-transaction-container{
   position: relative;
   border-radius: 16px;
-  padding: 8px;
+  padding: 18px;
   z-index: 1;
   transition: transform 250ms ease 0s;
   box-sizing: border-box;
@@ -86,13 +86,13 @@
   font-size: 25px;
 }
 @media screen and (max-width:408px){
-  .bridge-swap-container{
+  .bridge-transaction-container{
     width: 95%;
   }
 }
 
 @media screen and (min-width:408px){
-  .bridge-swap-container{
+  .bridge-transaction-container{
     width: 408px
   }
 }
@@ -121,12 +121,11 @@
 
 .bridge-copy-button{
   // background-color: var(--adm-color-primary);
-  font-size: 20px;
-  font-weight: 600;
-  padding: 12px;
+  font-size: 15px;
+  padding: 2px;
   color: rgb(245, 246, 252);
   text-align: center;
-  border-radius: 12px;
+  border-radius: 6px;
   outline: none;
   border: 1px solid transparent;
   text-decoration: none;
@@ -140,7 +139,7 @@
   will-change: transform;
   transition: transform 450ms ease 0s;
   transform: perspective(1px) translateZ(0px);
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
 .bridge-transaction-detail-block {
@@ -167,29 +166,11 @@
   color: #5D61FF;
 }
 
-.bridge-back-button{
-  // background-color: var(--adm-color-primary);
-  font-size: 20px;
-  font-weight: 600;
-  padding: 12px;
-  color: rgb(245, 246, 252);
-  text-align: center;
-  border-radius: 6px;
-  outline: none;
-  border: 1px solid transparent;
-  text-decoration: none;
-  display: flex;
-  justify-content: center;
-  flex-wrap: nowrap;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-  will-change: transform;
-  transition: transform 450ms ease 0s;
-  transform: perspective(1px) translateZ(0px);
+.bridge-with-underline{
+    border-bottom: 1px solid #80a3b638;
+    margin-bottom: 12px;
 }
 
-.bridge-with-underline{
-    border-bottom: 1px solid black;
+.bridge-transaction-container h2 {
+  color: #666666;
 }

@@ -436,7 +436,7 @@ const Bridge = () => {
           onClick={createTransaction}
           block
           color="primary"
-          className='exchange-button'>Confirm &amp; make payment</Button>
+          className='confirm-button'>Confirm &amp; make payment</Button>
         </div>
       </div>
     </div>
