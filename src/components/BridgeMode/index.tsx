@@ -183,9 +183,13 @@ const BridgeMode: FC<Iprops> = (props) => {
         }
     }
 
-    if(!swapContext?.bridgeFloatAvailable && !swapContext?.bridgeFixedAvailable){
+    // if(!swapContext?.bridgeFloatAvailable && !swapContext?.bridgeFixedAvailable){
+    //     return null
+    // }
+    if(!swapContext){
         return null
     }
+
     return (
     <div className='bridge-swap-container auto-z-index margin-0'>
         <div>
@@ -208,7 +212,7 @@ const BridgeMode: FC<Iprops> = (props) => {
         {swapContext.bridgeFloatMode && 
         <div className='token-container padding-10'>
             <div>
-                <div className="bridge-mode-title">Recipient Wallet Address</div>
+                <div className="bridge-mode-title">Recipient Wallet Address ({swapContext.bridgeToData.bridgeBlockchain})</div>
                 <Input 
                     className="bridge-mode-address-input"
                     onChange={handleAddressChange("floatRecipient")}
@@ -231,7 +235,7 @@ const BridgeMode: FC<Iprops> = (props) => {
         <>
         <div className='token-container margin-10 padding-10'>
             <div className="margin-10">
-                <div className="bridge-mode-title">Recipient Wallet Address</div>
+                <div className="bridge-mode-title">Recipient Wallet Address ({swapContext.bridgeToData.bridgeBlockchain})</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRecipient")}
@@ -251,7 +255,7 @@ const BridgeMode: FC<Iprops> = (props) => {
         </div>
         <div className='token-container padding-10'>
             <div>
-                <div className="bridge-mode-title">Refund Wallet Address</div>
+                <div className="bridge-mode-title">Refund Wallet Address ({swapContext.bridgeFromData.bridgeBlockchain})</div>
                 <Input 
                     className="bridge-mode-address-input" 
                     onChange={handleAddressChange("fixRefund")}

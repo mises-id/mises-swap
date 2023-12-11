@@ -9,7 +9,7 @@ import { hooks } from '@/components/Web3Provider/mises';
 import { useWeb3React } from '@web3-react/core';
 import { SwapContext } from "@/context/swapContext";
 import BridgeTokenInput from "@/components/bridgeTokenInput";
-import { Button, Toast } from "antd-mobile";
+import { Button, Checkbox, Toast } from "antd-mobile";
 import StatusDialog from "@/components/StatusDialog";
 import { useNavigate } from "react-router-dom";
 import { findBridgeToken, retryRequest } from "@/utils";
@@ -264,8 +264,8 @@ const Bridge = () => {
         ✔&nbsp;I have been informed and agreed
         </div>
         <div className="flex">
-            <input type="checkbox" checked={props.userClauseChecked} onChange={() => setChecked(!props.userClauseChecked)} />
-            <div className="user-clause-tip">The exchange service is provided by Changelly.com. If there is any problem, I need to contact the support line of Changelly.com directly.</div>
+            <Checkbox checked={props.userClauseChecked} onChange={() => setChecked(!props.userClauseChecked)} />
+            <div className="user-clause-tip">The exchange service is provided by Changelly.com. If there is any problem, I need to contact the support of Changelly.com directly.</div>
         </div>
         <Button
           onClick={goToConfirm}
@@ -366,7 +366,7 @@ const Bridge = () => {
                 {/*<div className="bridge-transaction-detail-tip">blockchain: {bitcoin}</div>*/}
               </div>
               <div className="bridge-transaction-detail-block">
-                <div className="bridge-transaction-detail-title">You get</div>
+                <div className="bridge-transaction-detail-title">You'll get</div>
                 <div className="bridge-transaction-detail-content">{swapContext.bridgeToAmount} {swapContext.bridgeToData.symbol}</div>
                 {/*<div className="bridge-transaction-detail-tip">blockchain: ethereum</div>*/}
               </div>
@@ -386,7 +386,7 @@ const Bridge = () => {
             */}
             </div>
             <div className="bridge-transaction-detail-block">
-              <div className="bridge-transaction-detail-title">Recipient address</div>
+              <div className="bridge-transaction-detail-title">Recipient address ({swapContext.bridgeToData.bridgeBlockchain})</div>
               <div className="bridge-transaction-detail-content">{swapContext.bridgeFloatRecipentAddress}</div>
             </div>
             {/*
@@ -405,7 +405,7 @@ const Bridge = () => {
                 {/*<div className="bridge-transaction-detail-tip">blockchain: bitcoin</div>*/}
               </div>
               <div className="bridge-transaction-detail-block">
-                <div className="bridge-transaction-detail-title">You get</div>
+                <div className="bridge-transaction-detail-title">You'll get</div>
                 <div className="bridge-transaction-detail-content">{swapContext?.bridgeToAmount} {swapContext?.bridgeToData.symbol}</div>
                 {/*<div className="bridge-transaction-detail-tip">blockchain: ethereum</div>*/}
               </div>
@@ -418,12 +418,12 @@ const Bridge = () => {
               </div>
               */}
               <div className="bridge-transaction-detail-block">
-                <div className="bridge-transaction-detail-title">Recipient address</div>
+                <div className="bridge-transaction-detail-title">Recipient address ({swapContext?.bridgeToData.bridgeBlockchain})</div>
                 <div className="bridge-transaction-detail-content">{swapContext?.bridgeFixedRecipentAddress}</div>
               </div>
             </div>
             <div className="bridge-transaction-detail-block">
-              <div className="bridge-transaction-detail-title">Refund address</div>
+              <div className="bridge-transaction-detail-title">Refund address ({swapContext?.bridgeFromData.bridgeBlockchain})</div>
               <div className="bridge-transaction-detail-content">{swapContext?.bridgeFixedRefundAddress}</div>
             </div>
             </>
@@ -470,44 +470,37 @@ const Bridge = () => {
     }
   }
 
-  let floatAvailable = true;
-  let fixAvailable = true;
+  let floatAvailable = false;
+  let fixAvailable = false;
 
   // checkPairInfo
   const getBridgeTokenPairInfoWithRetry = retryRequest(getBridgeTokenPairInfo)
   const checkPairInfo = async (fromVal: string | undefined, toVal: string | undefined): Promise<boolean> => {
     swapContext!.setBridgeAmountCheckMsg("")
-    swapContext!.setBridgeFloatAvailable(true)
-    swapContext!.setBridgeFixedAvailable(true)
+    swapContext!.setBridgeFloatAvailable(false)
+    swapContext!.setBridgeFixedAvailable(false)
     swapContext?.setBridgeFloatNotAvailableMsg("")
     swapContext?.setBridgeFixedNotAvailableMsg("")
-    floatAvailable = true
-    fixAvailable = true
-    setDisableExchangeButton(false)
+    floatAvailable = false
+    fixAvailable = false
+    setDisableExchangeButton(true)
+    swapContext?.setBridgeToAmount("...")
+    swapContext?.setBridgeFloatOutputAmount("...")
+    swapContext?.setBridgeFixedOutputAmount("...")
 
     if(!fromVal){
-      console.error("checkPairInfo:", "from token error")
       swapContext?.setBridgeToAmount("")
-      swapContext!.setBridgeFloatAvailable(false)
-      swapContext!.setBridgeFixedAvailable(false)
-      floatAvailable = false
-      fixAvailable = false
       return false
     }
+
     if(!toVal){
       swapContext?.setBridgeToAmount("")
-      swapContext!.setBridgeFloatAvailable(false)
-      swapContext!.setBridgeFixedAvailable(false)
-      floatAvailable = false
-      fixAvailable = false
-      console.error("checkPairInfo:", "to token error")
       return false
     }
 
     try{
       const ret = await getBridgeTokenPairInfoWithRetry<{data: getPairInfoResult}, {pairs:getPairInfoParams}>({pairs: {from: fromVal, to: toVal}})
       if(!ret.data.data || Object.keys(ret.data.data).length === 0){
-        console.error("getBridgeTokenPairInfoWithRetry:empty data", ret.data.data)
         swapContext?.setBridgeToAmount("")
         return false
       }
@@ -517,17 +510,7 @@ const Bridge = () => {
       const minAmountFixed = parseFloat(ret.data.data.minAmountFixed)
       const maxAmountFixed = parseFloat(ret.data.data.maxAmountFixed)
 
-      if(isNaN(minAmountFloat) && isNaN(maxAmountFloat)){
-        swapContext?.setBridgeFloatAvailable(false)
-        floatAvailable = false
-      }
-
-      if(isNaN(minAmountFixed) && isNaN(maxAmountFixed)){
-        swapContext?.setBridgeFixedAvailable(false)
-        fixAvailable = false
-      }
-
-      if(!floatAvailable && !fixAvailable){
+      if(isNaN(minAmountFloat) && isNaN(maxAmountFloat) && isNaN(minAmountFixed) && isNaN(maxAmountFixed)){
         swapContext?.setBridgeToAmount("")
         swapContext!.setBridgeAmountCheckMsg("Unsupported exchange pair")
         setDisableExchangeButton(true)
@@ -536,31 +519,24 @@ const Bridge = () => {
 
       const fromAmount = parseFloat(swapContext!.bridgeFromAmount)
 
-      if(!fromAmount){
-        swapContext?.setBridgeFloatAvailable(false)
-        swapContext?.setBridgeFixedAvailable(false)
-        floatAvailable = false
-        fixAvailable = false
-      } else {
+      if(fromAmount){
         if (!isNaN(minAmountFloat) && fromAmount < minAmountFloat) {
-          floatAvailable = false
-          swapContext?.setBridgeFloatAvailable(false)
           swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be less than ${minAmountFloat}`)
         }
         if (!isNaN(maxAmountFloat) && fromAmount > maxAmountFloat) {
-          floatAvailable = false
-          swapContext?.setBridgeFloatAvailable(false)
           swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be more than ${maxAmountFloat}`)
         }
+        if(!isNaN(minAmountFloat) && !isNaN(maxAmountFloat) && (fromAmount >= minAmountFloat) && (fromAmount <= maxAmountFloat)){
+          floatAvailable = true
+        }
         if (!isNaN(minAmountFixed) && fromAmount < minAmountFixed) {
-          fixAvailable = false
-          swapContext?.setBridgeFixedAvailable(false)
           swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be less than ${minAmountFixed}`)
         }
         if (!isNaN(maxAmountFixed) && fromAmount > maxAmountFixed) {
-          fixAvailable = false
-          swapContext?.setBridgeFixedAvailable(false)
           swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be more than ${maxAmountFixed}`)
+        }
+        if(!isNaN(minAmountFixed) && !isNaN(maxAmountFixed) && (fromAmount >= minAmountFixed) && (fromAmount <= maxAmountFixed)){
+          fixAvailable = true
         }
       }
 
@@ -576,22 +552,19 @@ const Bridge = () => {
       if(!fromAmount || fromAmount < minAmount) {
         swapContext!.setBridgeAmountCheckMsg(`Minimum amount: ${minAmount} ${fromVal}`)
         swapContext?.setBridgeToAmount("")
-        setDisableExchangeButton(true)
         return false
       }
       if(fromAmount > maxAmount){
         swapContext!.setBridgeAmountCheckMsg(`Maximum allowed: ${maxAmount} ${fromVal}`)
         swapContext?.setBridgeToAmount("")
-        setDisableExchangeButton(true)
         return false
       }
     }catch(err){
-      console.error("getBridgeTokenPairInfoWithRetry:api error", err)
       swapContext!.setBridgeAmountCheckMsg("Unsupported exchange pair")
       swapContext?.setBridgeToAmount("")
-      setDisableExchangeButton(true)
       return false
     }
+    setDisableExchangeButton(false)
     return true
   }
 
@@ -604,15 +577,12 @@ const Bridge = () => {
     swapContext?.setBridgeFixedOutputAmount("...")
 
     if(!from){
-      console.error("generateOutputAmount:", "from token error")
       return false
     }
     if(!to){
-      console.error("generateOutputAmount:", "to token error")
       return false
     }
     if(!amountFrom){
-      console.error("generateOutputAmount:", "amountFrom error")
       return false
     }
 
@@ -630,6 +600,7 @@ const Bridge = () => {
           swapContext?.setBridgeToAmount(`~ ${amountTo}`)
         }
         swapContext?.setBridgeFloatOutputAmount(`~ ${amountTo}`)
+        swapContext?.setBridgeFloatAvailable(true)
       })
       .catch((err) => {
         console.error("getBridgeTokenExchangeAmountRetry:", err)
@@ -653,6 +624,7 @@ const Bridge = () => {
         if(ret.data.data.id){
           swapContext?.setBridgeFixedRateId(ret.data.data.id)
         }
+        swapContext?.setBridgeFixedAvailable(true)
       })
       .catch((err) => {
         console.error("getBridgeFixRateForAmountRetry:", err)
@@ -666,7 +638,6 @@ const Bridge = () => {
     auth: string,
     misesId: string
   }) => {
-    console.log("connectWallet:4")
     try {
       const data = await signin(params.auth)
       localStorage.setItem('ethAccount', params.misesId)
@@ -679,7 +650,6 @@ const Bridge = () => {
   }
 
   const signMsg = async (newAccount:string) => {
-    console.log("connectWallet:3", newAccount)
     try {
       const timestamp = new Date().getTime();
       if (newAccount) {
@@ -706,7 +676,6 @@ const Bridge = () => {
   }
 
   const loginMises = (newAccount:string) => {
-    console.log("connectWallet:2", newAccount)
     const oldConnectAddress = localStorage.getItem('ethAccount')
     if (newAccount && oldConnectAddress !== newAccount) {
       signMsg(newAccount).then(auth => {
@@ -727,13 +696,11 @@ const Bridge = () => {
     let currentAccount: string
     if (accounts?.length) {
       currentAccount = accounts[0]
-      console.log("currentAccount:accounts", currentAccount)
 
       loginMises(currentAccount)
     }else{
       const connectAddress = localStorage.getItem('ethAccount')
       currentAccount = connectAddress || ''
-      console.log("currentAccount:connectAddress", currentAccount)
     }
   }
 
@@ -742,7 +709,6 @@ const Bridge = () => {
 
   const connectWallet = async () => {
     try {
-      console.log("connectWallet:0")
       await connector.activate()
     } catch (error: any) {
       console.log("connectWallet:error", error)
@@ -763,7 +729,6 @@ const Bridge = () => {
       const token = localStorage.getItem('token')
       const ethAccount = localStorage.getItem('ethAccount')
       if(!ethAccount || !token){
-        console.log("reset login status")
         localStorage.removeItem('token')
         localStorage.removeItem('ethAccount')
         setApiToken("")
@@ -785,8 +750,14 @@ const Bridge = () => {
         throw new Error("fail to check pair")
       }
     } catch(err){
-      console.error(`onInputChange:${err}`)
+      console.error(`onRefresh:${err}`)
       setBridgeModeStatus(false)
+      // error msg
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: "Data Error: Please check your network"
+      })
+
       return false
     }
     return true 
@@ -804,7 +775,6 @@ const Bridge = () => {
   const onInputChange = async (val: string) => {
     cancelRefresh()
     if(isNaN(Number(val))){
-      console.error("input error:", val)
       return false
     }
     swapContext?.setBridgeFromAmount(val)
@@ -815,18 +785,15 @@ const Bridge = () => {
   const onFromTokenChange = async (val : string) => {
     cancelRefresh()
     if(!val) {
-      console.error("onFromTokenChange:", "empty val")
       return false
     }
     const tokens = swapContext!.bridgeTokens
     if(!tokens){
-      console.error("onFromTokenChange:", "empty bridge tokens")
       return false
     }
     if (swapContext) {
       const token = findBridgeToken(tokens, val)
       if(!token) {
-        console.error("onFromTokenChange:", "cannot find bridge token")
         return false
       }
       swapContext.bridgeFromData = {
@@ -843,18 +810,15 @@ const Bridge = () => {
   const onToTokenChange = async (val : string) => {
     cancelRefresh()
     if(!val) {
-      console.error("onToTokenChange:", "empty val")
       return false
     }
     const tokens = swapContext!.bridgeTokens
     if(!tokens){
-      console.error("onToTokenChange:", "empty bridge tokens")
       return false
     }
     if (swapContext) {
       const token = findBridgeToken(tokens, val)
       if(!token) {
-        console.error("onToTokenChange:", "cannot find bridge token")
         return false
       }
       swapContext.bridgeToData = {

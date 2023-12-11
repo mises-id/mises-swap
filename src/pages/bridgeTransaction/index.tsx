@@ -75,7 +75,7 @@ const BridgeTransaction = () => {
     const [amountFrom, setAmountFrom] = useState("")
     const [amountTo, setAmountTo] = useState("")
     const [amountExpectedFrom, setAmountExpectedFrom] = useState("")
-    //const [amountExpectedTo, setAmountExpectedTo] = useState("")
+    const [amountExpectedTo, setAmountExpectedTo] = useState("")
     const [payinAddress, setPayinAddress] = useState("")
     const [payinExtraIdName, setPayinExtraIdName] = useState("")
     const [payinExtraId, setPayinExtraId] = useState("")
@@ -86,6 +86,7 @@ const BridgeTransaction = () => {
     const [networkFee, setNetworkFee] = useState("")
     //const [totalFee, setTotalFee] = useState("")
     const [fromChain, setFromChain] = useState("")
+    const [toChain, setToChain] = useState("")
 
     // init
     
@@ -105,6 +106,7 @@ const BridgeTransaction = () => {
             setCurrencyFromTicker(ret.data.data.currencyFrom)
             setCurrencyToTicker(ret.data.data.currencyTo)
             setAmountExpectedFrom(ret.data.data.amountExpectedFrom)
+            setAmountExpectedTo(ret.data.data.amountExpectedTo)
             setAmountFrom(ret.data.data.amountFrom)
             setAmountTo(ret.data.data.amountTo)
             setPayinAddress(ret.data.data.payinAddress)
@@ -113,6 +115,7 @@ const BridgeTransaction = () => {
             setNetworkFee(ret.data.data.networkFee)
             // setTotalFee(ret.data.data.totalFee)
             setFromChain(ret.data.data.fromChain)
+            setToChain(ret.data.data.toChain)
             if(ret.data.data.expireHour){
                 setExpireHour(ret.data.data.expireHour)
             }
@@ -334,7 +337,7 @@ const BridgeTransaction = () => {
                 <div className="bridge-transaction-detail-content">{fromChain}</div>
               </div>
               <div className="bridge-transaction-detail-block">
-                <div className="bridge-transaction-detail-title">Changelly Address ({currencyFromTicker})</div>
+                <div className="bridge-transaction-detail-title">Changelly Address ({fromChain})</div>
                 <div className="bridge-transaction-detail-content">{payinAddress}</div>
                 <CopyToClipboard text={payinAddress} onCopy={() => {Toast.show('Copied to clipboard!')}}>
                     <Button
@@ -362,10 +365,10 @@ const BridgeTransaction = () => {
 
         <div className="bridge-transaction-container">
             <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Time left to send {amountExpectedFrom} {currencyFromTicker}</div>
                 <div className="bridge-transaction-detail-content">
                     <Countdown initialHours={expireHour} initialMinutes={expireMinute} initialSeconds={expireSecond} />
                 </div>
-                <div className="bridge-transaction-detail-title">Time left to send {amountExpectedFrom} {currencyFromTicker}</div>
                 {(status === "expired" || status === "overdue") &&
                 <div>
                     <Button
@@ -379,8 +382,16 @@ const BridgeTransaction = () => {
                 }
             </div>
             <div className="bridge-transaction-detail-block">
-                <div className="bridge-transaction-detail-content">{transId}</div>
                 <div className="bridge-transaction-detail-title">Transaction ID</div>
+                <div className="bridge-transaction-detail-content">{transId}</div>
+            </div>
+            <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">Recipient address ({toChain})</div>
+                <div className="bridge-transaction-detail-content">{payoutAddress}</div>
+            </div>
+            <div className="bridge-transaction-detail-block">
+                <div className="bridge-transaction-detail-title">You'll get</div>
+                <div className="bridge-transaction-detail-content">~ {amountExpectedTo} {currencyToTicker}</div>
             </div>
         </div>
       </div>
