@@ -594,7 +594,7 @@ const Bridge = () => {
         }
         const amountTo = parseFloat(ret.data.data.amountTo)
         if(isNaN(amountTo)){
-          throw new Error("amountTo or networkFee NaN")
+          throw new Error("amountTo or networkFee is NaN")
         }
         if(swapContext?.bridgeFloatMode){
           swapContext?.setBridgeToAmount(`~ ${amountTo}`)
@@ -615,7 +615,7 @@ const Bridge = () => {
         }
         const amountTo = parseFloat(ret.data.data.amountTo)
         if(isNaN(amountTo)){
-          throw new Error("amountTo or networkFee NaN")
+          throw new Error("amountTo or networkFee is NaN")
         }
         if(!swapContext?.bridgeFloatMode){
           swapContext?.setBridgeToAmount(`${amountTo}`)
@@ -747,7 +747,8 @@ const Bridge = () => {
           throw new Error("fail to generate output")
         }
       } else {
-        throw new Error("fail to check pair")
+        setBridgeModeStatus(false)
+        return false
       }
     } catch(err){
       console.error(`onRefresh:${err}`)
@@ -757,7 +758,6 @@ const Bridge = () => {
         type: 'error',
         description: "Data Error: Please check your network"
       })
-
       return false
     }
     return true 
