@@ -247,7 +247,7 @@ const Bridge = () => {
     const [nextStepButton, setNextStepButton] = useState<boolean>(true)
 
     useEffect(() => {
-      if(props.bridgeModeStatus && props.userClauseChecked){
+      if(swapContext?.bridgeToAmount && swapContext.bridgeToAmount !== "..." && props.bridgeModeStatus && props.userClauseChecked){
         setNextStepButton(false)
       }else{
         setNextStepButton(true)
