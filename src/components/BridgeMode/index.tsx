@@ -183,9 +183,6 @@ const BridgeMode: FC<Iprops> = (props) => {
         }
     }
 
-    // if(!swapContext?.bridgeFloatAvailable && !swapContext?.bridgeFixedAvailable){
-    //     return null
-    // }
     if(!swapContext){
         return null
     }
