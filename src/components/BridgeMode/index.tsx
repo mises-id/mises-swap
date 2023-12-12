@@ -197,12 +197,10 @@ const BridgeMode: FC<Iprops> = (props) => {
                 <div>Floating rate</div>
                 <div>{swapContext.bridgeFloatOutputAmount}</div>
             </div>
-            {swapContext.bridgeFloatMode && swapContext.bridgeFloatNotAvailableMsg ? <span className="bridgeAmountCheckMsg">{swapContext.bridgeFloatNotAvailableMsg}</span> : null}
             <div onClick={() => handleBridgeModeChange(false)} className={`token-container flex justify-between items-center ${!swapContext.bridgeFloatMode ? "border-selected" : ""} ${!swapContext.bridgeFixedAvailable ? "cursor-not-allowed" : "rate-item"}`}>
                 <div>Fixed rate</div>
                 <div>{swapContext.bridgeFixedOutputAmount}</div>
             </div>
-            {!swapContext.bridgeFloatMode && swapContext.bridgeFixedNotAvailableMsg ? <span className="bridgeAmountCheckMsg">{swapContext.bridgeFixedNotAvailableMsg}</span> : null}
         </div>
         {swapContext.bridgeFloatMode ? <div className="bridge-mode-tip">
         ✔&nbsp;The floating rate can change at any point due to market conditions, so you might receive more or less crypto than expected.

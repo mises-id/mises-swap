@@ -479,8 +479,6 @@ const Bridge = () => {
     swapContext!.setBridgeAmountCheckMsg("")
     swapContext!.setBridgeFloatAvailable(false)
     swapContext!.setBridgeFixedAvailable(false)
-    swapContext?.setBridgeFloatNotAvailableMsg("")
-    swapContext?.setBridgeFixedNotAvailableMsg("")
     floatAvailable = false
     fixAvailable = false
     setDisableExchangeButton(true)
@@ -520,20 +518,8 @@ const Bridge = () => {
       const fromAmount = parseFloat(swapContext!.bridgeFromAmount)
 
       if(fromAmount){
-        if (!isNaN(minAmountFloat) && fromAmount < minAmountFloat) {
-          swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be less than ${minAmountFloat}`)
-        }
-        if (!isNaN(maxAmountFloat) && fromAmount > maxAmountFloat) {
-          swapContext?.setBridgeFloatNotAvailableMsg(`Cannot be more than ${maxAmountFloat}`)
-        }
         if(!isNaN(minAmountFloat) && !isNaN(maxAmountFloat) && (fromAmount >= minAmountFloat) && (fromAmount <= maxAmountFloat)){
           floatAvailable = true
-        }
-        if (!isNaN(minAmountFixed) && fromAmount < minAmountFixed) {
-          swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be less than ${minAmountFixed}`)
-        }
-        if (!isNaN(maxAmountFixed) && fromAmount > maxAmountFixed) {
-          swapContext?.setBridgeFixedNotAvailableMsg(`Cannot be more than ${maxAmountFixed}`)
         }
         if(!isNaN(minAmountFixed) && !isNaN(maxAmountFixed) && (fromAmount >= minAmountFixed) && (fromAmount <= maxAmountFixed)){
           fixAvailable = true

@@ -97,10 +97,6 @@ export type SwapContextType = {
   setBridgeFloatAvailable: Dispatch<SetStateAction<boolean>>,
   bridgeFixedAvailable: boolean,
   setBridgeFixedAvailable: Dispatch<SetStateAction<boolean>>,
-  bridgeFloatNotAvailableMsg: string,
-  setBridgeFloatNotAvailableMsg: Dispatch<SetStateAction<string>>,
-  bridgeFixedNotAvailableMsg: string,
-  setBridgeFixedNotAvailableMsg: Dispatch<SetStateAction<string>>,
   bridgeFloatOutputAmount: string,
   setBridgeFloatOutputAmount: Dispatch<SetStateAction<string>>,
   bridgeFixedOutputAmount: string,
@@ -181,8 +177,6 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [bridgeFloatMode, setBridgeFloatMode] = useState(true)
   const [bridgeFloatAvailable, setBridgeFloatAvailable] = useState(true)
   const [bridgeFixedAvailable, setBridgeFixedAvailable] = useState(true)
-  const [bridgeFloatNotAvailableMsg, setBridgeFloatNotAvailableMsg] = useState('')
-  const [bridgeFixedNotAvailableMsg, setBridgeFixedNotAvailableMsg] = useState('')
   const [bridgeFloatOutputAmount, setBridgeFloatOutputAmount] = useState('...')
   const [bridgeFixedOutputAmount, setBridgeFixedOutputAmount] = useState('...')
 
@@ -282,10 +276,6 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     setBridgeFloatAvailable,
     bridgeFixedAvailable,
     setBridgeFixedAvailable,
-    bridgeFloatNotAvailableMsg,
-    setBridgeFloatNotAvailableMsg,
-    bridgeFixedNotAvailableMsg,
-    setBridgeFixedNotAvailableMsg,
     bridgeFloatOutputAmount,
     setBridgeFloatOutputAmount,
     bridgeFixedOutputAmount,
