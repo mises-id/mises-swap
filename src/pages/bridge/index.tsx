@@ -562,6 +562,10 @@ const Bridge = () => {
     }catch(err){
       swapContext!.setBridgeAmountCheckMsg("Unsupported exchange pair")
       swapContext?.setBridgeToAmount("")
+      swapContext?.setGlobalDialogMessage({
+        type: 'error',
+        description: "Data Error: Please check your network"
+      })
       return false
     }
     setDisableExchangeButton(false)
