@@ -1101,7 +1101,7 @@ const Home = () => {
     <div className='flex-1 flex flex-col overflow-hidden relative'>
       <div className="swap-container">
         <div className="flex justify-between items-center swap-header">
-          <p className="title">Swap</p>
+          <p className="selected-title">Swap</p><p className="unselected-title" onClick={() => navigate('/bridge')}>Bridge</p>
           <div className={`flex items-center ${swapContext?.slippage ? 'show-slippage' : ''}`}>
             {swapContext?.slippage && <p className="mr-10">{swapContext.slippage}% slippage</p>}
             <SetOutline className="setting-icon" onClick={() => setopenSetting(true)} />

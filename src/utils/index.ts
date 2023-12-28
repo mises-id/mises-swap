@@ -42,6 +42,10 @@ export function findToken(tokens: token[], address: string): token | undefined {
   return tokens.find(token => token.address.toLowerCase() === address.toLowerCase()) || undefined;
 }
 
+export function findBridgeToken(tokens: token[], symbol: string): token | undefined {
+  return tokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase()) || undefined;
+}
+
 export function networkFee(gasPrice: string, estimatedGas: string): string {
   return BigNumber(estimatedGas).multipliedBy(gasPrice).dividedBy(BigNumber(10).pow(18)).toString()
 }
@@ -189,5 +193,41 @@ const requestWrap = async <TData, U = any>(
     return [null, data];
   } catch (err: any) {
     return [err, null];
+  }
+}
+
+type tokenName = 'token' | 'mises-token'
+export function getToken(tokenName: tokenName = "token") {
+  return localStorage.getItem(tokenName)
+}
+
+export function setToken(tokenName: tokenName="token", tokenValue: string) {
+  return localStorage.setItem(tokenName, tokenValue)
+}
+
+export function removeToken(tokenName: tokenName="token") {
+  return localStorage.removeItem(tokenName)
+}
+
+export const getBridgePairInfoFromSession = (fromToken: string, toToken: string) => {
+  try {
+    const raw = sessionStorage.getItem(fromToken + ":" + toToken)
+    if(!raw) {
+      return null
+    }
+    return JSON.parse(raw)
+  } catch (err) {
+    console.error("getBridgePairInfoFromSession:", err)
+    return false
+  }
+}
+
+export const setBridgePairInfoToSession = (fromToken: string, toToken: string, val: any) => {
+  try {
+    sessionStorage.setItem(fromToken + ":" + toToken, JSON.stringify(val))
+    return true
+  } catch (err) {
+    console.error("setBridgePairInfoToSession:", err)
+    return false
   }
 }

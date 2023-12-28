@@ -1,0 +1,51 @@
+@media (prefers-color-scheme: dark) {
+  .token-container {
+    background-color: rgb(19, 26, 42);
+    color: rgb(152, 161, 192);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .token-container {
+    background-color: rgb(245, 246, 252);
+    color: rgb(119, 128, 160);
+  }
+}
+
+.token-container {
+  position: relative;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.token-input{
+  .adm-input-element{
+    filter: none;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out 0s;
+    text-align: left;
+    font-size: 30px;
+    line-height: 44px;
+    font-variant: small-caps;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: var(--theme-text-color)
+  }
+}
+.max{
+  margin-left: 10px;
+  color: var(--adm-color-primary);
+  cursor: pointer;
+}
+.custom-token-skeleton{
+  height: 14px;
+  width: 100px;
+  border-radius: 3px;
+}
+
+.bridgeAmountCheckMsg{
+  color:rgb(210, 94, 16)
+}

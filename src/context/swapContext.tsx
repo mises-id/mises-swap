@@ -8,6 +8,18 @@ interface swapTokenData {
   decimals?: number
   balance?: string
 };
+
+interface bridgeTokenData {
+  tokenAddress?: string,
+  symbol: string,
+  decimals?: number,
+  balance?: string,
+  bridgeExtraIdName?: string,
+  bridgeFixedTime?: number,
+  bridgeProtocol?: string,
+  bridgeBlockchain?: string,
+}
+
 interface globalDialogMessageData {
   type: 'error' | 'pending' | 'success' | 'cannotEstimate',
   description: string,
@@ -64,7 +76,49 @@ export type SwapContextType = {
   setcurrentSwitchType: Dispatch<SetStateAction<'from' | 'to'>>,
   tokens: token[] | undefined, 
   settokens: Dispatch<SetStateAction<token[] | undefined>>,
-  gasPrice: string
+  gasPrice: string,
+
+  // bridge
+  bridgeTokens: token[] | undefined,
+  setBridgeTokens: Dispatch<SetStateAction<token[] | undefined>>,
+  bridgeFromData: bridgeTokenData,
+  setBridgeFromData: Dispatch<SetStateAction<bridgeTokenData>>,
+  bridgeToData: bridgeTokenData,
+  setBridgeToData: Dispatch<SetStateAction<bridgeTokenData>>,
+  bridgeFromAmount: string,
+  setBridgeFromAmount: Dispatch<SetStateAction<string>>
+  bridgeToAmount: string,
+  setBridgeToAmount: Dispatch<SetStateAction<string>>,
+  bridgeAmountCheckMsg: string,
+  setBridgeAmountCheckMsg: Dispatch<SetStateAction<string>>,
+  bridgeFloatMode: boolean,
+  setBridgeFloatMode: Dispatch<SetStateAction<boolean>>,
+  bridgeFloatAvailable: boolean,
+  setBridgeFloatAvailable: Dispatch<SetStateAction<boolean>>,
+  bridgeFixedAvailable: boolean,
+  setBridgeFixedAvailable: Dispatch<SetStateAction<boolean>>,
+  bridgeFloatOutputAmount: string,
+  setBridgeFloatOutputAmount: Dispatch<SetStateAction<string>>,
+  bridgeFixedOutputAmount: string,
+  setBridgeFixedOutputAmount: Dispatch<SetStateAction<string>>,
+
+  bridgeFloatRecipentAddress: string,
+  setBridgeFloatRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFloatRecipentExtraId: string,
+  setBridgeFloatRecipentExtraId: Dispatch<SetStateAction<string>>,
+
+  bridgeFixedRecipentAddress: string,
+  setBridgeFixedRecipentAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRecipentExtraId: string,
+  setBridgeFixedRecipentExtraId: Dispatch<SetStateAction<string>>,
+
+  bridgeFixedRefundAddress: string,
+  setBridgeFixedRefundAddress: Dispatch<SetStateAction<string>>,
+  bridgeFixedRefundExtraId: string,
+  setBridgeFixedRefundExtraId: Dispatch<SetStateAction<string>>,
+
+  bridgeFixedRateId: string,
+  setBridgeFixedRateId: Dispatch<SetStateAction<string>>,
 };
 interface Iprops {
   children?: ReactNode
@@ -73,6 +127,10 @@ export const SwapContext = createContext<SwapContextType | null>(null);
 export const defaultSlippageValue = '0.5'
 const swapDataDefaults = {
   tokenAddress: ''
+}
+const bridgeDataDefaults = {
+  tokenAddress: '',
+  symbol: ''
 }
 const SwapProvider: FC<Iprops> = ({ children }) => {
   const [swapToData, setswapToData] = useState<swapTokenData>(swapDataDefaults)
@@ -108,6 +166,30 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
   const [tokens, settokens] = useState<token[] | undefined>(undefined)
 
   const [gasPrice, setgasPrice] = useState('0')
+
+  // bridge
+  const [bridgeTokens, setBridgeTokens] = useState<token[] | undefined>(undefined)
+  const [bridgeToData, setBridgeToData] = useState<bridgeTokenData>(bridgeDataDefaults)
+  const [bridgeFromData, setBridgeFromData] = useState<bridgeTokenData>(bridgeDataDefaults)
+  const [bridgeFromAmount, setBridgeFromAmount] = useState('')
+  const [bridgeToAmount, setBridgeToAmount] = useState('')
+  const [bridgeAmountCheckMsg, setBridgeAmountCheckMsg] = useState('')
+  const [bridgeFloatMode, setBridgeFloatMode] = useState(true)
+  const [bridgeFloatAvailable, setBridgeFloatAvailable] = useState(true)
+  const [bridgeFixedAvailable, setBridgeFixedAvailable] = useState(true)
+  const [bridgeFloatOutputAmount, setBridgeFloatOutputAmount] = useState('...')
+  const [bridgeFixedOutputAmount, setBridgeFixedOutputAmount] = useState('...')
+
+  const [bridgeFloatRecipentAddress, setBridgeFloatRecipentAddress] = useState('')
+  const [bridgeFloatRecipentExtraId, setBridgeFloatRecipentExtraId] = useState('')
+
+  const [bridgeFixedRecipentAddress, setBridgeFixedRecipentAddress] = useState('')
+  const [bridgeFixedRecipentExtraId, setBridgeFixedRecipentExtraId] = useState('')
+
+  const [bridgeFixedRefundAddress, setBridgeFixedRefundAddress] = useState('')
+  const [bridgeFixedRefundExtraId, setBridgeFixedRefundExtraId] = useState('')
+
+  const [bridgeFixedRateId, setBridgeFixedRateId] = useState('')
 
   const createRemoveTask = () =>{
     const timeoutFn = setTimeout(removeNotificationData, 4000);
@@ -175,7 +257,43 @@ const SwapProvider: FC<Iprops> = ({ children }) => {
     setcurrentSwitchType,
     tokens, 
     settokens,
-    gasPrice
+    gasPrice,
+    bridgeTokens,
+    setBridgeTokens,
+    bridgeToData,
+    setBridgeToData,
+    bridgeFromData,
+    setBridgeFromData,
+    bridgeFromAmount,
+    setBridgeFromAmount,
+    bridgeToAmount,
+    setBridgeToAmount,
+    bridgeAmountCheckMsg,
+    setBridgeAmountCheckMsg,
+    bridgeFloatMode,
+    setBridgeFloatMode,
+    bridgeFloatAvailable,
+    setBridgeFloatAvailable,
+    bridgeFixedAvailable,
+    setBridgeFixedAvailable,
+    bridgeFloatOutputAmount,
+    setBridgeFloatOutputAmount,
+    bridgeFixedOutputAmount,
+    setBridgeFixedOutputAmount,
+    bridgeFloatRecipentAddress,
+    setBridgeFloatRecipentAddress,
+    bridgeFixedRecipentAddress,
+    setBridgeFixedRecipentAddress,
+    bridgeFixedRefundAddress,
+    setBridgeFixedRefundAddress,
+    bridgeFloatRecipentExtraId,
+    setBridgeFloatRecipentExtraId,
+    bridgeFixedRecipentExtraId,
+    setBridgeFixedRecipentExtraId,
+    bridgeFixedRefundExtraId,
+    setBridgeFixedRefundExtraId,
+    bridgeFixedRateId,
+    setBridgeFixedRateId
   }}>{children}</SwapContext.Provider>;
 };
 

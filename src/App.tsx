@@ -29,6 +29,7 @@ import RetryMaxStatus from './components/RetryMaxStatus';
 import { useEffect } from 'react';
 import { misesWallet } from './wallets/misesWallet';
 // import { coinbaseWallet } from './wallets/coinbase';
+import Web3Provider from './components/Web3Provider';
 
 export const klaytnChain: Chain = {
   id: 8217,
@@ -251,9 +252,11 @@ function App() {
           {/* <RecoilRoot> */}
           <ConfigProvider locale={enUS}>
             <SwapProvider>
+              <Web3Provider>
               <BrowserRouter>
                 <Routes />
               </BrowserRouter>
+              </Web3Provider>
             </SwapProvider>
           </ConfigProvider>
           {/* </RecoilRoot> */}

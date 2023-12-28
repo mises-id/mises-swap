@@ -7,7 +7,7 @@
  */
 import React from 'react'
 import { Navigate, useRoutes } from 'react-router-dom'
-import { HelpCenter, Home } from '@/pages'
+import { HelpCenter, Home, Bridge, BridgeTransaction } from '@/pages'
 type CutomFallBackT =
   | boolean
   | React.ReactChild
@@ -32,6 +32,24 @@ const Routes = () => {
       path: '/',
       element: SuspenseWrapper(
         () => <Home/>
+      ),
+    },
+    {
+      path: '/bridge',
+      element: SuspenseWrapper(
+        () => <Bridge/>
+      ),
+    },
+    {
+      path: '/bridge/process',
+      element: SuspenseWrapper(
+        () => <Bridge/>
+      ),
+    },
+    {
+      path: '/bridge/transaction/:transId',
+      element: SuspenseWrapper(
+        () => <BridgeTransaction/>
       ),
     },
     {
